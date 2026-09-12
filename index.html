@@ -122,7 +122,7 @@
     align-items: stretch;
   }
 
-  /* ---------- SETUP SCREEN ---------- */
+  /* ---------- SHARED CARD ---------- */
   .card {
     background: var(--surface);
     border-radius: 12px;
@@ -136,6 +136,55 @@
     color: var(--accent);
   }
   .card h2:not(:first-child) { margin-top: 22px; }
+
+  .back-link {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0 0 16px 0;
+    display: inline-block;
+  }
+
+  /* ---------- LANDING SCREEN ---------- */
+  .landing-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .landing-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 20px;
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    background: var(--surface);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+  }
+  .landing-card:hover { background: var(--accent-soft); }
+  .landing-card:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+  .landing-card-title {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--accent);
+  }
+  .landing-card-desc {
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
 
   .choice-row {
     display: flex;
@@ -240,7 +289,7 @@
     text-align: center;
   }
 
-  /* ---------- TEST SCREEN ---------- */
+  /* ---------- TEST SCREEN (running) ---------- */
   #testScreen { display: none; flex-direction: column; align-items: stretch; }
 
   .top-row {
@@ -376,6 +425,26 @@
     text-align: left;
     margin: 4px 0 24px;
   }
+  .rank-marker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 2px 0;
+  }
+  .rank-marker-line {
+    flex: 1;
+    height: 0;
+    border-top: 2px dashed var(--success);
+  }
+  .rank-marker-label {
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--success);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
   .rank-tier {
     display: flex;
     align-items: center;
@@ -490,7 +559,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .timer-bar-fill, .problem-box, .choice-row button, .start-btn, .again-btn { transition: none; }
+    .timer-bar-fill, .problem-box, .choice-row button, .start-btn, .again-btn, .landing-card { transition: none; }
   }
 </style>
 </head>
@@ -506,8 +575,38 @@
 
 <main>
 
-  <!-- SETUP -->
-  <div id="setupScreen" class="card">
+  <!-- LANDING -->
+  <div id="landingScreen" class="card">
+    <h2 id="landingHeading">Vad vill du göra?</h2>
+    <div class="landing-choices">
+      <button type="button" class="landing-card" id="chooseTestBtn">
+        <span class="landing-card-title" id="landingTestTitle">Test</span>
+        <span class="landing-card-desc" id="landingTestDesc">Utvärdera dig själv — alla tabeller, multiplikation och division.</span>
+      </button>
+      <button type="button" class="landing-card" id="choosePracticeBtn">
+        <span class="landing-card-title" id="landingPracticeTitle">Öva</span>
+        <span class="landing-card-desc" id="landingPracticeDesc">Träna fritt — välj tabeller och räknesätt själv.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TEST SETUP (fixed scope) -->
+  <div id="testSetupScreen" class="card" style="display:none;">
+    <button type="button" class="back-link" id="backFromTest">← Tillbaka</button>
+    <h2 id="testSetupHeading">Test</h2>
+    <div class="choice-sub" id="testSetupInfo">Alla tabeller (1–12), multiplikation och division blandat.</div>
+    <div class="choice-row" id="testModeChoice" style="margin-top: 14px;">
+      <button type="button" data-mode="time" class="active"></button>
+      <button type="button" data-mode="count"></button>
+    </div>
+    <button class="start-btn" id="testStartBtn"></button>
+    <div class="hint" id="testStartHint"></div>
+  </div>
+
+  <!-- PRACTICE SETUP (detailed) -->
+  <div id="setupScreen" class="card" style="display:none;">
+    <button type="button" class="back-link" id="backFromPractice">← Tillbaka</button>
+
     <h2 id="labelChooseMode">Välj läge</h2>
     <div class="choice-row" id="modeChoice">
       <button type="button" data-mode="time" class="active"></button>
@@ -533,7 +632,7 @@
     <div class="hint" id="startHint"></div>
   </div>
 
-  <!-- TEST -->
+  <!-- RUNNING TEST/PRACTICE -->
   <div id="testScreen">
     <div class="top-row">
       <div class="timer" id="timerDisplay">60</div>
@@ -576,11 +675,20 @@
   const ROUND_SECONDS = 60;
   const COUNT_TARGET = 100;
   const MAX_TABLE = 12;
+  const ACCEPTABLE_THRESHOLD = 2; // seconds/question — green cutoff & ladder marker
+  const BG_WORST_AT = 8; // seconds/question — fully orange beyond this
 
   // ---------- Translations ----------
   const I18N = {
     sv: {
       title: 'Tabellträning',
+      landingHeading: 'Vad vill du göra?',
+      testTitle: 'Test',
+      testDesc: 'Utvärdera dig själv — alla tabeller, multiplikation och division.',
+      practiceTitle: 'Öva',
+      practiceDesc: 'Träna fritt — välj tabeller och räknesätt själv.',
+      back: '← Tillbaka',
+      testInfo: 'Alla tabeller (1–12), multiplikation och division blandat.',
       chooseMode: 'Välj läge',
       mode1min: '1 minut',
       mode100: '100 frågor',
@@ -612,6 +720,7 @@
       statSpeed: 'Snitt/fråga',
       again: 'Kör igen',
       tierYou: 'DU',
+      acceptableLabel: 'Godkänd nivå',
       tiers: [
         { max: 1,        label: 'Matematikguden',    range: '≤ 1 sekund',    desc: 'Svaret finns innan frågan ens hunnit visas färdigt.' },
         { max: 2,        label: 'Superdatorn',       range: '≤ 2 sekunder',  desc: 'Beräknar snabbare än du hinner tänka.' },
@@ -625,6 +734,13 @@
     },
     en: {
       title: 'Times Tables Trainer',
+      landingHeading: 'What would you like to do?',
+      testTitle: 'Test',
+      testDesc: 'Evaluate yourself — all tables, multiplication and division.',
+      practiceTitle: 'Practice',
+      practiceDesc: 'Train freely — choose your own tables and operation.',
+      back: '← Back',
+      testInfo: 'All tables (1–12), multiplication and division mixed.',
       chooseMode: 'Choose mode',
       mode1min: '1 minute',
       mode100: '100 questions',
@@ -656,6 +772,7 @@
       statSpeed: 'Avg/question',
       again: 'Try again',
       tierYou: 'YOU',
+      acceptableLabel: 'Acceptable level',
       tiers: [
         { max: 1,        label: 'The Math God',              range: '≤ 1 second',    desc: 'The answer exists before the question has even finished appearing.' },
         { max: 2,        label: 'The Supercomputer',         range: '≤ 2 seconds',   desc: 'Computes faster than you can think.' },
@@ -677,12 +794,23 @@
 
   function t() { return I18N[lang]; }
 
+  const landingScreen = document.getElementById('landingScreen');
+  const testSetupScreen = document.getElementById('testSetupScreen');
   const setupScreen = document.getElementById('setupScreen');
   const testScreen = document.getElementById('testScreen');
   const resultScreen = document.getElementById('resultScreen');
 
   const headerTitle = document.getElementById('headerTitle');
   const langToggle = document.getElementById('langToggle');
+
+  const chooseTestBtn = document.getElementById('chooseTestBtn');
+  const choosePracticeBtn = document.getElementById('choosePracticeBtn');
+  const backFromTest = document.getElementById('backFromTest');
+  const backFromPractice = document.getElementById('backFromPractice');
+
+  const testModeButtons = document.querySelectorAll('#testModeChoice button');
+  const testStartBtn = document.getElementById('testStartBtn');
+  const testStartHint = document.getElementById('testStartHint');
 
   const tableGrid = document.getElementById('tableGrid');
   const modeButtons = document.querySelectorAll('#modeChoice button');
@@ -714,6 +842,7 @@
   let mode = 'time';
   let operation = 'mul';
   let selectedTables = new Set(Array.from({ length: MAX_TABLE }, (_, i) => i + 1));
+  let originScreen = 'practice'; // which setup screen to return to on "again"
 
   // ---------- Round state ----------
   let queue = [];
@@ -725,6 +854,52 @@
   let hasResult = false;
   let timerId = null;
   let running = false;
+
+  // ---------- Screen navigation ----------
+  function showScreen(el) {
+    [landingScreen, testSetupScreen, setupScreen, testScreen, resultScreen].forEach(s => {
+      s.style.display = 'none';
+    });
+    el.style.display = el === testScreen ? 'flex' : 'block';
+  }
+
+  chooseTestBtn.addEventListener('click', () => {
+    syncModeUI();
+    showScreen(testSetupScreen);
+  });
+  choosePracticeBtn.addEventListener('click', () => {
+    syncModeUI();
+    showScreen(setupScreen);
+  });
+  backFromTest.addEventListener('click', () => showScreen(landingScreen));
+  backFromPractice.addEventListener('click', () => showScreen(landingScreen));
+
+  // ---------- Mode / operation / tables helpers ----------
+  function syncModeUI() {
+    const s = t();
+    [modeButtons, testModeButtons].forEach(group => {
+      group.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    });
+    modeSub.textContent = mode === 'time' ? s.modeSubTime : s.modeSubCount;
+    startBtn.textContent = mode === 'time' ? s.startTime : s.startCount;
+    startHint.textContent = mode === 'time' ? s.hintTime : s.hintCount;
+    testStartBtn.textContent = mode === 'time' ? s.startTime : s.startCount;
+    testStartHint.textContent = mode === 'time' ? s.hintTime : s.hintCount;
+  }
+
+  function setOperation(op) {
+    operation = op;
+    opButtons.forEach(b => b.classList.toggle('active', b.dataset.op === op));
+  }
+
+  function setAllTablesSelected() {
+    tableGrid.querySelectorAll('input').forEach(cb => {
+      cb.checked = true;
+      cb.closest('label').classList.add('checked');
+    });
+    selectedTables = new Set(Array.from({ length: MAX_TABLE }, (_, i) => i + 1));
+    updateStartButton();
+  }
 
   // ---------- Language ----------
   function renderLiveLabel() {
@@ -758,6 +933,12 @@
     statWrong.textContent = wrongCount;
     statSpeed.textContent = avgSpeed.toFixed(2).replace('.', ',') + ' s';
     renderRankLadder(avgSpeed, totalAnswered);
+
+    if (totalAnswered > 0) {
+      document.body.style.backgroundColor = speedToBgColor(avgSpeed);
+    } else {
+      document.body.style.backgroundColor = '';
+    }
   }
 
   function applyLanguage() {
@@ -768,10 +949,22 @@
     headerTitle.textContent = s.title;
     langToggle.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
 
+    document.getElementById('landingHeading').textContent = s.landingHeading;
+    document.getElementById('landingTestTitle').textContent = s.testTitle;
+    document.getElementById('landingTestDesc').textContent = s.testDesc;
+    document.getElementById('landingPracticeTitle').textContent = s.practiceTitle;
+    document.getElementById('landingPracticeDesc').textContent = s.practiceDesc;
+
+    backFromTest.textContent = s.back;
+    backFromPractice.textContent = s.back;
+    document.getElementById('testSetupHeading').textContent = s.testTitle;
+    document.getElementById('testSetupInfo').textContent = s.testInfo;
+    testModeButtons[0].textContent = s.mode1min;
+    testModeButtons[1].textContent = s.mode100;
+
     document.getElementById('labelChooseMode').textContent = s.chooseMode;
     modeButtons[0].textContent = s.mode1min;
     modeButtons[1].textContent = s.mode100;
-    modeSub.textContent = mode === 'time' ? s.modeSubTime : s.modeSubCount;
 
     document.getElementById('labelChooseOp').textContent = s.chooseOp;
     opButtons[0].textContent = s.opMul;
@@ -782,8 +975,7 @@
     selectAllBtn.textContent = s.selectAll;
     selectNoneBtn.textContent = s.selectNone;
 
-    startBtn.textContent = mode === 'time' ? s.startTime : s.startCount;
-    startHint.textContent = mode === 'time' ? s.hintTime : s.hintCount;
+    syncModeUI();
 
     document.getElementById('previewTitle').textContent = s.previewTitle;
     document.getElementById('previewNextLbl').textContent = s.previewNext;
@@ -819,34 +1011,18 @@
     });
   }
 
-  modeButtons.forEach(btn => {
+  [...modeButtons, ...testModeButtons].forEach(btn => {
     btn.addEventListener('click', () => {
-      modeButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       mode = btn.dataset.mode;
-      const s = t();
-      modeSub.textContent = mode === 'time' ? s.modeSubTime : s.modeSubCount;
-      startBtn.textContent = mode === 'time' ? s.startTime : s.startCount;
-      startHint.textContent = mode === 'time' ? s.hintTime : s.hintCount;
+      syncModeUI();
     });
   });
 
   opButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      opButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      operation = btn.dataset.op;
-    });
+    btn.addEventListener('click', () => setOperation(btn.dataset.op));
   });
 
-  selectAllBtn.addEventListener('click', () => {
-    tableGrid.querySelectorAll('input').forEach(cb => {
-      cb.checked = true;
-      cb.closest('label').classList.add('checked');
-      selectedTables.add(parseInt(cb.value, 10));
-    });
-    updateStartButton();
-  });
+  selectAllBtn.addEventListener('click', setAllTablesSelected);
 
   selectNoneBtn.addEventListener('click', () => {
     tableGrid.querySelectorAll('input').forEach(cb => {
@@ -861,6 +1037,16 @@
     startBtn.disabled = selectedTables.size === 0;
   }
 
+  // ---------- Result background color (green -> orange by speed) ----------
+  function speedToBgColor(avgSpeed) {
+    const green = [63, 174, 116];
+    const orange = [224, 138, 60];
+    const clamped = Math.max(ACCEPTABLE_THRESHOLD, Math.min(BG_WORST_AT, avgSpeed));
+    const ratio = (clamped - ACCEPTABLE_THRESHOLD) / (BG_WORST_AT - ACCEPTABLE_THRESHOLD);
+    const rgb = green.map((g, i) => Math.round(g + (orange[i] - g) * ratio));
+    return 'rgb(' + rgb.join(',') + ')';
+  }
+
   // ---------- Rank ladder ----------
   function renderRankLadder(avgSpeedSeconds, totalAnswered) {
     if (totalAnswered === 0) {
@@ -870,11 +1056,20 @@
     }
     const tiers = t().tiers;
     const youLabel = t().tierYou;
+    const markerLabel = t().acceptableLabel;
     rankLadder.style.display = 'flex';
     const achievedIndex = tiers.findIndex(tier => avgSpeedSeconds <= tier.max);
+    const markerAt = tiers.findIndex(tier => tier.max > ACCEPTABLE_THRESHOLD);
+
+    const markerHtml = '<div class="rank-marker">'
+      + '<span class="rank-marker-line"></span>'
+      + '<span class="rank-marker-label">' + markerLabel + '</span>'
+      + '<span class="rank-marker-line"></span>'
+      + '</div>';
+
     rankLadder.innerHTML = tiers.map((tier, i) => {
       const achieved = i === achievedIndex;
-      return '<div class="rank-tier' + (achieved ? ' achieved' : '') + '">'
+      const tierHtml = '<div class="rank-tier' + (achieved ? ' achieved' : '') + '">'
         + '<span class="tier-step">' + (tiers.length - i) + '</span>'
         + '<span class="tier-body">'
         +   '<span class="tier-top">'
@@ -885,6 +1080,7 @@
         + '</span>'
         + (achieved ? '<span class="tier-you">' + youLabel + '</span>' : '')
         + '</div>';
+      return (i === markerAt ? markerHtml : '') + tierHtml;
     }).join('');
   }
 
@@ -933,10 +1129,9 @@
     running = true;
     hasResult = false;
     roundStartTime = performance.now();
+    document.body.style.backgroundColor = '';
 
-    setupScreen.style.display = 'none';
-    resultScreen.style.display = 'none';
-    testScreen.style.display = 'flex';
+    showScreen(testScreen);
 
     answerInput.value = '';
 
@@ -976,8 +1171,7 @@
   function endRound() {
     running = false;
     clearInterval(timerId);
-    testScreen.style.display = 'none';
-    resultScreen.style.display = 'block';
+    showScreen(resultScreen);
 
     lastElapsedSeconds = mode === 'time'
       ? ROUND_SECONDS
@@ -1036,14 +1230,26 @@
     }
   });
 
-  startBtn.addEventListener('click', startRound);
+  testStartBtn.addEventListener('click', () => {
+    setAllTablesSelected();
+    setOperation('mix');
+    originScreen = 'test';
+    startRound();
+  });
+
+  startBtn.addEventListener('click', () => {
+    originScreen = 'practice';
+    startRound();
+  });
+
   againBtn.addEventListener('click', () => {
-    resultScreen.style.display = 'none';
-    setupScreen.style.display = 'block';
+    document.body.style.backgroundColor = '';
+    showScreen(originScreen === 'test' ? testSetupScreen : setupScreen);
   });
 
   updateStartButton();
   applyLanguage();
+  showScreen(landingScreen);
 })();
 </script>
 
