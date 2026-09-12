@@ -85,6 +85,16 @@
     font-weight: 700;
     font-size: 1.4rem;
     letter-spacing: 0.3px;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+  }
+  .header-title:hover { opacity: 0.85; }
+  .header-title:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
   }
   .lang-toggle {
     flex-shrink: 0;
@@ -566,7 +576,7 @@
 <body>
 
 <header>
-  <span class="header-title" id="headerTitle">Tabellträning</span>
+  <button type="button" class="header-title" id="headerTitle">Tabellträning</button>
   <div class="lang-toggle" id="langToggle">
     <button type="button" data-lang="sv" class="active">SV</button>
     <button type="button" data-lang="en">EN</button>
@@ -871,8 +881,16 @@
     syncModeUI();
     showScreen(setupScreen);
   });
-  backFromTest.addEventListener('click', () => showScreen(landingScreen));
-  backFromPractice.addEventListener('click', () => showScreen(landingScreen));
+  function goHome() {
+    clearInterval(timerId);
+    running = false;
+    document.body.style.backgroundColor = '';
+    showScreen(landingScreen);
+  }
+
+  backFromTest.addEventListener('click', goHome);
+  backFromPractice.addEventListener('click', goHome);
+  headerTitle.addEventListener('click', goHome);
 
   // ---------- Mode / operation / tables helpers ----------
   function syncModeUI() {
