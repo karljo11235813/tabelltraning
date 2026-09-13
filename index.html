@@ -668,7 +668,7 @@
   .heatmap-wrap { overflow-x: auto; }
   .heatmap-grid {
     display: grid;
-    grid-template-columns: 28px repeat(10, 26px);
+    grid-template-columns: 28px repeat(12, 26px);
     gap: 3px;
     margin: 4px 0 16px;
     width: max-content;
@@ -1927,7 +1927,7 @@
     if (op === 'mix') op = Math.random() < 0.5 ? 'mul' : 'div';
 
     const table = pickTable();
-    const factor = randInt(1, 10);
+    const factor = randInt(1, MAX_TABLE);
 
     if (op === 'mul') {
       const a = Math.random() < 0.5 ? table : factor;
@@ -2029,10 +2029,10 @@
     const s = t();
     let html = '<div class="heatmap-wrap"><div class="heatmap-grid">';
     html += '<div class="heatmap-label"></div>';
-    for (let col = 1; col <= 10; col++) html += '<div class="heatmap-label">' + col + '</div>';
+    for (let col = 1; col <= MAX_TABLE; col++) html += '<div class="heatmap-label">' + col + '</div>';
     for (let row = 0; row <= 12; row++) {
       html += '<div class="heatmap-label">' + row + '</div>';
-      for (let col = 1; col <= 10; col++) {
+      for (let col = 1; col <= MAX_TABLE; col++) {
         const fact = factKey(row, col);
         const bucket = getMastery(factStats[fact]);
         const isSelected = fact === selectedHeatmapFact;
