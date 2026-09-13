@@ -853,6 +853,7 @@
   ];
   const BUILD_FOCUS_LEN = 6;
   const BUILD_MIX_LEN = 10;
+  const SQUARE_NUMBERS = [2, 3, 4, 5, 6, 7, 8, 9, 10]; // all squares trained in the "Kvadrater" step
   const ACCEPTABLE_THRESHOLD = 2; // seconds/question — green cutoff & ladder marker
   const BG_WORST_AT = 8; // seconds/question — fully orange beyond this
   const WRONG_PENALTY_SECONDS = 5; // added per wrong answer before ranking (not shown in raw speed stat)
@@ -1116,6 +1117,7 @@
   let buildStepIndex = 0;
   let buildPhase = 'focus'; // 'focus' | 'mix'
   let buildPhaseLen = 0;
+  let buildSquaresQueue = []; // shuffled, no-repeat draw order for the squares step's focus phase
   let buildCompleted = new Set();
   try {
     const savedProgress = JSON.parse(localStorage.getItem('tabelltraning_build_progress') || '[]');
@@ -1598,6 +1600,15 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
+  function shuffled(arr) {
+    const copy = arr.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
   function pickTable() {
     const arr = Array.from(selectedTables);
     return arr[randInt(0, arr.length - 1)];
@@ -1645,7 +1656,10 @@
 
     if (buildPhase === 'focus') {
       if (step.kind === 'squares') {
-        const n = randInt(2, 10);
+        // Draw without repeats so every square (2² through 10²) gets covered
+        // before any repeats — falls back to random once the set is exhausted
+        // (only ever happens for unanswered preview slots, never a real question).
+        const n = buildSquaresQueue.length > 0 ? buildSquaresQueue.pop() : randInt(2, 10);
         return buildMulProblem(n, n);
       }
       const base = step.addsTables[randInt(0, step.addsTables.length - 1)];
@@ -1739,7 +1753,9 @@
   function startBuildPhase(phase) {
     mode = 'build';
     buildPhase = phase;
-    buildPhaseLen = phase === 'focus' ? BUILD_FOCUS_LEN : BUILD_MIX_LEN;
+    const isSquaresFocus = phase === 'focus' && BUILD_STEPS_META[buildStepIndex].kind === 'squares';
+    buildPhaseLen = isSquaresFocus ? SQUARE_NUMBERS.length : (phase === 'focus' ? BUILD_FOCUS_LEN : BUILD_MIX_LEN);
+    if (isSquaresFocus) buildSquaresQueue = shuffled(SQUARE_NUMBERS);
     correctCount = 0;
     wrongCount = 0;
     queue = [];
