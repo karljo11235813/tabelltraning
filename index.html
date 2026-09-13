@@ -597,6 +597,15 @@
     letter-spacing: 0.4px;
     margin-top: 2px;
   }
+  .penalty-note {
+    display: none;
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--danger);
+    margin: 0 0 18px;
+    line-height: 1.35;
+  }
+  .penalty-note.visible { display: block; }
   .again-btn {
     width: 100%;
     padding: 14px;
@@ -723,8 +732,9 @@
       <div class="result-stats">
         <div class="result-stat"><div class="val" id="statCorrect">0</div><div class="lbl" id="lblStatCorrect">Rätt</div></div>
         <div class="result-stat"><div class="val" id="statWrong">0</div><div class="lbl" id="lblStatWrong">Fel</div></div>
-        <div class="result-stat"><div class="val" id="statSpeed">0,0 s</div><div class="lbl" id="lblStatSpeed">Snitt/fråga</div></div>
+        <div class="result-stat"><div class="val" id="statSpeed">0,0 s</div><div class="lbl" id="lblStatSpeed">Snitt/rätt</div></div>
       </div>
+      <div class="penalty-note" id="penaltyNote"></div>
       <button class="again-btn" id="againBtn">Kör igen</button>
     </div>
   </div>
@@ -738,6 +748,7 @@
   const MAX_TABLE = 12;
   const ACCEPTABLE_THRESHOLD = 2; // seconds/question — green cutoff & ladder marker
   const BG_WORST_AT = 8; // seconds/question — fully orange beyond this
+  const WRONG_PENALTY_SECONDS = 5; // added per wrong answer before ranking (not shown in raw speed stat)
 
   // ---------- Translations ----------
   const I18N = {
@@ -782,7 +793,9 @@
       resultCaptionCount: 'för 100 frågor',
       statCorrect: 'Rätt',
       statWrong: 'Fel',
-      statSpeed: 'Snitt/fråga',
+      statSpeed: 'Snitt/rätt',
+      penaltyNote: 'Fel svar drar ner din nivå — varje fel motsvarar {n} extra sekunder i bedömningen ovan.',
+      allWrongNote: 'Inga rätta svar — ingen snitthastighet att visa.',
       again: 'Kör igen',
       tierYou: 'DU',
       acceptableLabel: 'Godkänd nivå',
@@ -838,7 +851,9 @@
       resultCaptionCount: 'for 100 questions',
       statCorrect: 'Correct',
       statWrong: 'Wrong',
-      statSpeed: 'Avg/question',
+      statSpeed: 'Avg/correct',
+      penaltyNote: 'Wrong answers pull your level down — each mistake counts as {n} extra seconds in the ranking above.',
+      allWrongNote: 'No correct answers — no average speed to show.',
       again: 'Try again',
       tierYou: 'YOU',
       acceptableLabel: 'Acceptable level',
@@ -907,6 +922,7 @@
   const statCorrect = document.getElementById('statCorrect');
   const statWrong = document.getElementById('statWrong');
   const statSpeed = document.getElementById('statSpeed');
+  const penaltyNote = document.getElementById('penaltyNote');
   const rankLadder = document.getElementById('rankLadder');
   const againBtn = document.getElementById('againBtn');
 
@@ -1158,7 +1174,16 @@
   function renderResultText() {
     const s = t();
     const totalAnswered = correctCount + wrongCount;
-    const avgSpeed = totalAnswered > 0 ? lastElapsedSeconds / totalAnswered : 0;
+
+    // Raw speed stat: seconds per CORRECT answer only (wrong answers don't count toward pace).
+    const rawSpeed = correctCount > 0 ? lastElapsedSeconds / correctCount : null;
+
+    // Ranking speed: same, but each wrong answer adds a time penalty first, so
+    // guessing fast without accuracy can't inflate the tier. No correct answers
+    // at all always lands in the worst tier (Infinity sorts past every cutoff).
+    const rankSpeed = correctCount > 0
+      ? (lastElapsedSeconds + wrongCount * WRONG_PENALTY_SECONDS) / correctCount
+      : Infinity;
 
     if (mode === 'time') {
       resultTitle.textContent = s.resultTitleTime;
@@ -1175,11 +1200,25 @@
     againBtn.textContent = s.again;
     statCorrect.textContent = correctCount;
     statWrong.textContent = wrongCount;
-    statSpeed.textContent = avgSpeed.toFixed(2).replace('.', ',') + ' s';
-    renderRankLadder(avgSpeed, totalAnswered);
+    statSpeed.textContent = rawSpeed !== null
+      ? (rawSpeed.toFixed(2).replace('.', ',') + ' s')
+      : '–';
+
+    if (wrongCount > 0 && correctCount > 0) {
+      penaltyNote.textContent = s.penaltyNote.replace('{n}', WRONG_PENALTY_SECONDS);
+      penaltyNote.classList.add('visible');
+    } else if (totalAnswered > 0 && correctCount === 0) {
+      penaltyNote.textContent = s.allWrongNote;
+      penaltyNote.classList.add('visible');
+    } else {
+      penaltyNote.textContent = '';
+      penaltyNote.classList.remove('visible');
+    }
+
+    renderRankLadder(rankSpeed, totalAnswered);
 
     if (totalAnswered > 0) {
-      document.body.style.backgroundColor = speedToBgColor(avgSpeed);
+      document.body.style.backgroundColor = speedToBgColor(rankSpeed);
     } else {
       document.body.style.backgroundColor = '';
     }
