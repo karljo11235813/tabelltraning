@@ -20,6 +20,7 @@
     --success-soft: #e6f5ef;
     --danger: #b23b3b;
     --danger-soft: #fbecec;
+    --warning: #b8860b;
     --border: #d8cfe0;
     --shadow: 0 2px 14px rgba(45, 24, 58, 0.10);
   }
@@ -36,6 +37,7 @@
       --success-soft: #203a30;
       --danger: #e2837f;
       --danger-soft: #402226;
+      --warning: #e0b84f;
       --border: #453a4f;
       --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
     }
@@ -52,6 +54,7 @@
     --success-soft: #203a30;
     --danger: #e2837f;
     --danger-soft: #402226;
+    --warning: #e0b84f;
     --border: #453a4f;
     --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
   }
@@ -596,6 +599,142 @@
   .rank-tier .step-badge.done { color: #fff; background: var(--success); }
   .rank-tier .step-badge.next { color: #fff; background: var(--accent); }
 
+  .mastery-pill {
+    display: inline-block;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #fff;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .mastery-pill.mastery-green { background: var(--success); }
+  .mastery-pill.mastery-yellow { background: var(--warning); color: #221b28; }
+  .mastery-pill.mastery-red { background: var(--danger); }
+  .mastery-pill.mastery-gray { background: var(--text-muted); }
+
+  .stats-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stats-tabs button {
+    flex: 1;
+    padding: 10px 6px;
+    border: 2px solid var(--accent);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 9px;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .stats-tabs button.active { background: var(--accent); color: #fff; }
+
+  .weak-list { display: flex; flex-direction: column; gap: 8px; }
+  .weak-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    flex-wrap: wrap;
+  }
+  .weak-row .weak-fact {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    min-width: 60px;
+  }
+  .weak-row .weak-detail {
+    flex: 1;
+    min-width: 140px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .weak-row .weak-mistake {
+    width: 100%;
+    font-size: 0.74rem;
+    color: var(--danger);
+  }
+
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: 28px repeat(10, 26px);
+    gap: 3px;
+    margin: 4px 0 16px;
+    width: max-content;
+  }
+  .heatmap-grid .heatmap-label {
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .heatmap-cell {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    background: var(--border);
+  }
+  .heatmap-cell.mastery-green { background: var(--success); }
+  .heatmap-cell.mastery-yellow { background: var(--warning); }
+  .heatmap-cell.mastery-red { background: var(--danger); }
+  .heatmap-cell.mastery-gray { background: var(--border); }
+  .heatmap-cell.selected {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 1px;
+  }
+
+  .fact-detail {
+    background: var(--accent-soft);
+    border: 1.5px dashed var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .fact-detail .fact-detail-title {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent-strong);
+    margin-bottom: 6px;
+  }
+
+  .stats-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 24px 10px;
+  }
+
+  .stats-reset-link {
+    display: block;
+    margin: 18px auto 0;
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
   .strategy-box {
     background: var(--accent-soft);
     border: 1.5px dashed var(--accent);
@@ -713,6 +852,10 @@
         <span class="landing-card-title" id="landingBuildTitle">Bygg upp</span>
         <span class="landing-card-desc" id="landingBuildDesc">Lär tabellerna i rätt ordning, med strategier — inte bara utantill.</span>
       </button>
+      <button type="button" class="landing-card" id="chooseStatsBtn">
+        <span class="landing-card-title" id="landingStatsTitle">Statistik</span>
+        <span class="landing-card-desc" id="landingStatsDesc">Se dina starka och svaga fakta.</span>
+      </button>
     </div>
   </div>
 
@@ -735,6 +878,24 @@
       <div class="strategy-example" id="buildStrategyExample"></div>
     </div>
     <button class="start-btn" id="buildStartBtn">Starta</button>
+  </div>
+
+  <!-- STATISTIK -->
+  <div id="statsScreen" class="card" style="display:none;">
+    <button type="button" class="back-link" id="backFromStats">← Tillbaka</button>
+    <h2 id="statsHeading">Din statistik</h2>
+
+    <div id="statsEmpty" class="stats-empty" style="display:none;"></div>
+
+    <div id="statsContent" style="display:none;">
+      <div class="stats-tabs" id="statsTabs">
+        <button type="button" id="statsTabWeak" class="active"></button>
+        <button type="button" id="statsTabGrid"></button>
+      </div>
+      <div id="statsWeakView"></div>
+      <div id="statsGridView" style="display:none;"></div>
+      <button type="button" class="stats-reset-link" id="statsResetBtn"></button>
+    </div>
   </div>
 
   <!-- BUILD UP: step complete -->
@@ -858,6 +1019,14 @@
   const BG_WORST_AT = 8; // seconds/question — fully orange beyond this
   const WRONG_PENALTY_SECONDS = 5; // added per wrong answer before ranking (not shown in raw speed stat)
 
+  // Per-fact mastery thresholds (Statistik screen)
+  const MASTERY_MIN_ATTEMPTS = 3;   // below this: not enough signal to call it either way
+  const MASTERY_GOOD_ACCURACY = 0.85;
+  const MASTERY_OK_ACCURACY = 0.60;
+  const MASTERY_GOOD_SPEED = 4;     // seconds, correct-only avg
+  const MASTERY_OK_SPEED = 6;
+  const MASTERY_YELLOW_MIN_ACCURACY = 0.4; // floor so a fast-but-mostly-wrong fact can't read as "building up"
+
   // ---------- Translations ----------
   const I18N = {
     sv: {
@@ -946,6 +1115,28 @@
         { title: '8:or',          strategy: 'Dubbla 4:ans tabell: 8 × n = 4 × n, dubblat.',                example: '8 × 7 = 28, dubblat = 56' },
         { title: '7:or',          strategy: '5 × n plus 2 × n.',                                           example: '7 × 8 = 40 + 16 = 56' },
       ],
+      statsTitle: 'Statistik',
+      statsDesc: 'Se dina starka och svaga fakta.',
+      statsHeading: 'Din statistik',
+      statsTabWeak: 'Svagaste fakta',
+      statsTabGrid: 'Alla fakta',
+      statsEmptyMessage: 'Ingen statistik än — öva eller kör ett test först!',
+      statsReset: 'Rensa min statistik',
+      statsResetConfirm: 'Rensa all sparad statistik för alla fakta? Det går inte att ångra.',
+      masteryGreen: 'Säker',
+      masteryYellow: 'Under uppbyggnad',
+      masteryRed: 'Behöver övning',
+      masteryGray: 'För lite data',
+      weakOutOf: '{wrong} fel av {attempts} försök',
+      weakSpeed: 'snitt {speed}s',
+      weakMistake: 'Vanligaste felsvar: {answer}',
+      weakAllStrong: 'Inga svaga fakta just nu — bra jobbat!',
+      factDetailPrompt: 'Tryck på en ruta för att se detaljer.',
+      factDetailStats: '{correct} rätt, {wrong} fel av {attempts} försök',
+      factDetailSpeed: 'Snitt: {speed}s',
+      factDetailNoSpeed: 'Ingen tidsdata än',
+      factDetailLastSeen: 'Senast övad: {date}',
+      factDetailNone: 'Inte övad än',
     },
     en: {
       title: 'Times Tables Trainer',
@@ -1033,6 +1224,28 @@
         { title: '8s',          strategy: 'Double the 4s table: 8 × n = 4 × n, doubled.',                 example: '8 × 7 = 28, doubled = 56' },
         { title: '7s',          strategy: '5 × n plus 2 × n.',                                            example: '7 × 8 = 40 + 16 = 56' },
       ],
+      statsTitle: 'Statistics',
+      statsDesc: 'See your strong and weak facts.',
+      statsHeading: 'Your statistics',
+      statsTabWeak: 'Weakest facts',
+      statsTabGrid: 'All facts',
+      statsEmptyMessage: 'No statistics yet — practice or run a test first!',
+      statsReset: 'Clear my statistics',
+      statsResetConfirm: 'Clear all saved statistics for every fact? This cannot be undone.',
+      masteryGreen: 'Confident',
+      masteryYellow: 'Building up',
+      masteryRed: 'Needs practice',
+      masteryGray: 'Not enough data',
+      weakOutOf: '{wrong} wrong of {attempts} tries',
+      weakSpeed: 'avg {speed}s',
+      weakMistake: 'Most common wrong answer: {answer}',
+      weakAllStrong: 'No weak facts right now — nice work!',
+      factDetailPrompt: 'Tap a square to see details.',
+      factDetailStats: '{correct} correct, {wrong} wrong of {attempts} tries',
+      factDetailSpeed: 'Avg: {speed}s',
+      factDetailNoSpeed: 'No timing data yet',
+      factDetailLastSeen: 'Last practiced: {date}',
+      factDetailNone: 'Not practiced yet',
     },
   };
 
@@ -1057,6 +1270,7 @@
   const chooseTestBtn = document.getElementById('chooseTestBtn');
   const choosePracticeBtn = document.getElementById('choosePracticeBtn');
   const chooseBuildBtn = document.getElementById('chooseBuildBtn');
+  const chooseStatsBtn = document.getElementById('chooseStatsBtn');
   const backFromTest = document.getElementById('backFromTest');
   const backFromPractice = document.getElementById('backFromPractice');
 
@@ -1074,6 +1288,16 @@
   const buildStartBtn = document.getElementById('buildStartBtn');
   const buildDoneCaption = document.getElementById('buildDoneCaption');
   const buildNextBtn = document.getElementById('buildNextBtn');
+
+  const statsScreen = document.getElementById('statsScreen');
+  const backFromStats = document.getElementById('backFromStats');
+  const statsEmpty = document.getElementById('statsEmpty');
+  const statsContent = document.getElementById('statsContent');
+  const statsTabWeak = document.getElementById('statsTabWeak');
+  const statsTabGrid = document.getElementById('statsTabGrid');
+  const statsWeakView = document.getElementById('statsWeakView');
+  const statsGridView = document.getElementById('statsGridView');
+  const statsResetBtn = document.getElementById('statsResetBtn');
 
   const testModeButtons = document.querySelectorAll('#testModeChoice button');
   const testStartBtn = document.getElementById('testStartBtn');
@@ -1127,6 +1351,68 @@
   function saveBuildProgress() {
     try {
       localStorage.setItem('tabelltraning_build_progress', JSON.stringify(Array.from(buildCompleted)));
+    } catch (e) { /* ignore */ }
+  }
+
+  // ---------- Per-fact statistics ----------
+  const ATTEMPTS_CAP = 2000;
+
+  let factStats = {};
+  try {
+    const parsed = JSON.parse(localStorage.getItem('tabelltraning_fact_stats') || '{}');
+    factStats = (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch (e) { /* localStorage unavailable — fall back to empty stats */ }
+
+  function saveFactStats() {
+    try {
+      localStorage.setItem('tabelltraning_fact_stats', JSON.stringify(factStats));
+    } catch (e) { /* ignore */ }
+  }
+
+  let attemptsLog = [];
+  try {
+    attemptsLog = JSON.parse(localStorage.getItem('tabelltraning_attempts') || '[]');
+  } catch (e) { /* localStorage unavailable — fall back to empty log */ }
+
+  function saveAttempts() {
+    try {
+      localStorage.setItem('tabelltraning_attempts', JSON.stringify(attemptsLog));
+    } catch (e) { /* ignore */ }
+  }
+
+  function logAttempt(fact, given, correctAnswer, isCorrect, elapsedMs, mode) {
+    if (!factStats[fact]) {
+      factStats[fact] = { attempts: 0, correct: 0, wrong: 0, speedSum: 0, speedCount: 0, wrongAnswerCounts: {}, lastSeen: 0 };
+    }
+    const s = factStats[fact];
+    s.attempts++;
+    s.lastSeen = Date.now();
+    if (isCorrect) {
+      s.correct++;
+      if (typeof elapsedMs === 'number') {
+        s.speedSum += elapsedMs / 1000;
+        s.speedCount++;
+      }
+    } else {
+      s.wrong++;
+      if (Number.isFinite(given)) {
+        const key = String(given);
+        s.wrongAnswerCounts[key] = (s.wrongAnswerCounts[key] || 0) + 1;
+      }
+    }
+    saveFactStats();
+
+    attemptsLog.push({ fact, given, answer: correctAnswer, correct: isCorrect, elapsedMs, mode, ts: Date.now() });
+    if (attemptsLog.length > ATTEMPTS_CAP) attemptsLog = attemptsLog.slice(-ATTEMPTS_CAP);
+    saveAttempts();
+  }
+
+  function clearFactStats() {
+    factStats = {};
+    attemptsLog = [];
+    try {
+      localStorage.removeItem('tabelltraning_fact_stats');
+      localStorage.removeItem('tabelltraning_attempts');
     } catch (e) { /* ignore */ }
   }
 
@@ -1308,7 +1594,7 @@
   // ---------- Screen navigation ----------
   function showScreen(el) {
     [landingScreen, testSetupScreen, setupScreen, buildOverviewScreen,
-     buildStepIntroScreen, buildCompleteScreen, testScreen, resultScreen].forEach(s => {
+     buildStepIntroScreen, buildCompleteScreen, statsScreen, testScreen, resultScreen].forEach(s => {
       s.style.display = 'none';
     });
     el.style.display = el === testScreen ? 'flex' : 'block';
@@ -1328,6 +1614,11 @@
     renderBuildOverview();
     showScreen(buildOverviewScreen);
   });
+  chooseStatsBtn.addEventListener('click', () => {
+    renderStatsScreen();
+    showScreen(statsScreen);
+  });
+  backFromStats.addEventListener('click', goHome);
   function goHome() {
     clearInterval(timerId);
     running = false;
@@ -1460,6 +1751,8 @@
     document.getElementById('landingPracticeDesc').textContent = s.practiceDesc;
     document.getElementById('landingBuildTitle').textContent = s.buildTitle;
     document.getElementById('landingBuildDesc').textContent = s.buildDesc;
+    document.getElementById('landingStatsTitle').textContent = s.statsTitle;
+    document.getElementById('landingStatsDesc').textContent = s.statsDesc;
 
     backFromTest.textContent = s.back;
     backFromPractice.textContent = s.back;
@@ -1495,6 +1788,7 @@
     if (buildOverviewScreen.style.display !== 'none') renderBuildOverview();
     if (buildStepIntroScreen.style.display !== 'none') openBuildStepIntro(buildStepIndex);
     if (buildCompleteScreen.style.display !== 'none') showBuildComplete();
+    if (statsScreen.style.display !== 'none') renderStatsScreen();
   }
 
   langToggle.addEventListener('click', (e) => {
@@ -1600,6 +1894,20 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
+  function factKey(a, b) {
+    return Math.min(a, b) + 'x' + Math.max(a, b);
+  }
+
+  function getMastery(stats) {
+    if (!stats || stats.attempts === 0) return 'gray';
+    if (stats.attempts < MASTERY_MIN_ATTEMPTS) return 'gray';
+    const accuracy = stats.correct / stats.attempts;
+    const avgSpeed = stats.speedCount > 0 ? stats.speedSum / stats.speedCount : null;
+    if (accuracy >= MASTERY_GOOD_ACCURACY && (avgSpeed === null || avgSpeed <= MASTERY_GOOD_SPEED)) return 'green';
+    if (accuracy >= MASTERY_OK_ACCURACY || (accuracy >= MASTERY_YELLOW_MIN_ACCURACY && avgSpeed !== null && avgSpeed <= MASTERY_OK_SPEED)) return 'yellow';
+    return 'red';
+  }
+
   function shuffled(arr) {
     const copy = arr.slice();
     for (let i = copy.length - 1; i > 0; i--) {
@@ -1624,20 +1932,135 @@
     if (op === 'mul') {
       const a = Math.random() < 0.5 ? table : factor;
       const b = a === table ? factor : table;
-      return { text: a + ' × ' + b + ' =', answer: table * factor };
+      return { text: a + ' × ' + b + ' =', answer: table * factor, factA: table, factB: factor };
     } else {
       const dividend = table * factor;
-      return { text: dividend + ' ÷ ' + table + ' =', answer: factor };
+      return { text: dividend + ' ÷ ' + table + ' =', answer: factor, factA: table, factB: factor };
     }
   }
 
   let problemGenerator = makeProblem; // swapped to a build-step generator while in Bygg upp
 
+  function masteryLabel(bucket) {
+    const s = t();
+    if (bucket === 'green') return s.masteryGreen;
+    if (bucket === 'yellow') return s.masteryYellow;
+    if (bucket === 'red') return s.masteryRed;
+    return s.masteryGray;
+  }
+
+  function mostCommonWrongAnswer(wrongAnswerCounts) {
+    let best = null;
+    let bestCount = 0;
+    for (const key in wrongAnswerCounts) {
+      if (wrongAnswerCounts[key] > bestCount) {
+        best = key;
+        bestCount = wrongAnswerCounts[key];
+      }
+    }
+    return best;
+  }
+
+  function renderWeakList() {
+    const s = t();
+    const candidates = Object.keys(factStats)
+      .map(fact => ({ fact, stats: factStats[fact], bucket: getMastery(factStats[fact]) }))
+      .filter(f => f.stats.attempts >= MASTERY_MIN_ATTEMPTS && (f.bucket === 'red' || f.bucket === 'yellow'));
+
+    candidates.sort((x, y) => {
+      const rank = { red: 0, yellow: 1 };
+      if (rank[x.bucket] !== rank[y.bucket]) return rank[x.bucket] - rank[y.bucket];
+      const accX = x.stats.correct / x.stats.attempts;
+      const accY = y.stats.correct / y.stats.attempts;
+      if (accX !== accY) return accX - accY;
+      const speedX = x.stats.speedCount > 0 ? x.stats.speedSum / x.stats.speedCount : 0;
+      const speedY = y.stats.speedCount > 0 ? y.stats.speedSum / y.stats.speedCount : 0;
+      return speedY - speedX;
+    });
+
+    const top = candidates.slice(0, 8);
+
+    if (top.length === 0) {
+      statsWeakView.innerHTML = '<div class="stats-empty">' + s.weakAllStrong + '</div>';
+      return;
+    }
+
+    statsWeakView.innerHTML = '<div class="weak-list">' + top.map(({ fact, stats, bucket }) => {
+      const [a, b] = fact.split('x');
+      const avgSpeed = stats.speedCount > 0 ? (stats.speedSum / stats.speedCount).toFixed(1) : null;
+      const mistake = mostCommonWrongAnswer(stats.wrongAnswerCounts);
+      let html = '<div class="weak-row">';
+      html += '<span class="weak-fact">' + a + ' × ' + b + '</span>';
+      html += '<span class="mastery-pill mastery-' + bucket + '">' + masteryLabel(bucket) + '</span>';
+      html += '<span class="weak-detail">';
+      html += s.weakOutOf.replace('{wrong}', stats.wrong).replace('{attempts}', stats.attempts);
+      if (avgSpeed !== null) html += ' · ' + s.weakSpeed.replace('{speed}', avgSpeed.replace('.', ','));
+      html += '</span>';
+      if (mistake !== null) {
+        html += '<span class="weak-mistake">' + s.weakMistake.replace('{answer}', mistake) + '</span>';
+      }
+      html += '</div>';
+      return html;
+    }).join('') + '</div>';
+  }
+  let selectedHeatmapFact = null;
+
+  function renderFactDetail(fact) {
+    const s = t();
+    const container = document.getElementById('statsFactDetail');
+    if (!container) return;
+    const stats = factStats[fact];
+    const [a, b] = fact.split('x');
+    if (!stats || stats.attempts === 0) {
+      container.innerHTML = '<div class="fact-detail-title">' + a + ' × ' + b + ' = ' + (a * b) + '</div>' + s.factDetailNone;
+      return;
+    }
+    const avgSpeed = stats.speedCount > 0 ? (stats.speedSum / stats.speedCount).toFixed(1).replace('.', ',') : null;
+    const mistake = mostCommonWrongAnswer(stats.wrongAnswerCounts);
+    let html = '<div class="fact-detail-title">' + a + ' × ' + b + ' = ' + (a * b) + '</div>';
+    html += '<div>' + s.factDetailStats.replace('{correct}', stats.correct).replace('{wrong}', stats.wrong).replace('{attempts}', stats.attempts) + '</div>';
+    html += '<div>' + (avgSpeed !== null ? s.factDetailSpeed.replace('{speed}', avgSpeed) : s.factDetailNoSpeed) + '</div>';
+    if (mistake !== null) html += '<div>' + s.weakMistake.replace('{answer}', mistake) + '</div>';
+    html += '<div>' + s.factDetailLastSeen.replace('{date}', new Date(stats.lastSeen).toLocaleDateString(lang === 'sv' ? 'sv-SE' : 'en-US')) + '</div>';
+    container.innerHTML = html;
+  }
+
+  function renderHeatmap() {
+    const s = t();
+    let html = '<div class="heatmap-wrap"><div class="heatmap-grid">';
+    html += '<div class="heatmap-label"></div>';
+    for (let col = 1; col <= 10; col++) html += '<div class="heatmap-label">' + col + '</div>';
+    for (let row = 0; row <= 12; row++) {
+      html += '<div class="heatmap-label">' + row + '</div>';
+      for (let col = 1; col <= 10; col++) {
+        const fact = factKey(row, col);
+        const bucket = getMastery(factStats[fact]);
+        const isSelected = fact === selectedHeatmapFact;
+        html += '<button type="button" class="heatmap-cell mastery-' + bucket + (isSelected ? ' selected' : '')
+          + '" data-fact="' + fact + '" aria-label="' + row + ' × ' + col + '"></button>';
+      }
+    }
+    html += '</div></div>';
+    html += '<div class="fact-detail" id="statsFactDetail">' + s.factDetailPrompt + '</div>';
+    statsGridView.innerHTML = html;
+
+    statsGridView.querySelectorAll('.heatmap-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        selectedHeatmapFact = cell.dataset.fact;
+        statsGridView.querySelectorAll('.heatmap-cell').forEach(c => c.classList.remove('selected'));
+        cell.classList.add('selected');
+        renderFactDetail(selectedHeatmapFact);
+      });
+    });
+
+    if (selectedHeatmapFact) renderFactDetail(selectedHeatmapFact);
+  }
+
   function buildMulProblem(a, b) {
     const flip = Math.random() < 0.5;
     const x = flip ? a : b;
     const y = flip ? b : a;
-    return { text: x + ' × ' + y + ' =', answer: a * b };
+    return { text: x + ' × ' + y + ' =', answer: a * b, factA: a, factB: b };
   }
 
   function buildStepsUpTo(index) {
@@ -1680,11 +2103,14 @@
     while (queue.length < 3) queue.push(problemGenerator());
   }
 
+  let problemShownAt = 0;
+
   function renderCurrent() {
     refillQueue();
     problemText.textContent = queue[0].text;
     preview1.textContent = queue[1].text;
     preview2.textContent = queue[2].text;
+    problemShownAt = performance.now();
   }
 
   function startRound() {
@@ -1836,6 +2262,46 @@
 
   buildStartBtn.addEventListener('click', () => startBuildPhase('focus'));
 
+  function statsTabLabels() {
+    const s = t();
+    statsTabWeak.textContent = s.statsTabWeak;
+    statsTabGrid.textContent = s.statsTabGrid;
+    backFromStats.textContent = s.back;
+    document.getElementById('statsHeading').textContent = s.statsHeading;
+    statsResetBtn.textContent = s.statsReset;
+  }
+
+  let statsActiveTab = 'weak';
+
+  function renderStatsScreen() {
+    const s = t();
+    statsTabLabels();
+
+    const hasAnyData = Object.keys(factStats).length > 0;
+    statsEmpty.style.display = hasAnyData ? 'none' : 'block';
+    statsContent.style.display = hasAnyData ? 'block' : 'none';
+    statsEmpty.textContent = s.statsEmptyMessage;
+    if (!hasAnyData) return;
+
+    statsTabWeak.classList.toggle('active', statsActiveTab === 'weak');
+    statsTabGrid.classList.toggle('active', statsActiveTab === 'grid');
+    statsWeakView.style.display = statsActiveTab === 'weak' ? 'block' : 'none';
+    statsGridView.style.display = statsActiveTab === 'grid' ? 'block' : 'none';
+
+    renderWeakList();
+    renderHeatmap();
+  }
+
+  statsTabWeak.addEventListener('click', () => { statsActiveTab = 'weak'; renderStatsScreen(); });
+  statsTabGrid.addEventListener('click', () => { statsActiveTab = 'grid'; renderStatsScreen(); });
+
+  statsResetBtn.addEventListener('click', () => {
+    if (!window.confirm(t().statsResetConfirm)) return;
+    clearFactStats();
+    selectedHeatmapFact = null;
+    renderStatsScreen();
+  });
+
   function showBuildComplete() {
     const s = t();
     const info = s.buildSteps[buildStepIndex];
@@ -1867,6 +2333,8 @@
     const given = parseInt(raw, 10);
     const correct = queue[0].answer;
     const isCorrect = given === correct;
+    const elapsedMs = performance.now() - problemShownAt;
+    logAttempt(factKey(queue[0].factA, queue[0].factB), given, correct, isCorrect, elapsedMs, mode);
 
     if (isCorrect) {
       correctCount++;
