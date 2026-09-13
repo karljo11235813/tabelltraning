@@ -571,6 +571,59 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
   }
+  .rank-tier.clickable {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .rank-tier.clickable:hover { border-color: var(--accent); }
+  .rank-tier.clickable:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+  .rank-tier .step-badge {
+    flex-shrink: 0;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.66rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .rank-tier .step-badge.done { color: #fff; background: var(--success); }
+  .rank-tier .step-badge.next { color: #fff; background: var(--accent); }
+
+  .strategy-box {
+    background: var(--accent-soft);
+    border: 1.5px dashed var(--accent);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 4px 0 20px;
+  }
+  .strategy-box .strategy-label {
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+  .strategy-box .strategy-text {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .strategy-box .strategy-example {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent-strong);
+    font-variant-numeric: tabular-nums;
+  }
   .result-stats {
     display: flex;
     justify-content: center;
@@ -656,6 +709,41 @@
         <span class="landing-card-title" id="landingPracticeTitle">Öva</span>
         <span class="landing-card-desc" id="landingPracticeDesc">Träna fritt — välj tabeller och räknesätt själv.</span>
       </button>
+      <button type="button" class="landing-card" id="chooseBuildBtn">
+        <span class="landing-card-title" id="landingBuildTitle">Bygg upp</span>
+        <span class="landing-card-desc" id="landingBuildDesc">Lär tabellerna i rätt ordning, med strategier — inte bara utantill.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- BUILD UP: overview -->
+  <div id="buildOverviewScreen" class="card" style="display:none;">
+    <button type="button" class="back-link" id="backFromBuildOverview">← Tillbaka</button>
+    <h2 id="buildOverviewHeading">Bygg upp tabellerna</h2>
+    <p class="choice-sub" id="buildOverviewIntro">Varje steg lär dig en tabell genom en strategi.</p>
+    <div class="rank-ladder" id="buildLadder" style="display:flex; margin-top:14px;"></div>
+  </div>
+
+  <!-- BUILD UP: step intro -->
+  <div id="buildStepIntroScreen" class="card" style="display:none;">
+    <button type="button" class="back-link" id="backFromBuildIntro">← Alla steg</button>
+    <div class="choice-sub" id="buildStepOf">Steg 1 av 11</div>
+    <h2 id="buildStepTitle">2:or</h2>
+    <div class="strategy-box">
+      <div class="strategy-label" id="buildStrategyLabel">Så kan du tänka</div>
+      <div class="strategy-text" id="buildStrategyText"></div>
+      <div class="strategy-example" id="buildStrategyExample"></div>
+    </div>
+    <button class="start-btn" id="buildStartBtn">Starta</button>
+  </div>
+
+  <!-- BUILD UP: step complete -->
+  <div id="buildCompleteScreen" class="card" style="display:none;">
+    <div style="text-align:center;">
+      <h2 id="buildDoneHeading">Bra jobbat!</h2>
+      <p class="result-caption" id="buildDoneCaption">Du har gått igenom 2:or.</p>
+      <button class="start-btn" id="buildNextBtn">Nästa: 10:or</button>
+      <button type="button" class="back-link" id="backFromBuildComplete" style="display:block; margin:14px auto 0;">← Alla steg</button>
     </div>
   </div>
 
@@ -746,6 +834,25 @@
   const ROUND_SECONDS = 60;
   const COUNT_TARGET = 100;
   const MAX_TABLE = 12;
+
+  // ---------- Bygg upp: anchor-and-strategy learning path ----------
+  // Order and rationale from docs/multiplikationstabeller_sekvensering_forskningsoversikt.md:
+  // anchors (2, 10, 5) -> 0/1 and squares -> derive the rest via strategies.
+  const BUILD_STEPS_META = [
+    { kind: 'table',   addsTables: [2] },
+    { kind: 'table',   addsTables: [10] },
+    { kind: 'table',   addsTables: [5] },
+    { kind: 'combo',   addsTables: [0, 1] },
+    { kind: 'squares', addsTables: [] },
+    { kind: 'table',   addsTables: [3] },
+    { kind: 'table',   addsTables: [4] },
+    { kind: 'table',   addsTables: [9] },
+    { kind: 'table',   addsTables: [6] },
+    { kind: 'table',   addsTables: [8] },
+    { kind: 'table',   addsTables: [7] },
+  ];
+  const BUILD_FOCUS_LEN = 6;
+  const BUILD_MIX_LEN = 10;
   const ACCEPTABLE_THRESHOLD = 2; // seconds/question — green cutoff & ladder marker
   const BG_WORST_AT = 8; // seconds/question — fully orange beyond this
   const WRONG_PENALTY_SECONDS = 5; // added per wrong answer before ranking (not shown in raw speed stat)
@@ -759,8 +866,24 @@
       testDesc: 'Utvärdera dig själv — alla tabeller, multiplikation och division.',
       practiceTitle: 'Öva',
       practiceDesc: 'Träna fritt — välj tabeller och räknesätt själv.',
+      buildTitle: 'Bygg upp',
+      buildDesc: 'Lär tabellerna i rätt ordning, med strategier — inte bara utantill.',
       back: '← Tillbaka',
       testInfo: 'Alla tabeller (1–12), multiplikation och division blandat.',
+      buildOverviewHeading: 'Bygg upp tabellerna',
+      buildOverviewIntro: 'Varje steg lär dig en tabell genom en strategi, inte bara utantill. Ordningen är inte 1, 2, 3 ... — den bygger vidare från det du redan kan.',
+      stepOf: 'Steg {i} av {n}',
+      strategyLabel: 'Så kan du tänka',
+      startStep: 'Starta',
+      phaseFocus: 'Fokusera',
+      phaseMix: 'Blanda med gamla',
+      stepDoneHeading: 'Bra jobbat!',
+      stepDoneCaption: 'Du har gått igenom {title}.',
+      nextStepBtn: 'Nästa: {title}',
+      allStepsDoneBtn: 'Tillbaka till alla steg',
+      backToOverview: '← Alla steg',
+      doneBadge: 'KLAR',
+      nextBadge: 'NÄSTA',
       chooseMode: 'Välj läge',
       mode1min: '1 minut',
       mode100: '100 frågor',
@@ -809,6 +932,19 @@
         { max: 10,       label: 'Huvudräknaren',     range: '7–10 sekunder', desc: 'Räknar i huvudet, men behöver fundera lite.' },
         { max: Infinity, label: 'Fingerräknaren',    range: '> 10 sekunder', desc: 'Räknar på fingrarna. Alla måste börja någonstans!' },
       ],
+      buildSteps: [
+        { title: '2:or',          strategy: 'Dubbla talet: 2 × n är samma som n + n.',                    example: '2 × 6 = 6 + 6 = 12' },
+        { title: '10:or',         strategy: 'Tio grupper: 10 × n är n följt av en nolla.',                 example: '10 × 7 = 70' },
+        { title: '5:or',          strategy: 'Hälften av 10:or: 5 × n är hälften av 10 × n.',               example: '5 × 8 = hälften av 80 = 40' },
+        { title: '0:or och 1:or', strategy: '0 grupper ger 0. 1 grupp ger samma tal tillbaka.',            example: '0 × 9 = 0    1 × 9 = 9' },
+        { title: 'Kvadrater',     strategy: 'n × n — samma tal två gånger. Ett bra ankare för svåra fakta.', example: '7 × 7 = 49' },
+        { title: '3:or',          strategy: 'Lägg till en grupp till 2:ans tabell: 3 × n = 2 × n + n.',    example: '3 × 7 = 14 + 7 = 21' },
+        { title: '4:or',          strategy: 'Dubbla 2:ans tabell: 4 × n = 2 × n, dubblat.',                example: '4 × 6 = 12, dubblat = 24' },
+        { title: '9:or',          strategy: '10 × n minus en grupp: 9 × n = 10 × n − n.',                  example: '9 × 6 = 60 − 6 = 54' },
+        { title: '6:or',          strategy: '5 × n plus en grupp: 6 × n = 5 × n + n.',                     example: '6 × 7 = 35 + 7 = 42' },
+        { title: '8:or',          strategy: 'Dubbla 4:ans tabell: 8 × n = 4 × n, dubblat.',                example: '8 × 7 = 28, dubblat = 56' },
+        { title: '7:or',          strategy: '5 × n plus 2 × n.',                                           example: '7 × 8 = 40 + 16 = 56' },
+      ],
     },
     en: {
       title: 'Times Tables Trainer',
@@ -817,8 +953,24 @@
       testDesc: 'Evaluate yourself — all tables, multiplication and division.',
       practiceTitle: 'Practice',
       practiceDesc: 'Train freely — choose your own tables and operation.',
+      buildTitle: 'Build Up',
+      buildDesc: 'Learn the tables in the right order, with strategies — not just by rote.',
       back: '← Back',
       testInfo: 'All tables (1–12), multiplication and division mixed.',
+      buildOverviewHeading: 'Build up the tables',
+      buildOverviewIntro: 'Each step teaches one table through a strategy, not just memorization. The order isn’t 1, 2, 3 ... — it builds on what you already know.',
+      stepOf: 'Step {i} of {n}',
+      strategyLabel: 'How to think about it',
+      startStep: 'Start',
+      phaseFocus: 'Focus',
+      phaseMix: 'Mix with what you know',
+      stepDoneHeading: 'Nice work!',
+      stepDoneCaption: 'You’ve gone through {title}.',
+      nextStepBtn: 'Next: {title}',
+      allStepsDoneBtn: 'Back to all steps',
+      backToOverview: '← All steps',
+      doneBadge: 'DONE',
+      nextBadge: 'NEXT',
       chooseMode: 'Choose mode',
       mode1min: '1 minute',
       mode100: '100 questions',
@@ -867,6 +1019,19 @@
         { max: 10,       label: 'The Mental Mathematician',  range: '7–10 seconds',  desc: 'Does it in their head, but needs a moment to think.' },
         { max: Infinity, label: 'The Finger Counter',        range: '> 10 seconds',  desc: 'Counts on fingers. Everyone starts somewhere!' },
       ],
+      buildSteps: [
+        { title: '2s',          strategy: 'Double the number: 2 × n is the same as n + n.',              example: '2 × 6 = 6 + 6 = 12' },
+        { title: '10s',         strategy: 'Ten groups: 10 × n is n followed by a zero.',                  example: '10 × 7 = 70' },
+        { title: '5s',          strategy: 'Half of 10s: 5 × n is half of 10 × n.',                        example: '5 × 8 = half of 80 = 40' },
+        { title: '0s and 1s',   strategy: '0 groups gives 0. 1 group gives the same number back.',        example: '0 × 9 = 0    1 × 9 = 9' },
+        { title: 'Squares',     strategy: 'n × n — the same number twice. A great anchor for hard facts.', example: '7 × 7 = 49' },
+        { title: '3s',          strategy: 'Add one more group to the 2s table: 3 × n = 2 × n + n.',       example: '3 × 7 = 14 + 7 = 21' },
+        { title: '4s',          strategy: 'Double the 2s table: 4 × n = 2 × n, doubled.',                 example: '4 × 6 = 12, doubled = 24' },
+        { title: '9s',          strategy: '10 × n minus one group: 9 × n = 10 × n − n.',                  example: '9 × 6 = 60 − 6 = 54' },
+        { title: '6s',          strategy: '5 × n plus one group: 6 × n = 5 × n + n.',                     example: '6 × 7 = 35 + 7 = 42' },
+        { title: '8s',          strategy: 'Double the 4s table: 8 × n = 4 × n, doubled.',                 example: '8 × 7 = 28, doubled = 56' },
+        { title: '7s',          strategy: '5 × n plus 2 × n.',                                            example: '7 × 8 = 40 + 16 = 56' },
+      ],
     },
   };
 
@@ -890,8 +1055,24 @@
 
   const chooseTestBtn = document.getElementById('chooseTestBtn');
   const choosePracticeBtn = document.getElementById('choosePracticeBtn');
+  const chooseBuildBtn = document.getElementById('chooseBuildBtn');
   const backFromTest = document.getElementById('backFromTest');
   const backFromPractice = document.getElementById('backFromPractice');
+
+  const buildOverviewScreen = document.getElementById('buildOverviewScreen');
+  const buildStepIntroScreen = document.getElementById('buildStepIntroScreen');
+  const buildCompleteScreen = document.getElementById('buildCompleteScreen');
+  const buildLadder = document.getElementById('buildLadder');
+  const backFromBuildOverview = document.getElementById('backFromBuildOverview');
+  const backFromBuildIntro = document.getElementById('backFromBuildIntro');
+  const backFromBuildComplete = document.getElementById('backFromBuildComplete');
+  const buildStepOf = document.getElementById('buildStepOf');
+  const buildStepTitle = document.getElementById('buildStepTitle');
+  const buildStrategyText = document.getElementById('buildStrategyText');
+  const buildStrategyExample = document.getElementById('buildStrategyExample');
+  const buildStartBtn = document.getElementById('buildStartBtn');
+  const buildDoneCaption = document.getElementById('buildDoneCaption');
+  const buildNextBtn = document.getElementById('buildNextBtn');
 
   const testModeButtons = document.querySelectorAll('#testModeChoice button');
   const testStartBtn = document.getElementById('testStartBtn');
@@ -930,6 +1111,22 @@
   let operation = 'mul';
   let selectedTables = new Set(Array.from({ length: MAX_TABLE }, (_, i) => i + 1));
   let originScreen = 'practice'; // which setup screen to return to on "again"
+
+  // ---------- Bygg upp state ----------
+  let buildStepIndex = 0;
+  let buildPhase = 'focus'; // 'focus' | 'mix'
+  let buildPhaseLen = 0;
+  let buildCompleted = new Set();
+  try {
+    const savedProgress = JSON.parse(localStorage.getItem('tabelltraning_build_progress') || '[]');
+    buildCompleted = new Set(savedProgress);
+  } catch (e) { /* localStorage unavailable — fall back to empty progress */ }
+
+  function saveBuildProgress() {
+    try {
+      localStorage.setItem('tabelltraning_build_progress', JSON.stringify(Array.from(buildCompleted)));
+    } catch (e) { /* ignore */ }
+  }
 
   // ---------- Round state ----------
   let queue = [];
@@ -1108,19 +1305,26 @@
 
   // ---------- Screen navigation ----------
   function showScreen(el) {
-    [landingScreen, testSetupScreen, setupScreen, testScreen, resultScreen].forEach(s => {
+    [landingScreen, testSetupScreen, setupScreen, buildOverviewScreen,
+     buildStepIntroScreen, buildCompleteScreen, testScreen, resultScreen].forEach(s => {
       s.style.display = 'none';
     });
     el.style.display = el === testScreen ? 'flex' : 'block';
   }
 
   chooseTestBtn.addEventListener('click', () => {
+    if (mode === 'build') mode = 'time';
     syncModeUI();
     showScreen(testSetupScreen);
   });
   choosePracticeBtn.addEventListener('click', () => {
+    if (mode === 'build') mode = 'time';
     syncModeUI();
     showScreen(setupScreen);
+  });
+  chooseBuildBtn.addEventListener('click', () => {
+    renderBuildOverview();
+    showScreen(buildOverviewScreen);
   });
   function goHome() {
     clearInterval(timerId);
@@ -1132,6 +1336,15 @@
 
   backFromTest.addEventListener('click', goHome);
   backFromPractice.addEventListener('click', goHome);
+  backFromBuildOverview.addEventListener('click', goHome);
+  backFromBuildIntro.addEventListener('click', () => {
+    renderBuildOverview();
+    showScreen(buildOverviewScreen);
+  });
+  backFromBuildComplete.addEventListener('click', () => {
+    renderBuildOverview();
+    showScreen(buildOverviewScreen);
+  });
   headerTitle.addEventListener('click', goHome);
 
   // ---------- Mode / operation / tables helpers ----------
@@ -1165,9 +1378,12 @@
   function renderLiveLabel() {
     if (mode === 'time') {
       liveScoreLabel.innerHTML = t().liveCorrect + '<b id="liveScore">' + correctCount + '</b>';
-    } else {
+    } else if (mode === 'count') {
       const totalAnswered = correctCount + wrongCount;
       liveScoreLabel.innerHTML = t().liveQuestion + '<b id="liveScore">' + totalAnswered + '</b> / ' + COUNT_TARGET;
+    } else {
+      const totalAnswered = correctCount + wrongCount;
+      liveScoreLabel.innerHTML = t().liveQuestion + '<b id="liveScore">' + totalAnswered + '</b> / ' + buildPhaseLen;
     }
   }
 
@@ -1240,6 +1456,8 @@
     document.getElementById('landingTestDesc').textContent = s.testDesc;
     document.getElementById('landingPracticeTitle').textContent = s.practiceTitle;
     document.getElementById('landingPracticeDesc').textContent = s.practiceDesc;
+    document.getElementById('landingBuildTitle').textContent = s.buildTitle;
+    document.getElementById('landingBuildDesc').textContent = s.buildDesc;
 
     backFromTest.textContent = s.back;
     backFromPractice.textContent = s.back;
@@ -1271,6 +1489,10 @@
 
     renderLiveLabel();
     if (hasResult) renderResultText();
+
+    if (buildOverviewScreen.style.display !== 'none') renderBuildOverview();
+    if (buildStepIntroScreen.style.display !== 'none') openBuildStepIntro(buildStepIndex);
+    if (buildCompleteScreen.style.display !== 'none') showBuildComplete();
   }
 
   langToggle.addEventListener('click', (e) => {
@@ -1398,8 +1620,50 @@
     }
   }
 
+  let problemGenerator = makeProblem; // swapped to a build-step generator while in Bygg upp
+
+  function buildMulProblem(a, b) {
+    const flip = Math.random() < 0.5;
+    const x = flip ? a : b;
+    const y = flip ? b : a;
+    return { text: x + ' × ' + y + ' =', answer: a * b };
+  }
+
+  function buildStepsUpTo(index) {
+    const nums = new Set();
+    let includeSquares = false;
+    for (let i = 0; i <= index; i++) {
+      const step = BUILD_STEPS_META[i];
+      if (step.kind === 'squares') includeSquares = true;
+      else step.addsTables.forEach(n => nums.add(n));
+    }
+    return { nums: Array.from(nums), includeSquares };
+  }
+
+  function makeBuildProblem() {
+    const step = BUILD_STEPS_META[buildStepIndex];
+
+    if (buildPhase === 'focus') {
+      if (step.kind === 'squares') {
+        const n = randInt(2, 10);
+        return buildMulProblem(n, n);
+      }
+      const base = step.addsTables[randInt(0, step.addsTables.length - 1)];
+      return buildMulProblem(base, randInt(1, 10));
+    }
+
+    // mix phase: draw from everything unlocked so far, including this step
+    const { nums, includeSquares } = buildStepsUpTo(buildStepIndex);
+    if (includeSquares && Math.random() < 0.25) {
+      const n = randInt(2, 10);
+      return buildMulProblem(n, n);
+    }
+    const table = nums[randInt(0, nums.length - 1)];
+    return buildMulProblem(table, randInt(1, 10));
+  }
+
   function refillQueue() {
-    while (queue.length < 3) queue.push(makeProblem());
+    while (queue.length < 3) queue.push(problemGenerator());
   }
 
   function renderCurrent() {
@@ -1417,6 +1681,7 @@
     hasResult = false;
     roundStartTime = performance.now();
     document.body.style.backgroundColor = '';
+    problemGenerator = makeProblem;
     startMusic();
 
     showScreen(testScreen);
@@ -1470,6 +1735,114 @@
     renderResultText();
   }
 
+  // ---------- Bygg upp: untimed focus -> mix phases per step ----------
+  function startBuildPhase(phase) {
+    mode = 'build';
+    buildPhase = phase;
+    buildPhaseLen = phase === 'focus' ? BUILD_FOCUS_LEN : BUILD_MIX_LEN;
+    correctCount = 0;
+    wrongCount = 0;
+    queue = [];
+    running = true;
+    hasResult = false;
+    problemGenerator = makeBuildProblem;
+    document.body.style.backgroundColor = '';
+    clearInterval(timerId);
+    timerId = null;
+
+    showScreen(testScreen);
+    answerInput.value = '';
+    timerDisplay.textContent = phase === 'focus' ? t().phaseFocus : t().phaseMix;
+    timerBar.style.width = '0%';
+    renderLiveLabel();
+    renderCurrent();
+    answerInput.focus();
+  }
+
+  function completeBuildPhase() {
+    running = false;
+    if (buildPhase === 'focus') {
+      startBuildPhase('mix');
+      return;
+    }
+    buildCompleted.add(buildStepIndex);
+    saveBuildProgress();
+    showBuildComplete();
+  }
+
+  function renderBuildOverview() {
+    const s = t();
+    document.getElementById('buildOverviewHeading').textContent = s.buildOverviewHeading;
+    document.getElementById('buildOverviewIntro').textContent = s.buildOverviewIntro;
+    backFromBuildOverview.textContent = s.back;
+
+    const firstOpenIndex = BUILD_STEPS_META.findIndex((_, i) => !buildCompleted.has(i));
+    buildLadder.innerHTML = BUILD_STEPS_META.map((_, i) => {
+      const info = s.buildSteps[i];
+      const done = buildCompleted.has(i);
+      const isNext = !done && i === firstOpenIndex;
+      const badge = done
+        ? '<span class="step-badge done">' + s.doneBadge + '</span>'
+        : (isNext ? '<span class="step-badge next">' + s.nextBadge + '</span>' : '');
+      return '<button type="button" class="rank-tier clickable' + (done ? ' achieved' : '') + '" data-step="' + i + '">'
+        + '<span class="tier-step">' + (i + 1) + '</span>'
+        + '<span class="tier-body">'
+        +   '<span class="tier-top">'
+        +     '<span class="tier-name">' + info.title + '</span>'
+        +   '</span>'
+        +   '<span class="tier-desc">' + info.strategy + '</span>'
+        + '</span>'
+        + badge
+        + '</button>';
+    }).join('');
+  }
+
+  buildLadder.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-step]');
+    if (!btn) return;
+    openBuildStepIntro(parseInt(btn.dataset.step, 10));
+  });
+
+  function openBuildStepIntro(index) {
+    buildStepIndex = index;
+    const s = t();
+    const info = s.buildSteps[index];
+    document.getElementById('buildStepOf').textContent = s.stepOf
+      .replace('{i}', index + 1).replace('{n}', BUILD_STEPS_META.length);
+    buildStepTitle.textContent = info.title;
+    document.getElementById('buildStrategyLabel').textContent = s.strategyLabel;
+    buildStrategyText.textContent = info.strategy;
+    buildStrategyExample.textContent = info.example;
+    buildStartBtn.textContent = s.startStep;
+    backFromBuildIntro.textContent = s.backToOverview;
+    showScreen(buildStepIntroScreen);
+  }
+
+  buildStartBtn.addEventListener('click', () => startBuildPhase('focus'));
+
+  function showBuildComplete() {
+    const s = t();
+    const info = s.buildSteps[buildStepIndex];
+    document.getElementById('buildDoneHeading').textContent = s.stepDoneHeading;
+    buildDoneCaption.textContent = s.stepDoneCaption.replace('{title}', info.title);
+    backFromBuildComplete.textContent = s.backToOverview;
+
+    const hasNext = buildStepIndex < BUILD_STEPS_META.length - 1;
+    buildNextBtn.textContent = hasNext
+      ? s.nextStepBtn.replace('{title}', s.buildSteps[buildStepIndex + 1].title)
+      : s.allStepsDoneBtn;
+    buildNextBtn.onclick = () => {
+      if (hasNext) {
+        openBuildStepIntro(buildStepIndex + 1);
+      } else {
+        renderBuildOverview();
+        showScreen(buildOverviewScreen);
+      }
+    };
+
+    showScreen(buildCompleteScreen);
+  }
+
   function submitAnswer() {
     if (!running) return;
     const raw = answerInput.value.trim();
@@ -1496,6 +1869,13 @@
       timerBar.style.width = (totalAnswered / COUNT_TARGET * 100) + '%';
       if (totalAnswered >= COUNT_TARGET) {
         endRound();
+        return;
+      }
+    } else if (mode === 'build') {
+      const totalAnswered = correctCount + wrongCount;
+      timerBar.style.width = (totalAnswered / buildPhaseLen * 100) + '%';
+      if (totalAnswered >= buildPhaseLen) {
+        completeBuildPhase();
         return;
       }
     }
