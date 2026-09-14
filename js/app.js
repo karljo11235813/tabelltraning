@@ -546,7 +546,7 @@ function renderHeatmap() {
   let html = '<div class="heatmap-wrap"><div class="heatmap-grid">';
   html += '<div class="heatmap-label"></div>';
   for (let col = 1; col <= MAX_TABLE; col++) html += '<div class="heatmap-label">' + col + '</div>';
-  for (let row = 0; row <= 12; row++) {
+  for (let row = 1; row <= 12; row++) {
     html += '<div class="heatmap-label">' + row + '</div>';
     for (let col = 1; col <= MAX_TABLE; col++) {
       const fact = factKey(row, col);
