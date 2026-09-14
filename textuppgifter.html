@@ -215,32 +215,35 @@
     outline-offset: 2px;
   }
 
-  .answer-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 18px;
-    flex-wrap: wrap;
+  .op-feedback {
+    min-height: 1.2em;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 10px;
   }
-  #answerInput {
-    width: 140px;
+  .op-feedback.correct { color: var(--success); }
+  .op-feedback.wrong { color: var(--danger); }
+
+  .computation-input {
+    width: 100%;
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.5rem;
-    text-align: center;
-    padding: 10px;
+    font-size: 1.25rem;
+    padding: 10px 12px;
     border: 2px solid var(--accent);
     border-radius: 9px;
     outline: none;
     background: var(--surface);
     color: var(--text);
   }
-  #answerInput:focus-visible {
+  .computation-input:focus-visible {
     outline: 3px solid var(--accent-strong);
     outline-offset: 2px;
   }
   .answer-unit {
-    font-size: 0.9rem;
+    display: block;
+    font-size: 0.85rem;
     color: var(--text-muted);
+    margin-top: 6px;
   }
 
   .feedback {
@@ -332,6 +335,10 @@
         <button type="button" data-op="×">×</button>
         <button type="button" data-op="/">/</button>
       </div>
+      <div class="op-feedback" id="opFeedback1"></div>
+
+      <div class="step-label" id="calc1Label">Skriv uträkningen med siffror</div>
+      <input type="text" class="computation-input" id="computationInput1" placeholder="t.ex. 18 + 7" autocomplete="off" aria-label="Uträkning">
 
       <div id="step2Block" style="display:none;">
         <div class="step-label">Steg 2: vilket räknesätt?</div>
@@ -341,13 +348,13 @@
           <button type="button" data-op="×">×</button>
           <button type="button" data-op="/">/</button>
         </div>
+        <div class="op-feedback" id="opFeedback2"></div>
+
+        <div class="step-label">Steg 2: skriv uträkningen med siffror</div>
+        <input type="text" class="computation-input" id="computationInput2" placeholder="t.ex. 72 − 17" autocomplete="off" aria-label="Uträkning steg 2">
       </div>
 
-      <div class="answer-row">
-        <label for="answerInput" class="step-label" style="margin:0;">Svar:</label>
-        <input type="text" inputmode="decimal" id="answerInput" autocomplete="off" aria-label="Svar">
-        <span class="answer-unit" id="answerUnit"></span>
-      </div>
+      <span class="answer-unit" id="answerUnit"></span>
 
       <div class="feedback" id="feedback"></div>
     </div>
@@ -357,7 +364,7 @@
       <button type="button" class="secondary" id="nextBtn">Nästa</button>
     </div>
 
-    <div class="hint">Läs uppgiften, välj räknesätt och skriv svaret. Vid flerstegsproblem: välj räknesätt för båda stegen och skriv slutsvaret.</div>
+    <div class="hint">Läs uppgiften, välj räknesätt (du får direkt besked) och skriv sedan uträkningen med siffror, t.ex. 18 + 7. Vid flerstegsproblem: gör båda stegen.</div>
   </div>
 </main>
 
@@ -452,11 +459,13 @@
   };
   const CATEGORY_KEYS = Object.keys(BANK);
 
+  // Symbols shown on the op buttons/feedback vs. the JS operator they mean
+  // once a student's typed expression is sanitized.
+  const OP_TO_JS = { '+': '+', '−': '-', '×': '*', '/': '/' };
+
   let currentCategory = 'mixed';
   let current = null;
   let lastText = null;
-  let selectedOp1 = null;
-  let selectedOp2 = null;
   let correctCount = 0;
   let totalCount = 0;
   let awaitingNext = false;
@@ -468,9 +477,12 @@
   const problemText = document.getElementById('problemText');
   const step1Label = document.getElementById('step1Label');
   const opRow1 = document.getElementById('opRow1');
+  const opFeedback1 = document.getElementById('opFeedback1');
+  const computationInput1 = document.getElementById('computationInput1');
   const step2Block = document.getElementById('step2Block');
   const opRow2 = document.getElementById('opRow2');
-  const answerInput = document.getElementById('answerInput');
+  const opFeedback2 = document.getElementById('opFeedback2');
+  const computationInput2 = document.getElementById('computationInput2');
   const answerUnit = document.getElementById('answerUnit');
   const feedback = document.getElementById('feedback');
   const checkBtn = document.getElementById('checkBtn');
@@ -478,6 +490,55 @@
 
   function fmtSv(n) {
     return Number.isInteger(n) ? String(n) : String(n).replace('.', ',');
+  }
+
+  // ---- Free-text computation parsing ----
+  // A student types the actual computation, e.g. "18 + 7" — this is
+  // evaluated directly rather than compared to a hidden operand pair, so
+  // any numbers that reach the right operator sequence and final value work.
+  function sanitizeExpr(raw) {
+    let s = raw.trim().replace(/=\s*$/, '');
+    s = s.replace(/[×·xX]/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+    s = s.replace(/,/g, '.').replace(/\s+/g, '');
+    return s;
+  }
+
+  function isValidExprChars(s) {
+    return s.length > 0 && /^[0-9.+\-*/()]+$/.test(s);
+  }
+
+  // Binary operators only, in left-to-right order — a leading '-' or one
+  // right after '(' or another operator is a sign, not an operation.
+  function extractOperators(s) {
+    const ops = [];
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (c === '+' || c === '-' || c === '*' || c === '/') {
+        const prev = s[i - 1];
+        const isUnary = i === 0 || prev === '(' || '+-*/'.includes(prev);
+        if (!isUnary) ops.push(c);
+      }
+    }
+    return ops;
+  }
+
+  function evalExpr(s) {
+    try {
+      const v = Function('"use strict"; return (' + s + ')')();
+      return Number.isFinite(v) ? v : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function gradeComputation(inputEl, expectedOpSymbol) {
+    const raw = inputEl.value.trim();
+    if (raw === '') return { opOk: false, value: null };
+    const s = sanitizeExpr(raw);
+    if (!isValidExprChars(s)) return { opOk: false, value: null };
+    const opsUsed = extractOperators(s);
+    const opOk = opsUsed.length === 1 && opsUsed[0] === OP_TO_JS[expectedOpSymbol];
+    return { opOk, value: evalExpr(s) };
   }
 
   function pickProblem() {
@@ -501,33 +562,58 @@
     step1Label.textContent = isMultiStep ? 'Steg 1: vilket räknesätt?' : 'Vilket räknesätt passar?';
     step2Block.style.display = isMultiStep ? 'block' : 'none';
 
-    selectedOp1 = null;
-    selectedOp2 = null;
     opRow1.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     opRow2.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    opFeedback1.textContent = '';
+    opFeedback1.className = 'op-feedback';
+    opFeedback2.textContent = '';
+    opFeedback2.className = 'op-feedback';
 
-    answerInput.value = '';
-    answerUnit.textContent = current.unit ? '(' + current.unit + ')' : '';
+    computationInput1.value = '';
+    computationInput2.value = '';
+    answerUnit.textContent = current.unit ? 'Svaret ska vara i ' + current.unit + '.' : '';
     feedback.innerHTML = '';
     problemBox.classList.remove('flash-correct', 'flash-wrong');
     awaitingNext = false;
-    answerInput.focus();
+    opRow1.querySelector('button').focus();
   }
+
+  // Immediate feedback the instant a räknesätt button is clicked — this is
+  // a formative nudge only, not part of the graded check below.
+  function wireOpRow(rowEl, feedbackEl, getExpectedOp) {
+    rowEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-op]');
+      if (!btn) return;
+      rowEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+      const expected = getExpectedOp();
+      const correct = btn.dataset.op === expected;
+      feedbackEl.textContent = correct ? 'Rätt!' : 'Fel, försök igen.';
+      feedbackEl.className = 'op-feedback ' + (correct ? 'correct' : 'wrong');
+    });
+  }
+  wireOpRow(opRow1, opFeedback1, () => Array.isArray(current.ops) ? current.ops[0] : current.op);
+  wireOpRow(opRow2, opFeedback2, () => current.ops[1]);
 
   function checkAnswer() {
     if (awaitingNext) {
       newProblem();
       return;
     }
-    const raw = answerInput.value.trim();
-    if (raw === '') return;
-
-    const given = parseFloat(raw.replace(/\s+/g, '').replace(',', '.'));
     const isMultiStep = Array.isArray(current.ops);
-    const opCorrect = isMultiStep
-      ? (selectedOp1 === current.ops[0] && selectedOp2 === current.ops[1])
-      : (selectedOp1 === current.op);
-    const answerCorrect = Number.isFinite(given) && Math.abs(given - current.answer) < 0.005;
+
+    const step1 = gradeComputation(computationInput1, isMultiStep ? current.ops[0] : current.op);
+    if (computationInput1.value.trim() === '') return;
+    let opCorrect = step1.opOk;
+    let finalValue = step1.value;
+
+    if (isMultiStep) {
+      const step2 = gradeComputation(computationInput2, current.ops[1]);
+      if (computationInput2.value.trim() === '') return;
+      opCorrect = opCorrect && step2.opOk;
+      finalValue = step2.value;
+    }
+
+    const answerCorrect = finalValue !== null && Math.abs(finalValue - current.answer) < 0.005;
 
     totalCount++;
     if (opCorrect && answerCorrect) correctCount++;
@@ -558,27 +644,16 @@
     newProblem();
   });
 
-  opRow1.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-op]');
-    if (!btn) return;
-    selectedOp1 = btn.dataset.op;
-    opRow1.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
-  });
-  opRow2.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-op]');
-    if (!btn) return;
-    selectedOp2 = btn.dataset.op;
-    opRow2.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
-  });
-
   checkBtn.addEventListener('click', checkAnswer);
   nextBtn.addEventListener('click', newProblem);
 
-  answerInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.repeat) {
-      e.preventDefault();
-      checkAnswer();
-    }
+  [computationInput1, computationInput2].forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.repeat) {
+        e.preventDefault();
+        checkAnswer();
+      }
+    });
   });
 
   newProblem();
