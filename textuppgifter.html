@@ -571,6 +571,16 @@
     return item;
   }
 
+  // Per-step gating: step 2 isn't reachable until step 1's numbers AND
+  // result are verified correct (not just the operation choice). This
+  // keeps the marking unambiguous — a mistake in step 2 can never be
+  // confused with a leftover mistake in step 1, because step 1 is already
+  // locked in as correct by the time step 2 becomes visible at all.
+  let step1Done = false;
+  let step2Done = false;
+  let step1WrongAttempt = false;
+  let step2WrongAttempt = false;
+
   function newProblem() {
     current = pickProblem();
     const multi = isMultiStep();
@@ -586,6 +596,11 @@
     calcOp1.textContent = '';
     calcOp2.textContent = '';
 
+    step1Done = false;
+    step2Done = false;
+    step1WrongAttempt = false;
+    step2WrongAttempt = false;
+
     answerUnit.textContent = current.unit ? 'Svaret ska vara i ' + current.unit + '.' : '';
     feedback.innerHTML = '';
     problemBox.classList.remove('flash-correct', 'flash-wrong');
@@ -594,9 +609,10 @@
   }
 
   // Immediate feedback the instant a räknesätt button is clicked. Wrong
-  // choices get a warning and can be retried; a correct choice reveals that
-  // step's number-box template (and, for step 1, step 2's op buttons too).
-  function wireOpRow(rowEl, feedbackEl, calcRowEl, calcOpEl, getExpectedOp, onCorrect) {
+  // choices get a warning and can be retried; a correct choice reveals
+  // that step's number-box template. Step 2's op buttons only appear once
+  // step 1's boxes are verified correct in checkAnswer() below — not here.
+  function wireOpRow(rowEl, feedbackEl, calcRowEl, calcOpEl, getExpectedOp) {
     rowEl.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-op]');
       if (!btn) return;
@@ -608,14 +624,11 @@
       if (correct) {
         calcOpEl.textContent = expected;
         calcRowEl.style.display = 'flex';
-        if (onCorrect) onCorrect();
         calcRowEl.querySelector('.box-input').focus();
       }
     });
   }
-  wireOpRow(opRow1, opFeedback1, calcRow1, calcOp1,
-    () => isMultiStep() ? current.ops[0] : current.op,
-    () => { if (isMultiStep()) step2Block.style.display = 'block'; });
+  wireOpRow(opRow1, opFeedback1, calcRow1, calcOp1, () => isMultiStep() ? current.ops[0] : current.op);
   wireOpRow(opRow2, opFeedback2, calcRow2, calcOp2, () => current.ops[1]);
 
   function readNum(input) {
@@ -633,69 +646,91 @@
     return close(typedA, groundA) && close(typedB, groundB);
   }
 
+  function flashBox(ok) {
+    problemBox.classList.remove('flash-correct', 'flash-wrong');
+    void problemBox.offsetWidth;
+    problemBox.classList.add(ok ? 'flash-correct' : 'flash-wrong');
+  }
+
+  function renderFeedback(extraLine) {
+    let lines = step1Done ? '<div class="feedback-line correct">Steg 1: Rätt!</div>' : '';
+    if (isMultiStep() && step2Done) {
+      lines += '<div class="feedback-line correct">Steg 2: Rätt!</div>';
+    }
+    lines += extraLine || '';
+    const done = isMultiStep() ? step2Done : step1Done;
+    const noteLine = done && current.note ? '<div class="feedback-note">' + current.note + '</div>' : '';
+    feedback.innerHTML = lines + noteLine;
+  }
+
   function checkAnswer() {
     if (awaitingNext) {
       newProblem();
       return;
     }
     const multi = isMultiStep();
-    if (calcRow1.style.display === 'none') return;
-    if ([box_a1, box_b1, box_result1].some(b => b.value.trim() === '')) return;
-    if (multi) {
-      if (calcRow2.style.display === 'none') return;
-      if ([box_a2, box_b2, box_result2].some(b => b.value.trim() === '')) return;
-    }
 
-    const op1 = multi ? current.ops[0] : current.op;
-    const a1 = readNum(box_a1), b1 = readNum(box_b1), r1 = readNum(box_result1);
-    const step1OperandsOk = operandsOk(a1, b1, current.a1, current.b1, op1);
-    const step1ResultOk = close(r1, multi ? current.mid : current.answer);
+    if (!step1Done) {
+      if (calcRow1.style.display === 'none') return;
+      if ([box_a1, box_b1, box_result1].some(b => b.value.trim() === '')) return;
 
-    let allOk = step1OperandsOk && step1ResultOk;
-    let step2OperandsOk = true, step2ResultOk = true;
-    if (multi) {
-      const op2 = current.ops[1];
-      const a2 = readNum(box_a2), b2 = readNum(box_b2), r2 = readNum(box_result2);
-      step2OperandsOk = operandsOk(a2, b2, current.a2, current.b2, op2);
-      step2ResultOk = close(r2, current.answer);
-      allOk = allOk && step2OperandsOk && step2ResultOk;
-    }
+      const op1 = multi ? current.ops[0] : current.op;
+      const a1 = readNum(box_a1), b1 = readNum(box_b1), r1 = readNum(box_result1);
+      const operandsGood = operandsOk(a1, b1, current.a1, current.b1, op1);
+      const resultGood = close(r1, multi ? current.mid : current.answer);
 
-    totalCount++;
-    if (allOk) correctCount++;
-    scoreCorrect.textContent = correctCount;
-    scoreTotal.textContent = totalCount;
-
-    problemBox.classList.remove('flash-correct', 'flash-wrong');
-    void problemBox.offsetWidth;
-    problemBox.classList.add(allOk ? 'flash-correct' : 'flash-wrong');
-
-    let lines = '';
-    if (!step1OperandsOk) {
-      lines += '<div class="feedback-line wrong">Steg 1: fel tal i rutorna — rätt är '
-        + fmtSv(current.a1) + ' ' + op1 + ' ' + fmtSv(current.b1) + '.</div>';
-    } else if (!step1ResultOk) {
-      lines += '<div class="feedback-line wrong">Steg 1: fel resultat — rätt är '
-        + fmtSv(multi ? current.mid : current.answer) + '.</div>';
-    } else {
-      lines += '<div class="feedback-line correct">Steg 1: Rätt!</div>';
-    }
-    if (multi) {
-      const op2 = current.ops[1];
-      if (!step2OperandsOk) {
-        lines += '<div class="feedback-line wrong">Steg 2: fel tal i rutorna — rätt är '
-          + fmtSv(current.a2) + ' ' + op2 + ' ' + fmtSv(current.b2) + '.</div>';
-      } else if (!step2ResultOk) {
-        lines += '<div class="feedback-line wrong">Steg 2: fel svar — rätt är '
-          + fmtSv(current.answer) + ' ' + current.unit + '.</div>';
+      if (operandsGood && resultGood) {
+        step1Done = true;
+        flashBox(true);
+        if (multi) {
+          renderFeedback();
+          step2Block.style.display = 'block';
+          opRow2.querySelector('button').focus();
+        } else {
+          totalCount++;
+          correctCount += step1WrongAttempt ? 0 : 1;
+          scoreCorrect.textContent = correctCount;
+          scoreTotal.textContent = totalCount;
+          renderFeedback();
+          awaitingNext = true;
+        }
       } else {
-        lines += '<div class="feedback-line correct">Steg 2: Rätt!</div>';
+        step1WrongAttempt = true;
+        flashBox(false);
+        const line = !operandsGood
+          ? '<div class="feedback-line wrong">Steg 1: talen i rutorna stämmer inte med uppgiften. Läs texten igen.</div>'
+          : '<div class="feedback-line wrong">Steg 1: talen stämmer, men uträkningen (resultatet) gör det inte. Räkna igen.</div>';
+        renderFeedback(line);
       }
+      return;
     }
-    const noteLine = current.note ? '<div class="feedback-note">' + current.note + '</div>' : '';
-    feedback.innerHTML = lines + noteLine;
 
-    awaitingNext = true;
+    // Step 1 is locked in as correct — grade step 2.
+    if (calcRow2.style.display === 'none') return;
+    if ([box_a2, box_b2, box_result2].some(b => b.value.trim() === '')) return;
+
+    const op2 = current.ops[1];
+    const a2 = readNum(box_a2), b2 = readNum(box_b2), r2 = readNum(box_result2);
+    const operandsGood = operandsOk(a2, b2, current.a2, current.b2, op2);
+    const resultGood = close(r2, current.answer);
+
+    if (operandsGood && resultGood) {
+      step2Done = true;
+      flashBox(true);
+      totalCount++;
+      correctCount += (step1WrongAttempt || step2WrongAttempt) ? 0 : 1;
+      scoreCorrect.textContent = correctCount;
+      scoreTotal.textContent = totalCount;
+      renderFeedback();
+      awaitingNext = true;
+    } else {
+      step2WrongAttempt = true;
+      flashBox(false);
+      const line = !operandsGood
+        ? '<div class="feedback-line wrong">Steg 2: talen i rutorna stämmer inte med uppgiften. Läs texten igen.</div>'
+        : '<div class="feedback-line wrong">Steg 2: talen stämmer, men uträkningen (resultatet, svaret) gör det inte. Räkna igen.</div>';
+      renderFeedback(line);
+    }
   }
 
   categoryRow.addEventListener('click', (e) => {
