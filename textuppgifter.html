@@ -651,6 +651,12 @@
     void problemBox.offsetWidth;
     problemBox.classList.add(ok ? 'flash-correct' : 'flash-wrong');
   }
+  // Clears any leftover red from an earlier wrong attempt without marking
+  // the box green — used when an intermediate step (not the whole problem)
+  // is confirmed correct.
+  function clearFlash() {
+    problemBox.classList.remove('flash-correct', 'flash-wrong');
+  }
 
   function renderFeedback(extraLine) {
     let lines = step1Done ? '<div class="feedback-line correct">Steg 1: Rätt!</div>' : '';
@@ -681,12 +687,16 @@
 
       if (operandsGood && resultGood) {
         step1Done = true;
-        flashBox(true);
         if (multi) {
+          // Only step 1 of several is done — don't mark the whole problem
+          // green yet, or it reads as "finished" before it is. Still clear
+          // any red left over from an earlier wrong attempt on this step.
+          clearFlash();
           renderFeedback();
           step2Block.style.display = 'block';
           opRow2.querySelector('button').focus();
         } else {
+          flashBox(true);
           totalCount++;
           correctCount += step1WrongAttempt ? 0 : 1;
           scoreCorrect.textContent = correctCount;
