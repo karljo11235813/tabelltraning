@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Textuppgifter — Övning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+  :root {
+    --bg: #f3eef9;
+    --surface: #ffffff;
+    --accent: #7a4a8c;
+    --accent-strong: #5f3870;
+    --accent-soft: #ece0f5;
+    --text: #221b28;
+    --text-muted: #6f6478;
+    --success: #2f8f6f;
+    --success-soft: #e6f5ef;
+    --danger: #b23b3b;
+    --danger-soft: #fbecec;
+    --border: #d8cfe0;
+    --shadow: 0 2px 14px rgba(45, 24, 58, 0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1420;
+      --surface: #251c2c;
+      --accent: #c9a0dd;
+      --accent-strong: #ddbaef;
+      --accent-soft: #382a44;
+      --text: #f0e9f5;
+      --text-muted: #b7a9c2;
+      --success: #5fcfa0;
+      --success-soft: #203a30;
+      --danger: #e2837f;
+      --danger-soft: #402226;
+      --border: #453a4f;
+      --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1420;
+    --surface: #251c2c;
+    --accent: #c9a0dd;
+    --accent-strong: #ddbaef;
+    --accent-soft: #382a44;
+    --text: #f0e9f5;
+    --text-muted: #b7a9c2;
+    --success: #5fcfa0;
+    --success-soft: #203a30;
+    --danger: #e2837f;
+    --danger-soft: #402226;
+    --border: #453a4f;
+    --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Nunito Sans", "Segoe UI", "Arial", sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1, h2 { font-family: "Baloo 2", "Segoe UI", sans-serif; }
+  header {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .header-title {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.3px;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .header-title:hover { opacity: 0.85; }
+  main {
+    width: 100%;
+    max-width: 560px;
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  a.back-link {
+    color: var(--accent);
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+
+  .category-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 4px 0 22px;
+  }
+  .category-row button {
+    padding: 8px 12px;
+    border: 2px solid var(--accent);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 999px;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .category-row button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .category-row button:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+
+  .score-line {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-line b { color: var(--text); }
+
+  .problem-box {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 22px;
+    text-align: left;
+    box-shadow: var(--shadow);
+    border: 3px solid transparent;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 16px;
+  }
+  .problem-box.flash-correct { border-color: var(--success); background: var(--success-soft); }
+  .problem-box.flash-wrong { border-color: var(--danger); background: var(--danger-soft); }
+
+  .problem-text {
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+
+  .step-label {
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin: 14px 0 8px;
+  }
+  .step-label:first-of-type { margin-top: 0; }
+
+  .op-choice-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .op-choice-row button {
+    padding: 10px 0;
+    border: 2px solid var(--accent);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 9px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .op-choice-row button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .op-choice-row button:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+
+  .answer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  #answerInput {
+    width: 140px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.5rem;
+    text-align: center;
+    padding: 10px;
+    border: 2px solid var(--accent);
+    border-radius: 9px;
+    outline: none;
+    background: var(--surface);
+    color: var(--text);
+  }
+  #answerInput:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+  .answer-unit {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .feedback {
+    margin-top: 14px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .feedback-line { font-weight: 700; }
+  .feedback-line.correct { color: var(--success); }
+  .feedback-line.wrong { color: var(--danger); }
+  .feedback-note {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--accent-soft);
+    border-radius: 8px;
+    color: var(--text);
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    justify-content: center;
+  }
+  .btn-row button {
+    min-width: 130px;
+    padding: 12px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-row button:hover { background: var(--accent-strong); }
+  .btn-row button:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+  .btn-row button.secondary {
+    background: var(--surface);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+
+  .hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 14px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="header-title" href="index.html">Tabellträning</a>
+</header>
+
+<main>
+  <div class="card">
+    <a class="back-link" href="index.html">← Tillbaka</a>
+    <h2>Textuppgifter — övning</h2>
+
+    <div class="category-row" id="categoryRow">
+      <button type="button" data-cat="mixed" class="active">Blandat</button>
+      <button type="button" data-cat="grunderna">Grunderna</button>
+      <button type="button" data-cat="nyckelord">Nyckelord som lurar</button>
+      <button type="button" data-cat="enheter">Enheter</button>
+      <button type="button" data-cat="jamforelse">Jämförelse</button>
+      <button type="button" data-cat="division">Dela lika eller grupper?</button>
+      <button type="button" data-cat="area">Area och omkrets</button>
+      <button type="button" data-cat="flersteg">Flerstegsproblem</button>
+    </div>
+
+    <div class="score-line" id="scoreLine">Rätt: <b id="scoreCorrect">0</b> av <b id="scoreTotal">0</b></div>
+
+    <div class="problem-box" id="problemBox">
+      <div class="problem-text" id="problemText">–</div>
+
+      <div class="step-label" id="step1Label">Vilket räknesätt passar?</div>
+      <div class="op-choice-row" id="opRow1">
+        <button type="button" data-op="+">+</button>
+        <button type="button" data-op="−">−</button>
+        <button type="button" data-op="×">×</button>
+        <button type="button" data-op="/">/</button>
+      </div>
+
+      <div id="step2Block" style="display:none;">
+        <div class="step-label">Steg 2: vilket räknesätt?</div>
+        <div class="op-choice-row" id="opRow2">
+          <button type="button" data-op="+">+</button>
+          <button type="button" data-op="−">−</button>
+          <button type="button" data-op="×">×</button>
+          <button type="button" data-op="/">/</button>
+        </div>
+      </div>
+
+      <div class="answer-row">
+        <label for="answerInput" class="step-label" style="margin:0;">Svar:</label>
+        <input type="text" inputmode="decimal" id="answerInput" autocomplete="off" aria-label="Svar">
+        <span class="answer-unit" id="answerUnit"></span>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" id="checkBtn">Kontrollera</button>
+      <button type="button" class="secondary" id="nextBtn">Nästa</button>
+    </div>
+
+    <div class="hint">Läs uppgiften, välj räknesätt och skriv svaret. Vid flerstegsproblem: välj räknesätt för båda stegen och skriv slutsvaret.</div>
+  </div>
+</main>
+
+<script>
+(function () {
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  // ---------- Curated problem bank ----------
+  // Sourced from talochräkning/kuraterad_problemuppsattning_valja_raknesatt.md,
+  // raknesatt_textuppgifter_forskningsoversikt_och_diagnostiska_mallar.md, and
+  // textuppgifter_valja_raknesatt.md. Text is real Swedish prose, not generated —
+  // random *generation* of grammatically-correct word problems isn't safe, so
+  // this page randomly *selects* from a curated bank instead.
+  //
+  // Single-step items: { text, op, answer, unit, note? }
+  // Multi-step items:  { text, ops: [op1, op2], answer, unit, note? }
+
+  const BANK = {
+    grunderna: [
+      { text: 'En buss har 18 elever. Vid nästa hållplats kliver 7 elever på. Hur många elever är på bussen nu?', op: '+', answer: 25, unit: 'elever' },
+      { text: 'En elev har 200 kr. Hen köper lunch för 68 kr. Hur mycket pengar har eleven kvar?', op: '−', answer: 132, unit: 'kr' },
+      { text: 'En låda innehåller 24 pennor. Skolan köper 7 lådor. Hur många pennor köper skolan?', op: '×', answer: 168, unit: 'pennor' },
+      { text: 'En klass har 28 elever. Eleverna ska arbeta i grupper med 4 elever i varje grupp. Hur många grupper blir det?', op: '/', answer: 7, unit: 'grupper' },
+      { text: 'Ett paket med 8 yoghurtar kostar 36 kr. Vad kostar en yoghurt?', op: '/', answer: 4.5, unit: 'kr' },
+      { text: 'Ett recept behöver 250 g mjöl, 150 g socker och 75 g smör. Hur mycket väger ingredienserna tillsammans?', op: '+', answer: 475, unit: 'g' },
+      { text: 'En bil kör 360 km på 4 timmar. Hur långt kör bilen på en timme om hastigheten är jämn?', op: '/', answer: 90, unit: 'km' },
+      { text: 'Ett klassrum har 6 rader med 5 stolar i varje rad. Hur många stolar finns det?', op: '×', answer: 30, unit: 'stolar' },
+      { text: 'Målet är att läsa 120 sidor. Eleven har läst 76 sidor. Hur många sidor återstår?', op: '−', answer: 44, unit: 'sidor' },
+      { text: 'En hiss får bära 500 kg. Fyra personer väger tillsammans 326 kg. Hur mycket vikt finns kvar innan maxgränsen nås?', op: '−', answer: 174, unit: 'kg' },
+      { text: 'En elev cyklar 3,5 km varje dag i 6 dagar. Hur långt cyklar eleven sammanlagt?', op: '×', answer: 21, unit: 'km' },
+      { text: 'Ett äpple kostar 4,50 kr. Vad kostar 8 äpplen?', op: '×', answer: 36, unit: 'kr' },
+    ],
+
+    nyckelord: [
+      { text: 'Leo har 34 kr. Det är 12 kr mer än vad Sam har. Hur mycket pengar har Sam?', op: '−', answer: 22, unit: 'kr', note: 'Ordet "mer" lockar till addition — men Sam har mindre än Leo, inte mer.' },
+      { text: 'Amina har 28 klistermärken. Det är 9 färre än vad Noor har. Hur många klistermärken har Noor?', op: '+', answer: 37, unit: 'klistermärken', note: 'Ordet "färre" lockar till subtraktion — men Noor har fler än Amina.' },
+      { text: 'En låda innehåller 18 pennor. Skolan köper 7 lådor. Hur många pennor köper skolan totalt?', op: '×', answer: 126, unit: 'pennor', note: 'Ordet "totalt" lockar till addition — men här är det lika stora grupper, alltså multiplikation.' },
+      { text: 'Ett lag har 84 kr att dela lika mellan 6 spelare. Hur mycket får varje spelare?', op: '/', answer: 14, unit: 'kr', note: 'Ordet "varje" kan kännas som multiplikation — men här delas en summa lika, alltså division.' },
+      { text: 'En tårta är delad i 12 bitar. Efter fikat finns 5 bitar kvar. Hur många bitar åt gruppen?', op: '−', answer: 7, unit: 'bitar', note: 'Ordet "delad" lockar till division — men frågan handlar om hur mycket som är borta, alltså subtraktion.' },
+    ],
+
+    enheter: [
+      { text: 'Ett rep är 3 m långt och klipps i bitar som är 10 cm långa. Hur många bitar blir det?', op: '/', answer: 30, unit: 'bitar', note: 'Gör om till samma enhet först: 300 cm / 10 cm.' },
+      { text: 'En flaska innehåller 1,5 liter saft. Klassen dricker 8 dl. Hur mycket saft finns kvar?', op: '−', answer: 7, unit: 'dl', note: '1,5 liter = 15 dl. 15 dl − 8 dl = 7 dl.' },
+      { text: 'En elev springer 1,2 km och går sedan 850 m. Hur långt rör sig eleven totalt?', op: '+', answer: 2050, unit: 'm', note: '1,2 km = 1200 m. 1200 m + 850 m = 2050 m.' },
+      { text: 'En maskin fyller 250 ml i varje flaska. Den fyller 36 flaskor. Hur många liter fyller maskinen totalt?', op: '×', answer: 9, unit: 'liter', note: '250 ml × 36 = 9000 ml = 9 liter.' },
+      { text: 'En påse innehåller 1,8 kg mjöl. Ett recept behöver 300 g mjöl. Hur många recept räcker mjölet till?', op: '/', answer: 6, unit: 'recept', note: '1,8 kg = 1800 g. 1800 g / 300 g = 6.' },
+      { text: 'En penna är 17 cm lång och en annan penna är 128 mm lång. Hur mycket längre är den första pennan?', op: '−', answer: 4.2, unit: 'cm', note: '128 mm = 12,8 cm. 17 cm − 12,8 cm = 4,2 cm.' },
+      { text: 'En klass gör 12 affischer. Varje affisch behöver 35 cm tejp. Hur många meter tejp behövs totalt?', op: '×', answer: 4.2, unit: 'm', note: '12 × 35 cm = 420 cm = 4,2 m.' },
+      { text: 'En 5 liter dunk ska fyllas i flaskor som rymmer 250 ml. Hur många flaskor behövs?', op: '/', answer: 20, unit: 'flaskor', note: '5 liter = 5000 ml. 5000 ml / 250 ml = 20.' },
+      { text: 'En tygbit är 4,8 m lång. Varje kudde behöver 60 cm tyg. Hur många kuddar räcker tyget till?', op: '/', answer: 8, unit: 'kuddar', note: '4,8 m = 480 cm. 480 cm / 60 cm = 8.' },
+    ],
+
+    jamforelse: [
+      { text: 'Mira har 12 kulor. Aron har 4 fler än Mira. Hur många kulor har Aron?', op: '+', answer: 16, unit: 'kulor', note: '"Fler än" är en additiv jämförelse — man lägger till skillnaden.' },
+      { text: 'Mira har 12 kulor. Aron har 4 gånger så många som Mira. Hur många kulor har Aron?', op: '×', answer: 48, unit: 'kulor', note: '"Gånger så många" är en multiplikativ jämförelse — man multiplicerar med faktorn.' },
+      { text: 'Sara springer 4 varv på 10 minuter. Efter 15 minuter har hon sprungit 9 varv. Hur många fler varv sprang hon under de sista 5 minuterna?', op: '−', answer: 5, unit: 'varv', note: 'Det ser proportionellt ut (4 varv på 10 minuter), men frågan söker bara skillnaden mellan 9 och 4 varv.' },
+      { text: 'En ritning har skalan 1:50. Ett bord är 3 cm långt på ritningen. Hur långt är bordet i verkligheten?', op: '×', answer: 150, unit: 'cm', note: 'Skalfaktorn multipliceras med ritningens mått: 3 cm × 50 = 150 cm (= 1,5 m).' },
+    ],
+
+    division: [
+      { text: '2,4 kg ris delas lika i 6 burkar. Hur mycket ris får varje burk?', op: '/', answer: 0.4, unit: 'kg', note: 'Delningsdivision: gruppstorleken är okänd.' },
+      { text: '2,4 kg ris ska packas i påsar med 300 g i varje. Hur många påsar räcker riset till?', op: '/', answer: 8, unit: 'påsar', note: 'Gör om till gram: 2400 g / 300 g. Innehållsdivision: antalet grupper är okänt.' },
+      { text: 'Ett rep är 5 m långt. Det klipps i bitar som är 80 cm. Hur många hela bitar kan man få?', op: '/', answer: 6, unit: 'hela bitar', note: '500 cm / 80 cm = 6,25 — men man kan bara få 6 HELA bitar. Avrunda nedåt.' },
+      { text: '5 m rep ska packas i påsar. Varje påse rymmer 80 cm rep. Hur många påsar behövs?', op: '/', answer: 7, unit: 'påsar', note: 'Samma division som föregående (500/80 = 6,25), men nu behövs en påse extra för resten. Avrunda uppåt.' },
+      { text: '3 meter rep klipps i bitar som är 0,25 m långa. Hur många bitar blir det?', op: '/', answer: 12, unit: 'bitar', note: 'Division med ett tal mindre än 1 ger ett svar som är större än 3.' },
+      { text: '0,6 kg äpplen kostar 18 kr. Vad kostar 1 kg äpplen?', op: '/', answer: 30, unit: 'kr', note: 'Division kan ge ett svar som är större än talet du delar med.' },
+    ],
+
+    area: [
+      { text: 'Ett klassrum är 8 m långt och 6 m brett. Hur stor area har klassrummet?', op: '×', answer: 48, unit: 'm²', note: 'Area = längd gånger bredd.' },
+      { text: 'Ett klassrum är 8 m långt och 6 m brett. Hur lång är omkretsen?', op: '+', answer: 28, unit: 'm', note: 'Omkrets = summan av alla sidor (8+6+8+6) — inte area!' },
+      { text: 'En rektangulär matta är 2,4 m lång och 1,5 m bred. Hur många meter kantband behövs runt mattan?', op: '+', answer: 7.8, unit: 'm', note: 'Omkrets, inte area: 2,4 + 1,5 + 2,4 + 1,5.' },
+      { text: 'En skylt är 30 cm bred och 20 cm hög. Vad är skyltens area?', op: '×', answer: 600, unit: 'cm²', note: 'Area = bredd gånger höjd.' },
+    ],
+
+    flersteg: [
+      { text: 'En klass köper 6 paket pennor. Varje paket innehåller 12 pennor. 17 pennor delas ut direkt. Hur många pennor finns kvar?', ops: ['×', '−'], answer: 55, unit: 'pennor' },
+      { text: 'En elev har 5 meter snöre. Hen klipper bort 80 cm. Resten klipps i bitar som är 20 cm långa. Hur många bitar blir det?', ops: ['−', '/'], answer: 21, unit: 'bitar', note: 'Gör om till cm: 500 − 80 = 420, 420 / 20 = 21.' },
+      { text: 'En affär säljer 4 likadana vattenflaskor för 92 kr. Vad kostar 7 sådana flaskor?', ops: ['/', '×'], answer: 161, unit: 'kr', note: 'Först pris per styck (92/4 = 23 kr), sedan för 7 stycken (23 × 7).' },
+      { text: 'En hink innehåller 7,5 liter vatten. Eleverna häller upp 12 muggar med 250 ml i varje. Hur mycket vatten finns kvar?', ops: ['×', '−'], answer: 4.5, unit: 'liter', note: '12 × 250 ml = 3000 ml = 3 liter. 7,5 − 3 = 4,5 liter.' },
+      { text: 'En vandring är 8 km. Klassen har gått 3,25 km före lunch och 1800 m efter lunch. Hur långt är det kvar?', ops: ['+', '−'], answer: 2.95, unit: 'km', note: '1800 m = 1,8 km. 3,25 + 1,8 = 5,05 km gått. 8 − 5,05 = 2,95 km kvar.' },
+      { text: 'En låda väger 1,8 kg tom. Varje bok väger 350 g. Hur mycket väger lådan med 12 böcker?', ops: ['×', '+'], answer: 6, unit: 'kg', note: '12 × 350 g = 4200 g = 4,2 kg. 4,2 + 1,8 = 6 kg.' },
+      { text: 'En lärare har 8 paket med 25 papper i varje. Klassen använder 73 papper. Hur många papper finns kvar?', ops: ['×', '−'], answer: 127, unit: 'papper' },
+      { text: 'En rulle tejp är 8 m lång. Klassen använder 14 bitar som är 35 cm vardera. Hur mycket tejp finns kvar?', ops: ['×', '−'], answer: 310, unit: 'cm', note: '14 × 35 = 490 cm. 800 − 490 = 310 cm (= 3,1 m).' },
+      { text: 'En växt är 10 cm på måndag och 16 cm på fredag. En annan växt är 20 cm på måndag. Om den växer lika många centimeter, hur hög är den på fredag?', ops: ['−', '+'], answer: 26, unit: 'cm', note: 'Samma ÖKNING (skillnad), inte samma förhållande: 16 − 10 = 6, 20 + 6 = 26.' },
+      { text: 'Ett recept använder 10 g jäst till 16 dl degvätska. Hur mycket jäst behövs till 32 dl degvätska om förhållandet ska vara samma?', ops: ['/', '×'], answer: 20, unit: 'g', note: 'Samma FÖRHÅLLANDE, inte samma skillnad: 32/16 = 2, 10 × 2 = 20.' },
+      { text: 'En skrivare skriver ut 4 sidor på 10 sekunder. Hur många sidor skriver den ut på 15 sekunder om hastigheten är jämn?', ops: ['/', '×'], answer: 6, unit: 'sidor', note: 'Proportionalitet: 4/10 = 0,4 sidor/sekund, 0,4 × 15 = 6.' },
+    ],
+  };
+  const CATEGORY_KEYS = Object.keys(BANK);
+
+  let currentCategory = 'mixed';
+  let current = null;
+  let lastText = null;
+  let selectedOp1 = null;
+  let selectedOp2 = null;
+  let correctCount = 0;
+  let totalCount = 0;
+  let awaitingNext = false;
+
+  const categoryRow = document.getElementById('categoryRow');
+  const scoreCorrect = document.getElementById('scoreCorrect');
+  const scoreTotal = document.getElementById('scoreTotal');
+  const problemBox = document.getElementById('problemBox');
+  const problemText = document.getElementById('problemText');
+  const step1Label = document.getElementById('step1Label');
+  const opRow1 = document.getElementById('opRow1');
+  const step2Block = document.getElementById('step2Block');
+  const opRow2 = document.getElementById('opRow2');
+  const answerInput = document.getElementById('answerInput');
+  const answerUnit = document.getElementById('answerUnit');
+  const feedback = document.getElementById('feedback');
+  const checkBtn = document.getElementById('checkBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function fmtSv(n) {
+    return Number.isInteger(n) ? String(n) : String(n).replace('.', ',');
+  }
+
+  function pickProblem() {
+    const key = currentCategory === 'mixed'
+      ? CATEGORY_KEYS[randInt(0, CATEGORY_KEYS.length - 1)]
+      : currentCategory;
+    const list = BANK[key];
+    let item = list[randInt(0, list.length - 1)];
+    if (list.length > 1 && item.text === lastText) {
+      item = list[randInt(0, list.length - 1)];
+    }
+    lastText = item.text;
+    return item;
+  }
+
+  function newProblem() {
+    current = pickProblem();
+    const isMultiStep = Array.isArray(current.ops);
+
+    problemText.textContent = current.text;
+    step1Label.textContent = isMultiStep ? 'Steg 1: vilket räknesätt?' : 'Vilket räknesätt passar?';
+    step2Block.style.display = isMultiStep ? 'block' : 'none';
+
+    selectedOp1 = null;
+    selectedOp2 = null;
+    opRow1.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    opRow2.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+
+    answerInput.value = '';
+    answerUnit.textContent = current.unit ? '(' + current.unit + ')' : '';
+    feedback.innerHTML = '';
+    problemBox.classList.remove('flash-correct', 'flash-wrong');
+    awaitingNext = false;
+    answerInput.focus();
+  }
+
+  function checkAnswer() {
+    if (awaitingNext) {
+      newProblem();
+      return;
+    }
+    const raw = answerInput.value.trim();
+    if (raw === '') return;
+
+    const given = parseFloat(raw.replace(/\s+/g, '').replace(',', '.'));
+    const isMultiStep = Array.isArray(current.ops);
+    const opCorrect = isMultiStep
+      ? (selectedOp1 === current.ops[0] && selectedOp2 === current.ops[1])
+      : (selectedOp1 === current.op);
+    const answerCorrect = Number.isFinite(given) && Math.abs(given - current.answer) < 0.005;
+
+    totalCount++;
+    if (opCorrect && answerCorrect) correctCount++;
+    scoreCorrect.textContent = correctCount;
+    scoreTotal.textContent = totalCount;
+
+    problemBox.classList.remove('flash-correct', 'flash-wrong');
+    void problemBox.offsetWidth;
+    problemBox.classList.add(opCorrect && answerCorrect ? 'flash-correct' : 'flash-wrong');
+
+    const opLine = opCorrect
+      ? '<div class="feedback-line correct">Räknesätt: Rätt!</div>'
+      : '<div class="feedback-line wrong">Räknesätt: Fel — rätt var ' + (isMultiStep ? current.ops.join(' sedan ') : current.op) + '.</div>';
+    const ansLine = answerCorrect
+      ? '<div class="feedback-line correct">Svar: Rätt!</div>'
+      : '<div class="feedback-line wrong">Svar: Fel — rätt svar är ' + fmtSv(current.answer) + ' ' + current.unit + '.</div>';
+    const noteLine = current.note ? '<div class="feedback-note">' + current.note + '</div>' : '';
+    feedback.innerHTML = opLine + ansLine + noteLine;
+
+    awaitingNext = true;
+  }
+
+  categoryRow.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-cat]');
+    if (!btn) return;
+    currentCategory = btn.dataset.cat;
+    categoryRow.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    newProblem();
+  });
+
+  opRow1.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-op]');
+    if (!btn) return;
+    selectedOp1 = btn.dataset.op;
+    opRow1.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+  });
+  opRow2.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-op]');
+    if (!btn) return;
+    selectedOp2 = btn.dataset.op;
+    opRow2.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+  });
+
+  checkBtn.addEventListener('click', checkAnswer);
+  nextBtn.addEventListener('click', newProblem);
+
+  answerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.repeat) {
+      e.preventDefault();
+      checkAnswer();
+    }
+  });
+
+  newProblem();
+})();
+</script>
+
+</body>
+</html>
