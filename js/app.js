@@ -294,6 +294,8 @@ function applyLanguage() {
   document.getElementById('landingOtherLabel').textContent = s.landingOtherLabel;
   document.getElementById('landingNegativeTitle').textContent = s.landingNegativeTitle;
   document.getElementById('landingNegativeDesc').textContent = s.landingNegativeDesc;
+  document.getElementById('landingDecimalTitle').textContent = s.landingDecimalTitle;
+  document.getElementById('landingDecimalDesc').textContent = s.landingDecimalDesc;
 
   backFromTest.textContent = s.back;
   backFromPractice.textContent = s.back;

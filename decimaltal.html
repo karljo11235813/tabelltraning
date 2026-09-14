@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decimaltal — Övning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+  :root {
+    --bg: #f3eef9;
+    --surface: #ffffff;
+    --accent: #7a4a8c;
+    --accent-strong: #5f3870;
+    --accent-soft: #ece0f5;
+    --text: #221b28;
+    --text-muted: #6f6478;
+    --success: #2f8f6f;
+    --success-soft: #e6f5ef;
+    --danger: #b23b3b;
+    --danger-soft: #fbecec;
+    --border: #d8cfe0;
+    --shadow: 0 2px 14px rgba(45, 24, 58, 0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1420;
+      --surface: #251c2c;
+      --accent: #c9a0dd;
+      --accent-strong: #ddbaef;
+      --accent-soft: #382a44;
+      --text: #f0e9f5;
+      --text-muted: #b7a9c2;
+      --success: #5fcfa0;
+      --success-soft: #203a30;
+      --danger: #e2837f;
+      --danger-soft: #402226;
+      --border: #453a4f;
+      --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1420;
+    --surface: #251c2c;
+    --accent: #c9a0dd;
+    --accent-strong: #ddbaef;
+    --accent-soft: #382a44;
+    --text: #f0e9f5;
+    --text-muted: #b7a9c2;
+    --success: #5fcfa0;
+    --success-soft: #203a30;
+    --danger: #e2837f;
+    --danger-soft: #402226;
+    --border: #453a4f;
+    --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Nunito Sans", "Segoe UI", "Arial", sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1, h2 { font-family: "Baloo 2", "Segoe UI", sans-serif; }
+  header {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .header-title {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.3px;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .header-title:hover { opacity: 0.85; }
+  main {
+    width: 100%;
+    max-width: 560px;
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  a.back-link {
+    color: var(--accent);
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+
+  .category-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 4px 0 22px;
+  }
+  .category-row button {
+    padding: 8px 12px;
+    border: 2px solid var(--accent);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 999px;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .category-row button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .category-row button:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+
+  .score-line {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-line b { color: var(--text); }
+
+  .problem-box {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 32px 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 3px solid transparent;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 16px;
+  }
+  .problem-box.flash-correct { border-color: var(--success); background: var(--success-soft); }
+  .problem-box.flash-wrong { border-color: var(--danger); background: var(--danger-soft); }
+
+  .problem-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .problem-text {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 18px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
+  }
+  #answerInput {
+    width: 150px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.7rem;
+    text-align: center;
+    padding: 10px;
+    border: 2px solid var(--accent);
+    border-radius: 9px;
+    outline: none;
+    background: var(--surface);
+    color: var(--text);
+  }
+  #answerInput:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+  .feedback {
+    min-height: 1.3em;
+    margin-top: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .feedback.correct { color: var(--success); }
+  .feedback.wrong { color: var(--danger); }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    justify-content: center;
+  }
+  .btn-row button {
+    min-width: 130px;
+    padding: 12px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-row button:hover { background: var(--accent-strong); }
+  .btn-row button:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+  .btn-row button.secondary {
+    background: var(--surface);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+
+  .hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 14px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="header-title" href="index.html">Tabellträning</a>
+</header>
+
+<main>
+  <div class="card">
+    <a class="back-link" href="index.html">← Tillbaka</a>
+    <h2>Decimaltal — övning</h2>
+
+    <div class="category-row" id="categoryRow">
+      <button type="button" data-cat="mixed" class="active">Blandat</button>
+      <button type="button" data-cat="addsub">Addition/subtraktion</button>
+      <button type="button" data-cat="powers10">Gånger/delat med 10, 100, 1000</button>
+      <button type="button" data-cat="muldecimal">Multiplikation</button>
+      <button type="button" data-cat="fraction">Bråkform</button>
+      <button type="button" data-cat="comparison">Större eller mindre?</button>
+      <button type="button" data-cat="scale">Skala om</button>
+    </div>
+
+    <div class="score-line" id="scoreLine">Rätt: <b id="scoreCorrect">0</b> av <b id="scoreTotal">0</b></div>
+
+    <div class="problem-box" id="problemBox">
+      <div class="problem-label" id="problemLabel"></div>
+      <div class="problem-text" id="problemText">–</div>
+      <input type="text" inputmode="decimal" id="answerInput" autocomplete="off" aria-label="Svar">
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" id="checkBtn">Kontrollera</button>
+      <button type="button" class="secondary" id="nextBtn">Nästa</button>
+    </div>
+
+    <div class="hint">Skriv ditt svar (använd komma för decimaler, t.ex. 3,5) och tryck Enter, eller klicka Kontrollera. Vid "Större eller mindre?": skriv större eller mindre.</div>
+  </div>
+</main>
+
+<script>
+(function () {
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  function pick(arr) {
+    return arr[randInt(0, arr.length - 1)];
+  }
+
+  // ---- Exact decimal arithmetic ----
+  // A decimal is { m, d }: value = m / 10^d. All ops are done on integer
+  // mantissas so results are always exact — no floating-point drift.
+  function D(m, d) { return { m, d }; }
+
+  function dAdd(x, y) {
+    const d = Math.max(x.d, y.d);
+    const xm = x.m * Math.pow(10, d - x.d);
+    const ym = y.m * Math.pow(10, d - y.d);
+    return D(xm + ym, d);
+  }
+  function dSub(x, y) {
+    const d = Math.max(x.d, y.d);
+    const xm = x.m * Math.pow(10, d - x.d);
+    const ym = y.m * Math.pow(10, d - y.d);
+    return D(xm - ym, d);
+  }
+  function dMul(x, y) {
+    return D(x.m * y.m, x.d + y.d);
+  }
+  // Multiply by 10^power (power negative = divide). Decimal point shift only
+  // — always exact, which is exactly the mental-math skill this category drills.
+  function dMulPow10(x, power) {
+    let d = x.d - power;
+    let m = x.m;
+    if (d < 0) {
+      m = m * Math.pow(10, -d);
+      d = 0;
+    }
+    return D(m, d);
+  }
+
+  function fmt(x) {
+    let { m, d } = x;
+    const neg = m < 0;
+    m = Math.abs(m);
+    if (d === 0) return (neg ? '−' : '') + String(m);
+    const scale = Math.pow(10, d);
+    const intPart = Math.floor(m / scale);
+    let fracPart = m % scale;
+    let fracStr = String(fracPart).padStart(d, '0').replace(/0+$/, '');
+    const out = fracStr ? `${intPart},${fracStr}` : `${intPart}`;
+    return (neg ? '−' : '') + out;
+  }
+
+  function checkDecimalAnswer(rawInput, expected) {
+    const normalized = rawInput.trim().replace(/\s+/g, '').replace(',', '.');
+    if (normalized === '') return false;
+    const givenNum = Number(normalized);
+    if (!Number.isFinite(givenNum)) return false;
+    const scale = Math.pow(10, expected.d);
+    return Math.round(givenNum * scale) === expected.m;
+  }
+
+  // Each generator returns { label, text, answerType, answer }.
+  // answerType 'decimal' -> answer is a {m,d} object, checked via checkDecimalAnswer.
+  // answerType 'text' -> answer is a lowercase string, checked case-insensitively.
+
+  function genAddSub() {
+    const variant = randInt(1, 5);
+    switch (variant) {
+      case 1: { // 0,8 + 0,6  (two 1-decimal numbers)
+        const a = D(randInt(1, 9), 1), b = D(randInt(1, 9), 1);
+        return { text: `${fmt(a)} + ${fmt(b)} =`, answerType: 'decimal', answer: dAdd(a, b) };
+      }
+      case 2: { // 1 − 0,3  (whole number minus a <1 decimal)
+        const b = D(randInt(1, 9), 1);
+        const a = D(1, 0);
+        return { text: `1 − ${fmt(b)} =`, answerType: 'decimal', answer: dSub(a, b) };
+      }
+      case 3: { // 0,4 + 0,04  (1-decimal + 2-decimal)
+        const a = D(randInt(1, 9), 1), b = D(randInt(1, 9), 2);
+        return { text: `${fmt(a)} + ${fmt(b)} =`, answerType: 'decimal', answer: dAdd(a, b) };
+      }
+      case 4: { // 1,2 − 0,25  (2-decimal subtraction, a > b)
+        const b = D(randInt(10, 40), 2);
+        const a = D(b.m + randInt(1, 20) * 5, 2);
+        return { text: `${fmt(a)} − ${fmt(b)} =`, answerType: 'decimal', answer: dSub(a, b) };
+      }
+      default: { // 0,85 + 0,9  (2-decimal + 1-decimal)
+        const a = D(randInt(10, 95), 2), b = D(randInt(1, 9), 1);
+        return { text: `${fmt(a)} + ${fmt(b)} =`, answerType: 'decimal', answer: dAdd(a, b) };
+      }
+    }
+  }
+
+  function genPowers10() {
+    const variant = randInt(1, 5);
+    switch (variant) {
+      case 1: { // 10 · 3,24
+        const x = D(randInt(105, 995), 2);
+        return { text: `10 · ${fmt(x)} =`, answerType: 'decimal', answer: dMulPow10(x, 1) };
+      }
+      case 2: { // 100 · 3,2 or 100 · 3,24
+        const x = D(randInt(11, 99), pick([1, 2]));
+        return { text: `100 · ${fmt(x)} =`, answerType: 'decimal', answer: dMulPow10(x, 2) };
+      }
+      case 3: { // 1 000 · 0,35 or 1 000 · 0,065
+        const d = pick([2, 3]);
+        const x = D(randInt(Math.pow(10, d - 2), Math.pow(10, d) - 1), d);
+        return { text: `1 000 · ${fmt(x)} =`, answerType: 'decimal', answer: dMulPow10(x, 3) };
+      }
+      case 4: { // 84,3 / 10  (1-decimal x -> 2-decimal result, matches worksheet)
+        const x = D(randInt(15, 995), 1);
+        return { text: `${fmt(x)} / 10 =`, answerType: 'decimal', answer: dMulPow10(x, -1) };
+      }
+      default: { // 372 / 100 or 4,5 / 100  (0- or 1-decimal x -> at most 3-decimal result)
+        const x = D(randInt(15, 995), pick([0, 1]));
+        return { text: `${fmt(x)} / 100 =`, answerType: 'decimal', answer: dMulPow10(x, -2) };
+      }
+    }
+  }
+
+  function genMulDecimal() {
+    const variant = randInt(1, 5);
+    switch (variant) {
+      case 1: { // 0,6 · 0,4
+        const a = D(randInt(1, 9), 1), b = D(randInt(1, 9), 1);
+        return { text: `${fmt(a)} · ${fmt(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+      }
+      case 2: { // 5 · 0,7
+        const a = D(randInt(2, 9), 0), b = D(randInt(1, 9), 1);
+        return { text: `${fmt(a)} · ${fmt(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+      }
+      case 3: { // 6 · 0,08
+        const a = D(randInt(2, 9), 0), b = D(randInt(1, 9), 2);
+        return { text: `${fmt(a)} · ${fmt(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+      }
+      case 4: { // 30 · 0,7  (multiple of ten times a 1-decimal)
+        const a = D(randInt(2, 9) * 10, 0), b = D(randInt(1, 9), 1);
+        return { text: `${fmt(a)} · ${fmt(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+      }
+      default: { // 0,04 · 3 000
+        const a = D(randInt(1, 9), 2), b = D(randInt(2, 9) * 1000, 0);
+        return { text: `${fmt(a)} · ${fmt(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+      }
+    }
+  }
+
+  function genFraction() {
+    const variant = randInt(1, 2);
+    if (variant === 1) {
+      // Integer / round-integer, e.g. 360/60 = 6, 9000/3000 = 3, 5600/800 = 7
+      const divisor = pick([20, 30, 40, 50, 60, 70, 80, 90, 200, 300, 400, 500, 600, 700, 800, 900, 2000, 3000, 4000, 5000]);
+      const quotient = randInt(2, 9);
+      const dividend = D(divisor * quotient, 0);
+      return { text: `${fmt(dividend)} / ${divisor} =`, answerType: 'decimal', answer: D(quotient, 0) };
+    }
+    // divisor is a decimal < 1, e.g. 1/0,1 = 10, 3/0,6 = 5, 5/0,01 = 500, 36/0,9 = 40
+    const divisor = D(randInt(1, 9), pick([1, 2]));
+    const quotient = randInt(2, 40);
+    const dividend = dMul(D(quotient, 0), divisor);
+    return { text: `${fmt(dividend)} / ${fmt(divisor)} =`, answerType: 'decimal', answer: D(quotient, 0) };
+  }
+
+  function genComparison() {
+    const n = randInt(20, 90);
+    const useMultiply = Math.random() < 0.5;
+    const lessThanOne = Math.random() < 0.5;
+    const factor = lessThanOne
+      ? D(randInt(5, 98), 2)  // 0,05–0,98
+      : pick([D(randInt(11, 30), 1), D(randInt(2, 5), 0)]); // 1,1–3,0 or 2–5
+
+    const opSymbol = useMultiply ? '·' : '/';
+    const text = `${n} ${opSymbol} ${fmt(factor)}`;
+    // Multiplying by <1 shrinks; multiplying by >1 grows.
+    // Dividing by <1 grows; dividing by >1 shrinks.
+    let larger;
+    if (useMultiply) larger = !lessThanOne;
+    else larger = lessThanOne;
+
+    return {
+      label: `Blir svaret större eller mindre än ${n}? Svara utan att räkna.`,
+      text: text,
+      answerType: 'text',
+      answer: larger ? 'större' : 'mindre',
+    };
+  }
+
+  function genScale() {
+    const denominator0 = pick([2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 25, 30, 40, 50]);
+    const quotient0 = randInt(2, 50);
+    const numerator0 = D(denominator0 * quotient0, 0);
+    const denom0 = D(denominator0, 0);
+    const quot0 = D(quotient0, 0);
+
+    let p, q;
+    do {
+      p = pick([-1, 0, 1]);
+      q = pick([-1, 0, 1]);
+    } while (p === 0 && q === 0);
+
+    const scaledNumerator = dMulPow10(numerator0, p);
+    const scaledDenominator = dMulPow10(denom0, q);
+    const answer = dMulPow10(quot0, p - q);
+
+    return {
+      label: `Du vet att ${fmt(numerator0)} / ${fmt(denom0)} = ${fmt(quot0)}. Hur mycket är då:`,
+      text: `${fmt(scaledNumerator)} / ${fmt(scaledDenominator)} =`,
+      answerType: 'decimal',
+      answer: answer,
+    };
+  }
+
+  const GENERATORS = {
+    addsub: genAddSub,
+    powers10: genPowers10,
+    muldecimal: genMulDecimal,
+    fraction: genFraction,
+    comparison: genComparison,
+    scale: genScale,
+  };
+  const CATEGORY_KEYS = Object.keys(GENERATORS);
+
+  let currentCategory = 'mixed';
+  let current = null;
+  let correctCount = 0;
+  let totalCount = 0;
+  let awaitingNext = false;
+
+  const categoryRow = document.getElementById('categoryRow');
+  const scoreCorrect = document.getElementById('scoreCorrect');
+  const scoreTotal = document.getElementById('scoreTotal');
+  const problemBox = document.getElementById('problemBox');
+  const problemLabel = document.getElementById('problemLabel');
+  const problemText = document.getElementById('problemText');
+  const answerInput = document.getElementById('answerInput');
+  const feedback = document.getElementById('feedback');
+  const checkBtn = document.getElementById('checkBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function pickGenerator() {
+    const key = currentCategory === 'mixed'
+      ? CATEGORY_KEYS[randInt(0, CATEGORY_KEYS.length - 1)]
+      : currentCategory;
+    return GENERATORS[key]();
+  }
+
+  function displayAnswer(current) {
+    return current.answerType === 'text' ? current.answer : fmt(current.answer);
+  }
+
+  function newProblem() {
+    current = pickGenerator();
+    problemLabel.textContent = current.label || '';
+    problemLabel.style.display = current.label ? 'block' : 'none';
+    problemText.textContent = current.text;
+    answerInput.value = '';
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+    problemBox.classList.remove('flash-correct', 'flash-wrong');
+    awaitingNext = false;
+    answerInput.focus();
+  }
+
+  function checkAnswer() {
+    if (awaitingNext) {
+      newProblem();
+      return;
+    }
+    const raw = answerInput.value.trim();
+    if (raw === '') return;
+
+    const isCorrect = current.answerType === 'text'
+      ? raw.trim().toLowerCase() === current.answer
+      : checkDecimalAnswer(raw, current.answer);
+
+    totalCount++;
+    if (isCorrect) correctCount++;
+    scoreCorrect.textContent = correctCount;
+    scoreTotal.textContent = totalCount;
+
+    problemBox.classList.remove('flash-correct', 'flash-wrong');
+    void problemBox.offsetWidth;
+    if (isCorrect) {
+      problemBox.classList.add('flash-correct');
+      feedback.textContent = 'Rätt!';
+      feedback.className = 'feedback correct';
+    } else {
+      problemBox.classList.add('flash-wrong');
+      feedback.textContent = 'Fel — rätt svar är ' + displayAnswer(current) + '.';
+      feedback.className = 'feedback wrong';
+    }
+    awaitingNext = true;
+  }
+
+  categoryRow.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-cat]');
+    if (!btn) return;
+    currentCategory = btn.dataset.cat;
+    categoryRow.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    newProblem();
+  });
+
+  checkBtn.addEventListener('click', checkAnswer);
+  nextBtn.addEventListener('click', newProblem);
+
+  answerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.repeat) {
+      e.preventDefault();
+      checkAnswer();
+    }
+  });
+
+  newProblem();
+})();
+</script>
+
+</body>
+</html>
