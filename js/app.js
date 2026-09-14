@@ -290,6 +290,10 @@ function applyLanguage() {
   document.getElementById('landingBuildDesc').textContent = s.buildDesc;
   document.getElementById('landingStatsTitle').textContent = s.statsTitle;
   document.getElementById('landingStatsDesc').textContent = s.statsDesc;
+  document.getElementById('landingMulDivLabel').textContent = s.landingMulDivLabel;
+  document.getElementById('landingOtherLabel').textContent = s.landingOtherLabel;
+  document.getElementById('landingNegativeTitle').textContent = s.landingNegativeTitle;
+  document.getElementById('landingNegativeDesc').textContent = s.landingNegativeDesc;
 
   backFromTest.textContent = s.back;
   backFromPractice.textContent = s.back;
