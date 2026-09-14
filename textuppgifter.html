@@ -342,6 +342,7 @@
       <button type="button" data-cat="division">Dela lika eller grupper?</button>
       <button type="button" data-cat="area">Area och omkrets</button>
       <button type="button" data-cat="flersteg">Flerstegsproblem</button>
+      <button type="button" data-cat="distraktion">Överflödig information</button>
     </div>
 
     <div class="score-line" id="scoreLine">Rätt: <b id="scoreCorrect">0</b> av <b id="scoreTotal">0</b></div>
@@ -498,6 +499,19 @@
       { text: 'En bagare bakar 18 kanelbullar på morgonen och 30 till på eftermiddagen. Bullarna packas i påsar med 6 i varje. Hur många påsar blir det?', ops: ['+', '/'], a1: 18, b1: 30, mid: 48, a2: 48, b2: 6, answer: 8, unit: 'påsar' },
       { text: 'Ett bord kostar 800 kr. Kunden får 150 kr rabatt på varje bord. Kunden köper 3 sådana bord till rabatterat pris. Hur mycket kostar de tre borden totalt?', ops: ['−', '×'], a1: 800, b1: 150, mid: 650, a2: 650, b2: 3, answer: 1950, unit: 'kr', note: 'Först rabatterat pris per bord (800 − 150 = 650 kr), sedan för 3 bord (650 × 3).' },
       { text: 'En klass har 132 kr att dela lika mellan 6 elever för en aktivitet. Varje elev betalar sedan 12 kr av sin del för inträde. Hur mycket har varje elev kvar?', ops: ['/', '−'], a1: 132, b1: 6, mid: 22, a2: 22, b2: 12, answer: 10, unit: 'kr' },
+    ],
+
+    // Each item below has exactly one number that sounds usable (often the
+    // same unit, or the same sentence pattern, as the real ones) but plays
+    // no role in the correct computation — testing whether the student
+    // reasons from what the question actually asks, not "grab every number".
+    distraktion: [
+      { text: 'En klass med 24 elever åker på skolresa. Bussen kostar 3 600 kr och delas lika mellan eleverna. Varje elev betalar dessutom 20 kr för lunch. Resan är 45 minuter lång. Hur mycket betalar varje elev totalt?', ops: ['/', '+'], a1: 3600, b1: 24, mid: 150, a2: 150, b2: 20, answer: 170, unit: 'kr', note: 'Restiden (45 minuter) behövs inte för att räkna ut kostnaden — bara distraherande information.' },
+      { text: 'En bagare bakar bröd. Ugnen rymmer 8 brödlimpor åt gången och det tar 35 minuter att baka en omgång. Bagaren bakar 6 omgångar och säljer sedan 19 limpor på morgonen. Hur många limpor har hen kvar?', ops: ['×', '−'], a1: 8, b1: 6, mid: 48, a2: 48, b2: 19, answer: 29, unit: 'brödlimpor', note: 'Baktiden (35 minuter) är inte relevant för hur många limpor som bakas — bara distraherande information.' },
+      { text: 'En biograf har 18 rader med 22 platser i varje rad. Filmen som visas är 128 minuter lång. Om 15 platser är avbokade, hur många platser är lediga?', ops: ['×', '−'], a1: 18, b1: 22, mid: 396, a2: 396, b2: 15, answer: 381, unit: 'platser', note: 'Filmens längd (128 minuter) har inget med antalet lediga platser att göra — bara distraherande information.' },
+      { text: 'En fabrik tillverkar 120 muttrar på 15 minuter. Fabriken har 6 anställda som sköter maskinerna. Hur många muttrar tillverkas på 45 minuter om takten är jämn?', ops: ['/', '×'], a1: 120, b1: 15, mid: 8, a2: 8, b2: 45, answer: 360, unit: 'muttrar', note: 'Antalet anställda (6) behövs inte — takten (muttrar per minut) är redan given för hela fabriken.' },
+      { text: 'En affär säljer tröjor för 250 kr styck. Affären ger 60 kr rabatt per tröja på rean. Butiken öppnade för 12 år sedan. En kund köper 5 tröjor till rabatterat pris. Hur mycket betalar kunden totalt?', ops: ['−', '×'], a1: 250, b1: 60, mid: 190, a2: 190, b2: 5, answer: 950, unit: 'kr', note: 'Hur länge butiken funnits (12 år) har inget med priset att göra — bara distraherande information.' },
+      { text: 'En rektangulär trädgård är 12 m lång och 7 m bred. Gräsmattan i mitten av trädgården är 3 m bred. Hur lång är omkretsen av hela trädgården?', ops: ['+', '×'], a1: 12, b1: 7, mid: 19, a2: 19, b2: 2, answer: 38, unit: 'm', note: 'Gräsmattans bredd (3 m) används inte för omkretsen — bara trädgårdens yttermått (12 m och 7 m) behövs.' },
     ],
   };
   const CATEGORY_KEYS = Object.keys(BANK);
