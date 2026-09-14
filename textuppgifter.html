@@ -219,31 +219,52 @@
     min-height: 1.2em;
     font-size: 0.8rem;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
   .op-feedback.correct { color: var(--success); }
   .op-feedback.wrong { color: var(--danger); }
 
-  .computation-input {
-    width: 100%;
+  .calc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 4px;
+    flex-wrap: wrap;
+  }
+  .box-input {
+    width: 76px;
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.25rem;
-    padding: 10px 12px;
+    font-size: 1.15rem;
+    text-align: center;
+    padding: 8px 4px;
     border: 2px solid var(--accent);
-    border-radius: 9px;
+    border-radius: 8px;
     outline: none;
     background: var(--surface);
     color: var(--text);
   }
-  .computation-input:focus-visible {
+  .box-input:focus-visible {
     outline: 3px solid var(--accent-strong);
     outline-offset: 2px;
   }
+  .box-input.result {
+    border-style: dashed;
+  }
+  .calc-symbol {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+    min-width: 1ch;
+    text-align: center;
+  }
+
   .answer-unit {
     display: block;
     font-size: 0.85rem;
     color: var(--text-muted);
-    margin-top: 6px;
+    margin-top: 10px;
   }
 
   .feedback {
@@ -337,8 +358,13 @@
       </div>
       <div class="op-feedback" id="opFeedback1"></div>
 
-      <div class="step-label" id="calc1Label">Skriv uträkningen med siffror</div>
-      <input type="text" class="computation-input" id="computationInput1" placeholder="t.ex. 18 + 7" autocomplete="off" aria-label="Uträkning">
+      <div class="calc-row" id="calcRow1" style="display:none;">
+        <input type="text" class="box-input" id="box_a1" inputmode="decimal" aria-label="Första talet, steg 1">
+        <span class="calc-symbol" id="calcOp1"></span>
+        <input type="text" class="box-input" id="box_b1" inputmode="decimal" aria-label="Andra talet, steg 1">
+        <span class="calc-symbol">=</span>
+        <input type="text" class="box-input result" id="box_result1" inputmode="decimal" aria-label="Resultat, steg 1">
+      </div>
 
       <div id="step2Block" style="display:none;">
         <div class="step-label">Steg 2: vilket räknesätt?</div>
@@ -350,8 +376,13 @@
         </div>
         <div class="op-feedback" id="opFeedback2"></div>
 
-        <div class="step-label">Steg 2: skriv uträkningen med siffror</div>
-        <input type="text" class="computation-input" id="computationInput2" placeholder="t.ex. 72 − 17" autocomplete="off" aria-label="Uträkning steg 2">
+        <div class="calc-row" id="calcRow2" style="display:none;">
+          <input type="text" class="box-input" id="box_a2" inputmode="decimal" aria-label="Första talet, steg 2">
+          <span class="calc-symbol" id="calcOp2"></span>
+          <input type="text" class="box-input" id="box_b2" inputmode="decimal" aria-label="Andra talet, steg 2">
+          <span class="calc-symbol">=</span>
+          <input type="text" class="box-input result" id="box_result2" inputmode="decimal" aria-label="Svar">
+        </div>
       </div>
 
       <span class="answer-unit" id="answerUnit"></span>
@@ -364,7 +395,7 @@
       <button type="button" class="secondary" id="nextBtn">Nästa</button>
     </div>
 
-    <div class="hint">Läs uppgiften, välj räknesätt (du får direkt besked) och skriv sedan uträkningen med siffror, t.ex. 18 + 7. Vid flerstegsproblem: gör båda stegen.</div>
+    <div class="hint">Välj räknesätt först — du får direkt besked om det stämmer. När det är rätt visas rutorna: fyll i talen och räkna ut svaret.</div>
   </div>
 </main>
 
@@ -381,87 +412,91 @@
   // random *generation* of grammatically-correct word problems isn't safe, so
   // this page randomly *selects* from a curated bank instead.
   //
-  // Single-step items: { text, op, answer, unit, note? }
-  // Multi-step items:  { text, ops: [op1, op2], answer, unit, note? }
+  // Every number the student is asked to place in a box is stored explicitly
+  // (a1/b1, and a2/b2 for a second step) so "right operation, wrong numbers"
+  // is graded correctly — not just "does some expression evaluate right".
+  // For a two-step item, `mid` is step 1's own exact result (a1 op1 b1);
+  // it always reappears as either a2 or b2 in step 2 (never silently
+  // re-derived at grading time — every number here was hand-verified).
+  //
+  // Single-step items: { text, op, a1, b1, answer, unit, note? }
+  // Multi-step items:  { text, ops: [op1, op2], a1, b1, mid, a2, b2, answer, unit, note? }
 
   const BANK = {
     grunderna: [
-      { text: 'En buss har 18 elever. Vid nästa hållplats kliver 7 elever på. Hur många elever är på bussen nu?', op: '+', answer: 25, unit: 'elever' },
-      { text: 'En elev har 200 kr. Hen köper lunch för 68 kr. Hur mycket pengar har eleven kvar?', op: '−', answer: 132, unit: 'kr' },
-      { text: 'En låda innehåller 24 pennor. Skolan köper 7 lådor. Hur många pennor köper skolan?', op: '×', answer: 168, unit: 'pennor' },
-      { text: 'En klass har 28 elever. Eleverna ska arbeta i grupper med 4 elever i varje grupp. Hur många grupper blir det?', op: '/', answer: 7, unit: 'grupper' },
-      { text: 'Ett paket med 8 yoghurtar kostar 36 kr. Vad kostar en yoghurt?', op: '/', answer: 4.5, unit: 'kr' },
-      { text: 'Ett recept behöver 250 g mjöl, 150 g socker och 75 g smör. Hur mycket väger ingredienserna tillsammans?', op: '+', answer: 475, unit: 'g' },
-      { text: 'En bil kör 360 km på 4 timmar. Hur långt kör bilen på en timme om hastigheten är jämn?', op: '/', answer: 90, unit: 'km' },
-      { text: 'Ett klassrum har 6 rader med 5 stolar i varje rad. Hur många stolar finns det?', op: '×', answer: 30, unit: 'stolar' },
-      { text: 'Målet är att läsa 120 sidor. Eleven har läst 76 sidor. Hur många sidor återstår?', op: '−', answer: 44, unit: 'sidor' },
-      { text: 'En hiss får bära 500 kg. Fyra personer väger tillsammans 326 kg. Hur mycket vikt finns kvar innan maxgränsen nås?', op: '−', answer: 174, unit: 'kg' },
-      { text: 'En elev cyklar 3,5 km varje dag i 6 dagar. Hur långt cyklar eleven sammanlagt?', op: '×', answer: 21, unit: 'km' },
-      { text: 'Ett äpple kostar 4,50 kr. Vad kostar 8 äpplen?', op: '×', answer: 36, unit: 'kr' },
+      { text: 'En buss har 18 elever. Vid nästa hållplats kliver 7 elever på. Hur många elever är på bussen nu?', op: '+', a1: 18, b1: 7, answer: 25, unit: 'elever' },
+      { text: 'En elev har 200 kr. Hen köper lunch för 68 kr. Hur mycket pengar har eleven kvar?', op: '−', a1: 200, b1: 68, answer: 132, unit: 'kr' },
+      { text: 'En låda innehåller 24 pennor. Skolan köper 7 lådor. Hur många pennor köper skolan?', op: '×', a1: 24, b1: 7, answer: 168, unit: 'pennor' },
+      { text: 'En klass har 28 elever. Eleverna ska arbeta i grupper med 4 elever i varje grupp. Hur många grupper blir det?', op: '/', a1: 28, b1: 4, answer: 7, unit: 'grupper' },
+      { text: 'Ett paket med 8 yoghurtar kostar 36 kr. Vad kostar en yoghurt?', op: '/', a1: 36, b1: 8, answer: 4.5, unit: 'kr' },
+      { text: 'Ett recept behöver 250 g mjöl, 150 g socker och 75 g smör. Hur mycket väger ingredienserna tillsammans?', ops: ['+', '+'], a1: 250, b1: 150, mid: 400, a2: 400, b2: 75, answer: 475, unit: 'g', note: 'Lägg ihop två åt gången: 250 + 150 = 400, sedan 400 + 75 = 475.' },
+      { text: 'En bil kör 360 km på 4 timmar. Hur långt kör bilen på en timme om hastigheten är jämn?', op: '/', a1: 360, b1: 4, answer: 90, unit: 'km' },
+      { text: 'Ett klassrum har 6 rader med 5 stolar i varje rad. Hur många stolar finns det?', op: '×', a1: 6, b1: 5, answer: 30, unit: 'stolar' },
+      { text: 'Målet är att läsa 120 sidor. Eleven har läst 76 sidor. Hur många sidor återstår?', op: '−', a1: 120, b1: 76, answer: 44, unit: 'sidor' },
+      { text: 'En hiss får bära 500 kg. Fyra personer väger tillsammans 326 kg. Hur mycket vikt finns kvar innan maxgränsen nås?', op: '−', a1: 500, b1: 326, answer: 174, unit: 'kg' },
+      { text: 'En elev cyklar 3,5 km varje dag i 6 dagar. Hur långt cyklar eleven sammanlagt?', op: '×', a1: 3.5, b1: 6, answer: 21, unit: 'km' },
+      { text: 'Ett äpple kostar 4,50 kr. Vad kostar 8 äpplen?', op: '×', a1: 4.5, b1: 8, answer: 36, unit: 'kr' },
     ],
 
     nyckelord: [
-      { text: 'Leo har 34 kr. Det är 12 kr mer än vad Sam har. Hur mycket pengar har Sam?', op: '−', answer: 22, unit: 'kr', note: 'Ordet "mer" lockar till addition — men Sam har mindre än Leo, inte mer.' },
-      { text: 'Amina har 28 klistermärken. Det är 9 färre än vad Noor har. Hur många klistermärken har Noor?', op: '+', answer: 37, unit: 'klistermärken', note: 'Ordet "färre" lockar till subtraktion — men Noor har fler än Amina.' },
-      { text: 'En låda innehåller 18 pennor. Skolan köper 7 lådor. Hur många pennor köper skolan totalt?', op: '×', answer: 126, unit: 'pennor', note: 'Ordet "totalt" lockar till addition — men här är det lika stora grupper, alltså multiplikation.' },
-      { text: 'Ett lag har 84 kr att dela lika mellan 6 spelare. Hur mycket får varje spelare?', op: '/', answer: 14, unit: 'kr', note: 'Ordet "varje" kan kännas som multiplikation — men här delas en summa lika, alltså division.' },
-      { text: 'En tårta är delad i 12 bitar. Efter fikat finns 5 bitar kvar. Hur många bitar åt gruppen?', op: '−', answer: 7, unit: 'bitar', note: 'Ordet "delad" lockar till division — men frågan handlar om hur mycket som är borta, alltså subtraktion.' },
+      { text: 'Leo har 34 kr. Det är 12 kr mer än vad Sam har. Hur mycket pengar har Sam?', op: '−', a1: 34, b1: 12, answer: 22, unit: 'kr', note: 'Ordet "mer" lockar till addition — men Sam har mindre än Leo, inte mer.' },
+      { text: 'Amina har 28 klistermärken. Det är 9 färre än vad Noor har. Hur många klistermärken har Noor?', op: '+', a1: 28, b1: 9, answer: 37, unit: 'klistermärken', note: 'Ordet "färre" lockar till subtraktion — men Noor har fler än Amina.' },
+      { text: 'En låda innehåller 18 pennor. Skolan köper 7 lådor. Hur många pennor köper skolan totalt?', op: '×', a1: 18, b1: 7, answer: 126, unit: 'pennor', note: 'Ordet "totalt" lockar till addition — men här är det lika stora grupper, alltså multiplikation.' },
+      { text: 'Ett lag har 84 kr att dela lika mellan 6 spelare. Hur mycket får varje spelare?', op: '/', a1: 84, b1: 6, answer: 14, unit: 'kr', note: 'Ordet "varje" kan kännas som multiplikation — men här delas en summa lika, alltså division.' },
+      { text: 'En tårta är delad i 12 bitar. Efter fikat finns 5 bitar kvar. Hur många bitar åt gruppen?', op: '−', a1: 12, b1: 5, answer: 7, unit: 'bitar', note: 'Ordet "delad" lockar till division — men frågan handlar om hur mycket som är borta, alltså subtraktion.' },
     ],
 
     enheter: [
-      { text: 'Ett rep är 3 m långt och klipps i bitar som är 10 cm långa. Hur många bitar blir det?', op: '/', answer: 30, unit: 'bitar', note: 'Gör om till samma enhet först: 300 cm / 10 cm.' },
-      { text: 'En flaska innehåller 1,5 liter saft. Klassen dricker 8 dl. Hur mycket saft finns kvar?', op: '−', answer: 7, unit: 'dl', note: '1,5 liter = 15 dl. 15 dl − 8 dl = 7 dl.' },
-      { text: 'En elev springer 1,2 km och går sedan 850 m. Hur långt rör sig eleven totalt?', op: '+', answer: 2050, unit: 'm', note: '1,2 km = 1200 m. 1200 m + 850 m = 2050 m.' },
-      { text: 'En maskin fyller 250 ml i varje flaska. Den fyller 36 flaskor. Hur många liter fyller maskinen totalt?', op: '×', answer: 9, unit: 'liter', note: '250 ml × 36 = 9000 ml = 9 liter.' },
-      { text: 'En påse innehåller 1,8 kg mjöl. Ett recept behöver 300 g mjöl. Hur många recept räcker mjölet till?', op: '/', answer: 6, unit: 'recept', note: '1,8 kg = 1800 g. 1800 g / 300 g = 6.' },
-      { text: 'En penna är 17 cm lång och en annan penna är 128 mm lång. Hur mycket längre är den första pennan?', op: '−', answer: 4.2, unit: 'cm', note: '128 mm = 12,8 cm. 17 cm − 12,8 cm = 4,2 cm.' },
-      { text: 'En klass gör 12 affischer. Varje affisch behöver 35 cm tejp. Hur många meter tejp behövs totalt?', op: '×', answer: 4.2, unit: 'm', note: '12 × 35 cm = 420 cm = 4,2 m.' },
-      { text: 'En 5 liter dunk ska fyllas i flaskor som rymmer 250 ml. Hur många flaskor behövs?', op: '/', answer: 20, unit: 'flaskor', note: '5 liter = 5000 ml. 5000 ml / 250 ml = 20.' },
-      { text: 'En tygbit är 4,8 m lång. Varje kudde behöver 60 cm tyg. Hur många kuddar räcker tyget till?', op: '/', answer: 8, unit: 'kuddar', note: '4,8 m = 480 cm. 480 cm / 60 cm = 8.' },
+      { text: 'Ett rep är 3 m långt och klipps i bitar som är 10 cm långa. Hur många bitar blir det?', op: '/', a1: 300, b1: 10, answer: 30, unit: 'bitar', note: 'Gör om till samma enhet först: 3 m = 300 cm.' },
+      { text: 'En flaska innehåller 1,5 liter saft. Klassen dricker 8 dl. Hur mycket saft finns kvar?', op: '−', a1: 15, b1: 8, answer: 7, unit: 'dl', note: '1,5 liter = 15 dl.' },
+      { text: 'En elev springer 1,2 km och går sedan 850 m. Hur långt rör sig eleven totalt?', op: '+', a1: 1200, b1: 850, answer: 2050, unit: 'm', note: '1,2 km = 1200 m.' },
+      { text: 'En maskin fyller 250 ml i varje flaska. Den fyller 36 flaskor. Hur många milliliter fyller maskinen totalt?', op: '×', a1: 250, b1: 36, answer: 9000, unit: 'ml', note: '250 ml × 36 = 9000 ml (= 9 liter).' },
+      { text: 'En påse innehåller 1,8 kg mjöl. Ett recept behöver 300 g mjöl. Hur många recept räcker mjölet till?', op: '/', a1: 1800, b1: 300, answer: 6, unit: 'recept', note: '1,8 kg = 1800 g.' },
+      { text: 'En penna är 17 cm lång och en annan penna är 128 mm lång. Hur mycket längre är den första pennan?', op: '−', a1: 17, b1: 12.8, answer: 4.2, unit: 'cm', note: '128 mm = 12,8 cm.' },
+      { text: 'En klass gör 12 affischer. Varje affisch behöver 35 cm tejp. Hur många centimeter tejp behövs totalt?', op: '×', a1: 12, b1: 35, answer: 420, unit: 'cm', note: '12 × 35 cm = 420 cm (= 4,2 m).' },
+      { text: 'En 5 liter dunk ska fyllas i flaskor som rymmer 250 ml. Hur många flaskor behövs?', op: '/', a1: 5000, b1: 250, answer: 20, unit: 'flaskor', note: '5 liter = 5000 ml.' },
+      { text: 'En tygbit är 4,8 m lång. Varje kudde behöver 60 cm tyg. Hur många kuddar räcker tyget till?', op: '/', a1: 480, b1: 60, answer: 8, unit: 'kuddar', note: '4,8 m = 480 cm.' },
     ],
 
     jamforelse: [
-      { text: 'Mira har 12 kulor. Aron har 4 fler än Mira. Hur många kulor har Aron?', op: '+', answer: 16, unit: 'kulor', note: '"Fler än" är en additiv jämförelse — man lägger till skillnaden.' },
-      { text: 'Mira har 12 kulor. Aron har 4 gånger så många som Mira. Hur många kulor har Aron?', op: '×', answer: 48, unit: 'kulor', note: '"Gånger så många" är en multiplikativ jämförelse — man multiplicerar med faktorn.' },
-      { text: 'Sara springer 4 varv på 10 minuter. Efter 15 minuter har hon sprungit 9 varv. Hur många fler varv sprang hon under de sista 5 minuterna?', op: '−', answer: 5, unit: 'varv', note: 'Det ser proportionellt ut (4 varv på 10 minuter), men frågan söker bara skillnaden mellan 9 och 4 varv.' },
-      { text: 'En ritning har skalan 1:50. Ett bord är 3 cm långt på ritningen. Hur långt är bordet i verkligheten?', op: '×', answer: 150, unit: 'cm', note: 'Skalfaktorn multipliceras med ritningens mått: 3 cm × 50 = 150 cm (= 1,5 m).' },
+      { text: 'Mira har 12 kulor. Aron har 4 fler än Mira. Hur många kulor har Aron?', op: '+', a1: 12, b1: 4, answer: 16, unit: 'kulor', note: '"Fler än" är en additiv jämförelse — man lägger till skillnaden.' },
+      { text: 'Mira har 12 kulor. Aron har 4 gånger så många som Mira. Hur många kulor har Aron?', op: '×', a1: 12, b1: 4, answer: 48, unit: 'kulor', note: '"Gånger så många" är en multiplikativ jämförelse — man multiplicerar med faktorn.' },
+      { text: 'Sara springer 4 varv på 10 minuter. Efter 15 minuter har hon sprungit 9 varv. Hur många fler varv sprang hon under de sista 5 minuterna?', op: '−', a1: 9, b1: 4, answer: 5, unit: 'varv', note: 'Det ser proportionellt ut (4 varv på 10 minuter), men frågan söker bara skillnaden mellan 9 och 4 varv.' },
+      { text: 'En ritning har skalan 1:50. Ett bord är 3 cm långt på ritningen. Hur långt är bordet i verkligheten, i cm?', op: '×', a1: 3, b1: 50, answer: 150, unit: 'cm', note: 'Skalfaktorn multipliceras med ritningens mått: 3 cm × 50 = 150 cm (= 1,5 m).' },
     ],
 
     division: [
-      { text: '2,4 kg ris delas lika i 6 burkar. Hur mycket ris får varje burk?', op: '/', answer: 0.4, unit: 'kg', note: 'Delningsdivision: gruppstorleken är okänd.' },
-      { text: '2,4 kg ris ska packas i påsar med 300 g i varje. Hur många påsar räcker riset till?', op: '/', answer: 8, unit: 'påsar', note: 'Gör om till gram: 2400 g / 300 g. Innehållsdivision: antalet grupper är okänt.' },
-      { text: 'Ett rep är 5 m långt. Det klipps i bitar som är 80 cm. Hur många hela bitar kan man få?', op: '/', answer: 6, unit: 'hela bitar', note: '500 cm / 80 cm = 6,25 — men man kan bara få 6 HELA bitar. Avrunda nedåt.' },
-      { text: '5 m rep ska packas i påsar. Varje påse rymmer 80 cm rep. Hur många påsar behövs?', op: '/', answer: 7, unit: 'påsar', note: 'Samma division som föregående (500/80 = 6,25), men nu behövs en påse extra för resten. Avrunda uppåt.' },
-      { text: '3 meter rep klipps i bitar som är 0,25 m långa. Hur många bitar blir det?', op: '/', answer: 12, unit: 'bitar', note: 'Division med ett tal mindre än 1 ger ett svar som är större än 3.' },
-      { text: '0,6 kg äpplen kostar 18 kr. Vad kostar 1 kg äpplen?', op: '/', answer: 30, unit: 'kr', note: 'Division kan ge ett svar som är större än talet du delar med.' },
+      { text: '2,4 kg ris delas lika i 6 burkar. Hur mycket ris får varje burk?', op: '/', a1: 2.4, b1: 6, answer: 0.4, unit: 'kg', note: 'Delningsdivision: gruppstorleken är okänd.' },
+      { text: '2,4 kg ris ska packas i påsar med 300 g i varje. Hur många påsar räcker riset till?', op: '/', a1: 2400, b1: 300, answer: 8, unit: 'påsar', note: 'Gör om till gram: 2,4 kg = 2400 g. Innehållsdivision: antalet grupper är okänt.' },
+      { text: 'Ett rep är 5 m långt. Det klipps i bitar som är 80 cm. Hur många hela bitar kan man få?', op: '/', a1: 500, b1: 80, answer: 6, unit: 'hela bitar', note: '500 cm / 80 cm = 6,25 — men man kan bara få 6 HELA bitar. Avrunda nedåt.' },
+      { text: '5 m rep ska packas i påsar. Varje påse rymmer 80 cm rep. Hur många påsar behövs?', op: '/', a1: 500, b1: 80, answer: 7, unit: 'påsar', note: 'Samma division som föregående (500/80 = 6,25), men nu behövs en påse extra för resten. Avrunda uppåt.' },
+      { text: '3 meter rep klipps i bitar som är 0,25 m långa. Hur många bitar blir det?', op: '/', a1: 3, b1: 0.25, answer: 12, unit: 'bitar', note: 'Division med ett tal mindre än 1 ger ett svar som är större än 3.' },
+      { text: '0,6 kg äpplen kostar 18 kr. Vad kostar 1 kg äpplen?', op: '/', a1: 18, b1: 0.6, answer: 30, unit: 'kr', note: 'Division kan ge ett svar som är större än talet du delar med.' },
     ],
 
     area: [
-      { text: 'Ett klassrum är 8 m långt och 6 m brett. Hur stor area har klassrummet?', op: '×', answer: 48, unit: 'm²', note: 'Area = längd gånger bredd.' },
-      { text: 'Ett klassrum är 8 m långt och 6 m brett. Hur lång är omkretsen?', op: '+', answer: 28, unit: 'm', note: 'Omkrets = summan av alla sidor (8+6+8+6) — inte area!' },
-      { text: 'En rektangulär matta är 2,4 m lång och 1,5 m bred. Hur många meter kantband behövs runt mattan?', op: '+', answer: 7.8, unit: 'm', note: 'Omkrets, inte area: 2,4 + 1,5 + 2,4 + 1,5.' },
-      { text: 'En skylt är 30 cm bred och 20 cm hög. Vad är skyltens area?', op: '×', answer: 600, unit: 'cm²', note: 'Area = bredd gånger höjd.' },
+      { text: 'Ett klassrum är 8 m långt och 6 m brett. Hur stor area har klassrummet?', op: '×', a1: 8, b1: 6, answer: 48, unit: 'm²', note: 'Area = längd gånger bredd.' },
+      { text: 'Ett klassrum är 8 m långt och 6 m brett. Hur lång är omkretsen?', ops: ['+', '×'], a1: 8, b1: 6, mid: 14, a2: 14, b2: 2, answer: 28, unit: 'm', note: 'Omkrets = (längd + bredd) × 2, inte area! 8 + 6 = 14, sedan 14 × 2 = 28.' },
+      { text: 'En rektangulär matta är 2,4 m lång och 1,5 m bred. Hur många meter kantband behövs runt mattan?', ops: ['+', '×'], a1: 2.4, b1: 1.5, mid: 3.9, a2: 3.9, b2: 2, answer: 7.8, unit: 'm', note: 'Omkrets = (längd + bredd) × 2: 2,4 + 1,5 = 3,9, sedan 3,9 × 2 = 7,8.' },
+      { text: 'En skylt är 30 cm bred och 20 cm hög. Vad är skyltens area?', op: '×', a1: 30, b1: 20, answer: 600, unit: 'cm²', note: 'Area = bredd gånger höjd.' },
     ],
 
     flersteg: [
-      { text: 'En klass köper 6 paket pennor. Varje paket innehåller 12 pennor. 17 pennor delas ut direkt. Hur många pennor finns kvar?', ops: ['×', '−'], answer: 55, unit: 'pennor' },
-      { text: 'En elev har 5 meter snöre. Hen klipper bort 80 cm. Resten klipps i bitar som är 20 cm långa. Hur många bitar blir det?', ops: ['−', '/'], answer: 21, unit: 'bitar', note: 'Gör om till cm: 500 − 80 = 420, 420 / 20 = 21.' },
-      { text: 'En affär säljer 4 likadana vattenflaskor för 92 kr. Vad kostar 7 sådana flaskor?', ops: ['/', '×'], answer: 161, unit: 'kr', note: 'Först pris per styck (92/4 = 23 kr), sedan för 7 stycken (23 × 7).' },
-      { text: 'En hink innehåller 7,5 liter vatten. Eleverna häller upp 12 muggar med 250 ml i varje. Hur mycket vatten finns kvar?', ops: ['×', '−'], answer: 4.5, unit: 'liter', note: '12 × 250 ml = 3000 ml = 3 liter. 7,5 − 3 = 4,5 liter.' },
-      { text: 'En vandring är 8 km. Klassen har gått 3,25 km före lunch och 1800 m efter lunch. Hur långt är det kvar?', ops: ['+', '−'], answer: 2.95, unit: 'km', note: '1800 m = 1,8 km. 3,25 + 1,8 = 5,05 km gått. 8 − 5,05 = 2,95 km kvar.' },
-      { text: 'En låda väger 1,8 kg tom. Varje bok väger 350 g. Hur mycket väger lådan med 12 böcker?', ops: ['×', '+'], answer: 6, unit: 'kg', note: '12 × 350 g = 4200 g = 4,2 kg. 4,2 + 1,8 = 6 kg.' },
-      { text: 'En lärare har 8 paket med 25 papper i varje. Klassen använder 73 papper. Hur många papper finns kvar?', ops: ['×', '−'], answer: 127, unit: 'papper' },
-      { text: 'En rulle tejp är 8 m lång. Klassen använder 14 bitar som är 35 cm vardera. Hur mycket tejp finns kvar?', ops: ['×', '−'], answer: 310, unit: 'cm', note: '14 × 35 = 490 cm. 800 − 490 = 310 cm (= 3,1 m).' },
-      { text: 'En växt är 10 cm på måndag och 16 cm på fredag. En annan växt är 20 cm på måndag. Om den växer lika många centimeter, hur hög är den på fredag?', ops: ['−', '+'], answer: 26, unit: 'cm', note: 'Samma ÖKNING (skillnad), inte samma förhållande: 16 − 10 = 6, 20 + 6 = 26.' },
-      { text: 'Ett recept använder 10 g jäst till 16 dl degvätska. Hur mycket jäst behövs till 32 dl degvätska om förhållandet ska vara samma?', ops: ['/', '×'], answer: 20, unit: 'g', note: 'Samma FÖRHÅLLANDE, inte samma skillnad: 32/16 = 2, 10 × 2 = 20.' },
-      { text: 'En skrivare skriver ut 4 sidor på 10 sekunder. Hur många sidor skriver den ut på 15 sekunder om hastigheten är jämn?', ops: ['/', '×'], answer: 6, unit: 'sidor', note: 'Proportionalitet: 4/10 = 0,4 sidor/sekund, 0,4 × 15 = 6.' },
+      { text: 'En klass köper 6 paket pennor. Varje paket innehåller 12 pennor. 17 pennor delas ut direkt. Hur många pennor finns kvar?', ops: ['×', '−'], a1: 6, b1: 12, mid: 72, a2: 72, b2: 17, answer: 55, unit: 'pennor' },
+      { text: 'En elev har 5 meter snöre. Hen klipper bort 80 cm. Resten klipps i bitar som är 20 cm långa. Hur många bitar blir det?', ops: ['−', '/'], a1: 500, b1: 80, mid: 420, a2: 420, b2: 20, answer: 21, unit: 'bitar', note: '5 m = 500 cm.' },
+      { text: 'En affär säljer 4 likadana vattenflaskor för 92 kr. Vad kostar 7 sådana flaskor?', ops: ['/', '×'], a1: 92, b1: 4, mid: 23, a2: 23, b2: 7, answer: 161, unit: 'kr', note: 'Först pris per styck (92/4 = 23 kr), sedan för 7 stycken (23 × 7).' },
+      { text: 'En hink innehåller 7,5 liter vatten. Eleverna häller upp 12 muggar med 250 ml i varje. Hur många milliliter vatten finns kvar?', ops: ['×', '−'], a1: 12, b1: 250, mid: 3000, a2: 7500, b2: 3000, answer: 4500, unit: 'ml', note: '12 × 250 ml = 3000 ml. Hinken rymmer 7,5 liter = 7500 ml. (4500 ml = 4,5 liter)' },
+      { text: 'En vandring är 8 km. Klassen har gått 3,25 km före lunch och 1800 m efter lunch. Hur långt är det kvar?', ops: ['+', '−'], a1: 3.25, b1: 1.8, mid: 5.05, a2: 8, b2: 5.05, answer: 2.95, unit: 'km', note: '1800 m = 1,8 km. 3,25 + 1,8 = 5,05 km gått.' },
+      { text: 'En låda väger 1,8 kg tom. Varje bok väger 350 g. Hur mycket väger lådan med 12 böcker?', ops: ['×', '+'], a1: 12, b1: 0.35, mid: 4.2, a2: 4.2, b2: 1.8, answer: 6, unit: 'kg', note: '350 g = 0,35 kg. 12 × 0,35 kg = 4,2 kg.' },
+      { text: 'En lärare har 8 paket med 25 papper i varje. Klassen använder 73 papper. Hur många papper finns kvar?', ops: ['×', '−'], a1: 8, b1: 25, mid: 200, a2: 200, b2: 73, answer: 127, unit: 'papper' },
+      { text: 'En rulle tejp är 8 m lång. Klassen använder 14 bitar som är 35 cm vardera. Hur många centimeter tejp finns kvar?', ops: ['×', '−'], a1: 14, b1: 35, mid: 490, a2: 800, b2: 490, answer: 310, unit: 'cm', note: '8 m = 800 cm. (310 cm = 3,1 m)' },
+      { text: 'En växt är 10 cm på måndag och 16 cm på fredag. En annan växt är 20 cm på måndag. Om den växer lika många centimeter, hur hög är den på fredag?', ops: ['−', '+'], a1: 16, b1: 10, mid: 6, a2: 6, b2: 20, answer: 26, unit: 'cm', note: 'Samma ÖKNING (skillnad), inte samma förhållande: 16 − 10 = 6 är ökningen, sedan 6 + 20 = 26.' },
+      { text: 'Ett recept använder 10 g jäst till 16 dl degvätska. Hur mycket jäst behövs till 32 dl degvätska om förhållandet ska vara samma?', ops: ['/', '×'], a1: 32, b1: 16, mid: 2, a2: 10, b2: 2, answer: 20, unit: 'g', note: 'Samma FÖRHÅLLANDE, inte samma skillnad: 32/16 = 2 är skalfaktorn, sedan 10 × 2 = 20.' },
+      { text: 'En skrivare skriver ut 4 sidor på 10 sekunder. Hur många sidor skriver den ut på 15 sekunder om hastigheten är jämn?', ops: ['/', '×'], a1: 4, b1: 10, mid: 0.4, a2: 15, b2: 0.4, answer: 6, unit: 'sidor', note: 'Proportionalitet: 4/10 = 0,4 sidor/sekund (steg 1), sedan 0,4 × 15 = 6 (steg 2).' },
     ],
   };
   const CATEGORY_KEYS = Object.keys(BANK);
-
-  // Symbols shown on the op buttons/feedback vs. the JS operator they mean
-  // once a student's typed expression is sanitized.
-  const OP_TO_JS = { '+': '+', '−': '-', '×': '*', '/': '/' };
+  const COMMUTATIVE = { '+': true, '×': true, '−': false, '/': false };
 
   let currentCategory = 'mixed';
   let current = null;
@@ -478,11 +513,19 @@
   const step1Label = document.getElementById('step1Label');
   const opRow1 = document.getElementById('opRow1');
   const opFeedback1 = document.getElementById('opFeedback1');
-  const computationInput1 = document.getElementById('computationInput1');
+  const calcRow1 = document.getElementById('calcRow1');
+  const calcOp1 = document.getElementById('calcOp1');
+  const box_a1 = document.getElementById('box_a1');
+  const box_b1 = document.getElementById('box_b1');
+  const box_result1 = document.getElementById('box_result1');
   const step2Block = document.getElementById('step2Block');
   const opRow2 = document.getElementById('opRow2');
   const opFeedback2 = document.getElementById('opFeedback2');
-  const computationInput2 = document.getElementById('computationInput2');
+  const calcRow2 = document.getElementById('calcRow2');
+  const calcOp2 = document.getElementById('calcOp2');
+  const box_a2 = document.getElementById('box_a2');
+  const box_b2 = document.getElementById('box_b2');
+  const box_result2 = document.getElementById('box_result2');
   const answerUnit = document.getElementById('answerUnit');
   const feedback = document.getElementById('feedback');
   const checkBtn = document.getElementById('checkBtn');
@@ -492,53 +535,8 @@
     return Number.isInteger(n) ? String(n) : String(n).replace('.', ',');
   }
 
-  // ---- Free-text computation parsing ----
-  // A student types the actual computation, e.g. "18 + 7" — this is
-  // evaluated directly rather than compared to a hidden operand pair, so
-  // any numbers that reach the right operator sequence and final value work.
-  function sanitizeExpr(raw) {
-    let s = raw.trim().replace(/=\s*$/, '');
-    s = s.replace(/[×·xX]/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
-    s = s.replace(/,/g, '.').replace(/\s+/g, '');
-    return s;
-  }
-
-  function isValidExprChars(s) {
-    return s.length > 0 && /^[0-9.+\-*/()]+$/.test(s);
-  }
-
-  // Binary operators only, in left-to-right order — a leading '-' or one
-  // right after '(' or another operator is a sign, not an operation.
-  function extractOperators(s) {
-    const ops = [];
-    for (let i = 0; i < s.length; i++) {
-      const c = s[i];
-      if (c === '+' || c === '-' || c === '*' || c === '/') {
-        const prev = s[i - 1];
-        const isUnary = i === 0 || prev === '(' || '+-*/'.includes(prev);
-        if (!isUnary) ops.push(c);
-      }
-    }
-    return ops;
-  }
-
-  function evalExpr(s) {
-    try {
-      const v = Function('"use strict"; return (' + s + ')')();
-      return Number.isFinite(v) ? v : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function gradeComputation(inputEl, expectedOpSymbol) {
-    const raw = inputEl.value.trim();
-    if (raw === '') return { opOk: false, value: null };
-    const s = sanitizeExpr(raw);
-    if (!isValidExprChars(s)) return { opOk: false, value: null };
-    const opsUsed = extractOperators(s);
-    const opOk = opsUsed.length === 1 && opsUsed[0] === OP_TO_JS[expectedOpSymbol];
-    return { opOk, value: evalExpr(s) };
+  function isMultiStep() {
+    return Array.isArray(current.ops);
   }
 
   function pickProblem() {
@@ -556,21 +554,19 @@
 
   function newProblem() {
     current = pickProblem();
-    const isMultiStep = Array.isArray(current.ops);
+    const multi = isMultiStep();
 
     problemText.textContent = current.text;
-    step1Label.textContent = isMultiStep ? 'Steg 1: vilket räknesätt?' : 'Vilket räknesätt passar?';
-    step2Block.style.display = isMultiStep ? 'block' : 'none';
+    step1Label.textContent = multi ? 'Steg 1: vilket räknesätt?' : 'Vilket räknesätt passar?';
+    step2Block.style.display = 'none';
 
-    opRow1.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    opRow2.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    opFeedback1.textContent = '';
-    opFeedback1.className = 'op-feedback';
-    opFeedback2.textContent = '';
-    opFeedback2.className = 'op-feedback';
+    [opRow1, opRow2].forEach(row => row.querySelectorAll('button').forEach(b => b.classList.remove('active')));
+    [opFeedback1, opFeedback2].forEach(f => { f.textContent = ''; f.className = 'op-feedback'; });
+    [calcRow1, calcRow2].forEach(r => r.style.display = 'none');
+    [box_a1, box_b1, box_result1, box_a2, box_b2, box_result2].forEach(b => b.value = '');
+    calcOp1.textContent = '';
+    calcOp2.textContent = '';
 
-    computationInput1.value = '';
-    computationInput2.value = '';
     answerUnit.textContent = current.unit ? 'Svaret ska vara i ' + current.unit + '.' : '';
     feedback.innerHTML = '';
     problemBox.classList.remove('flash-correct', 'flash-wrong');
@@ -578,9 +574,10 @@
     opRow1.querySelector('button').focus();
   }
 
-  // Immediate feedback the instant a räknesätt button is clicked — this is
-  // a formative nudge only, not part of the graded check below.
-  function wireOpRow(rowEl, feedbackEl, getExpectedOp) {
+  // Immediate feedback the instant a räknesätt button is clicked. Wrong
+  // choices get a warning and can be retried; a correct choice reveals that
+  // step's number-box template (and, for step 1, step 2's op buttons too).
+  function wireOpRow(rowEl, feedbackEl, calcRowEl, calcOpEl, getExpectedOp, onCorrect) {
     rowEl.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-op]');
       if (!btn) return;
@@ -589,49 +586,95 @@
       const correct = btn.dataset.op === expected;
       feedbackEl.textContent = correct ? 'Rätt!' : 'Fel, försök igen.';
       feedbackEl.className = 'op-feedback ' + (correct ? 'correct' : 'wrong');
+      if (correct) {
+        calcOpEl.textContent = expected;
+        calcRowEl.style.display = 'flex';
+        if (onCorrect) onCorrect();
+        calcRowEl.querySelector('.box-input').focus();
+      }
     });
   }
-  wireOpRow(opRow1, opFeedback1, () => Array.isArray(current.ops) ? current.ops[0] : current.op);
-  wireOpRow(opRow2, opFeedback2, () => current.ops[1]);
+  wireOpRow(opRow1, opFeedback1, calcRow1, calcOp1,
+    () => isMultiStep() ? current.ops[0] : current.op,
+    () => { if (isMultiStep()) step2Block.style.display = 'block'; });
+  wireOpRow(opRow2, opFeedback2, calcRow2, calcOp2, () => current.ops[1]);
+
+  function readNum(input) {
+    const n = parseFloat(input.value.trim().replace(/\s+/g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  }
+  function close(x, y) {
+    return x !== null && y !== null && Math.abs(x - y) < 0.005;
+  }
+  // Commutative ops accept either box order; +/× results always check both.
+  function operandsOk(typedA, typedB, groundA, groundB, op) {
+    if (COMMUTATIVE[op]) {
+      return (close(typedA, groundA) && close(typedB, groundB)) || (close(typedA, groundB) && close(typedB, groundA));
+    }
+    return close(typedA, groundA) && close(typedB, groundB);
+  }
 
   function checkAnswer() {
     if (awaitingNext) {
       newProblem();
       return;
     }
-    const isMultiStep = Array.isArray(current.ops);
-
-    const step1 = gradeComputation(computationInput1, isMultiStep ? current.ops[0] : current.op);
-    if (computationInput1.value.trim() === '') return;
-    let opCorrect = step1.opOk;
-    let finalValue = step1.value;
-
-    if (isMultiStep) {
-      const step2 = gradeComputation(computationInput2, current.ops[1]);
-      if (computationInput2.value.trim() === '') return;
-      opCorrect = opCorrect && step2.opOk;
-      finalValue = step2.value;
+    const multi = isMultiStep();
+    if (calcRow1.style.display === 'none') return;
+    if ([box_a1, box_b1, box_result1].some(b => b.value.trim() === '')) return;
+    if (multi) {
+      if (calcRow2.style.display === 'none') return;
+      if ([box_a2, box_b2, box_result2].some(b => b.value.trim() === '')) return;
     }
 
-    const answerCorrect = finalValue !== null && Math.abs(finalValue - current.answer) < 0.005;
+    const op1 = multi ? current.ops[0] : current.op;
+    const a1 = readNum(box_a1), b1 = readNum(box_b1), r1 = readNum(box_result1);
+    const step1OperandsOk = operandsOk(a1, b1, current.a1, current.b1, op1);
+    const step1ResultOk = close(r1, multi ? current.mid : current.answer);
+
+    let allOk = step1OperandsOk && step1ResultOk;
+    let step2OperandsOk = true, step2ResultOk = true;
+    if (multi) {
+      const op2 = current.ops[1];
+      const a2 = readNum(box_a2), b2 = readNum(box_b2), r2 = readNum(box_result2);
+      step2OperandsOk = operandsOk(a2, b2, current.a2, current.b2, op2);
+      step2ResultOk = close(r2, current.answer);
+      allOk = allOk && step2OperandsOk && step2ResultOk;
+    }
 
     totalCount++;
-    if (opCorrect && answerCorrect) correctCount++;
+    if (allOk) correctCount++;
     scoreCorrect.textContent = correctCount;
     scoreTotal.textContent = totalCount;
 
     problemBox.classList.remove('flash-correct', 'flash-wrong');
     void problemBox.offsetWidth;
-    problemBox.classList.add(opCorrect && answerCorrect ? 'flash-correct' : 'flash-wrong');
+    problemBox.classList.add(allOk ? 'flash-correct' : 'flash-wrong');
 
-    const opLine = opCorrect
-      ? '<div class="feedback-line correct">Räknesätt: Rätt!</div>'
-      : '<div class="feedback-line wrong">Räknesätt: Fel — rätt var ' + (isMultiStep ? current.ops.join(' sedan ') : current.op) + '.</div>';
-    const ansLine = answerCorrect
-      ? '<div class="feedback-line correct">Svar: Rätt!</div>'
-      : '<div class="feedback-line wrong">Svar: Fel — rätt svar är ' + fmtSv(current.answer) + ' ' + current.unit + '.</div>';
+    let lines = '';
+    if (!step1OperandsOk) {
+      lines += '<div class="feedback-line wrong">Steg 1: fel tal i rutorna — rätt är '
+        + fmtSv(current.a1) + ' ' + op1 + ' ' + fmtSv(current.b1) + '.</div>';
+    } else if (!step1ResultOk) {
+      lines += '<div class="feedback-line wrong">Steg 1: fel resultat — rätt är '
+        + fmtSv(multi ? current.mid : current.answer) + '.</div>';
+    } else {
+      lines += '<div class="feedback-line correct">Steg 1: Rätt!</div>';
+    }
+    if (multi) {
+      const op2 = current.ops[1];
+      if (!step2OperandsOk) {
+        lines += '<div class="feedback-line wrong">Steg 2: fel tal i rutorna — rätt är '
+          + fmtSv(current.a2) + ' ' + op2 + ' ' + fmtSv(current.b2) + '.</div>';
+      } else if (!step2ResultOk) {
+        lines += '<div class="feedback-line wrong">Steg 2: fel svar — rätt är '
+          + fmtSv(current.answer) + ' ' + current.unit + '.</div>';
+      } else {
+        lines += '<div class="feedback-line correct">Steg 2: Rätt!</div>';
+      }
+    }
     const noteLine = current.note ? '<div class="feedback-note">' + current.note + '</div>' : '';
-    feedback.innerHTML = opLine + ansLine + noteLine;
+    feedback.innerHTML = lines + noteLine;
 
     awaitingNext = true;
   }
@@ -647,7 +690,7 @@
   checkBtn.addEventListener('click', checkAnswer);
   nextBtn.addEventListener('click', newProblem);
 
-  [computationInput1, computationInput2].forEach(input => {
+  [box_a1, box_b1, box_result1, box_a2, box_b2, box_result2].forEach(input => {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.repeat) {
         e.preventDefault();
