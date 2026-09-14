@@ -187,28 +187,24 @@
     gap: 12px;
     margin-top: 6px;
   }
-  .landing-section-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 22px 0 12px;
-  }
-  .landing-section-divider::before,
-  .landing-section-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-  .landing-section-divider span {
+  .landing-section-label {
     font-family: "Nunito Sans", sans-serif;
     font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
     color: var(--text-muted);
-    white-space: nowrap;
+    margin: 0 2px 8px;
   }
+  .landing-section-box {
+    margin-top: 26px;
+    padding: 16px 16px 18px;
+    background: var(--bg);
+    border: 1.5px dashed var(--border);
+    border-radius: 14px;
+  }
+  .landing-section-box .landing-section-label { margin: 0 2px 10px; }
+  .landing-section-box .landing-choices { margin-top: 0; }
   .landing-card {
     display: flex;
     flex-direction: column;
@@ -224,12 +220,6 @@
     transition: background 0.15s;
   }
   .landing-card:hover { background: var(--accent-soft); }
-  .landing-card.landing-card-secondary {
-    border-style: dashed;
-    border-color: var(--text-muted);
-  }
-  .landing-card.landing-card-secondary .landing-card-title { color: var(--text-muted); }
-  .landing-card.landing-card-secondary:hover { background: var(--bg); }
   .landing-card:focus-visible {
     outline: 3px solid var(--accent-strong);
     outline-offset: 2px;
