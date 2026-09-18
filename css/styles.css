@@ -510,6 +510,12 @@
     border-radius: 10px;
     background: var(--surface);
   }
+  .rank-tier .tier-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
   .rank-tier .tier-step {
     flex-shrink: 0;
     width: 22px;

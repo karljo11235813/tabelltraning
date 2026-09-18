@@ -408,6 +408,7 @@ function renderRankLadder(avgSpeedSeconds, totalAnswered) {
   rankLadder.innerHTML = tiers.map((tier, i) => {
     const achieved = i === achievedIndex;
     const tierHtml = '<div class="rank-tier' + (achieved ? ' achieved' : '') + '">'
+      + '<img class="tier-icon" src="img/tiers/tier-' + i + '.png" alt="">'
       + '<span class="tier-step">' + (tiers.length - i) + '</span>'
       + '<span class="tier-body">'
       +   '<span class="tier-top">'
