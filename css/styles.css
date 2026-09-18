@@ -290,9 +290,9 @@
   }
   .table-grid input { position: absolute; opacity: 0; width: 0; height: 0; }
   .table-grid label.checked {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: var(--success-soft);
+    border-color: var(--success);
+    color: var(--success);
   }
   .table-grid label:has(input:focus-visible) {
     outline: 3px solid var(--accent-strong);

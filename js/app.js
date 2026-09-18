@@ -87,7 +87,7 @@ const againBtn = document.getElementById('againBtn');
 
 let mode = 'time';
 let operation = 'mul';
-let selectedTables = new Set(Array.from({ length: MAX_TABLE }, (_, i) => i + 1));
+let selectedTables = new Set();
 let originScreen = 'practice'; // which setup screen to return to on "again"
 
 // ---------- Bygg upp state ----------
@@ -341,11 +341,10 @@ langToggle.addEventListener('click', (e) => {
   applyLanguage();
 });
 
-// Build table checkboxes 1..MAX_TABLE
+// Build table checkboxes 1..MAX_TABLE, unchecked by default
 for (let n = 1; n <= MAX_TABLE; n++) {
   const label = document.createElement('label');
-  label.className = 'checked';
-  label.innerHTML = '<input type="checkbox" value="' + n + '" checked><span>' + n + '</span>';
+  label.innerHTML = '<input type="checkbox" value="' + n + '"><span>' + n + '</span>';
   tableGrid.appendChild(label);
   label.querySelector('input').addEventListener('change', (e) => {
     if (e.target.checked) {
@@ -358,6 +357,7 @@ for (let n = 1; n <= MAX_TABLE; n++) {
     updateStartButton();
   });
 }
+updateStartButton();
 
 [...modeButtons, ...testModeButtons].forEach(btn => {
   btn.addEventListener('click', () => {
