@@ -473,20 +473,7 @@
     text-align: center;
     box-shadow: var(--shadow);
   }
-  .result-card h2 { color: var(--accent); margin: 0 0 4px 0; font-size: 1.3rem; }
-  .result-number {
-    font-family: "Baloo 2", sans-serif;
-    font-size: 3.4rem;
-    font-weight: 800;
-    color: var(--success);
-    margin: 8px 0 2px;
-    font-variant-numeric: tabular-nums;
-  }
-  .result-caption {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    margin-bottom: 18px;
-  }
+  .result-card h2 { color: var(--accent); margin: 0 0 20px 0; font-size: 1.3rem; }
   .rank-ladder {
     display: flex;
     flex-direction: column;
@@ -792,6 +779,8 @@
     font-variant-numeric: tabular-nums;
     line-height: 1;
   }
+  #statCorrect { color: var(--success); }
+  #statWrong { color: var(--danger); }
   .result-stat .lbl {
     font-size: 0.95rem;
     font-weight: 700;

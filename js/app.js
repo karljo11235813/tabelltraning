@@ -76,8 +76,6 @@ const nextBtn = document.getElementById('nextBtn');
 const preview1 = document.getElementById('preview1');
 
 const resultTitle = document.getElementById('resultTitle');
-const resultHeadline = document.getElementById('resultHeadline');
-const resultCaption = document.getElementById('resultCaption');
 const statCorrect = document.getElementById('statCorrect');
 const statWrong = document.getElementById('statWrong');
 const statSpeed = document.getElementById('statSpeed');
@@ -232,15 +230,7 @@ function renderResultText() {
     ? (lastElapsedSeconds + wrongCount * WRONG_PENALTY_SECONDS) / correctCount
     : Infinity;
 
-  if (mode === 'time') {
-    resultTitle.textContent = s.resultTitleTime;
-    resultHeadline.textContent = correctCount;
-    resultCaption.textContent = s.resultCaptionTime;
-  } else {
-    resultTitle.textContent = s.resultTitleCount;
-    resultHeadline.textContent = lastElapsedSeconds.toFixed(1).replace('.', ',') + ' s';
-    resultCaption.textContent = s.resultCaptionCount;
-  }
+  resultTitle.textContent = mode === 'time' ? s.resultTitleTime : s.resultTitleCount;
   document.getElementById('lblStatCorrect').textContent = s.statCorrect;
   document.getElementById('lblStatWrong').textContent = s.statWrong;
   document.getElementById('lblStatSpeed').textContent = s.statSpeed;
