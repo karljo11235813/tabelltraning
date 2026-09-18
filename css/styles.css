@@ -775,8 +775,8 @@
   .result-stats {
     display: flex;
     justify-content: center;
-    gap: 26px;
-    margin-bottom: 26px;
+    gap: 32px;
+    margin: 4px 0 28px;
     flex-wrap: wrap;
   }
   .result-stat {
@@ -786,17 +786,19 @@
   }
   .result-stat .val {
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 2.9rem;
+    font-weight: 800;
     color: var(--text);
     font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
   .result-stat .lbl {
-    font-size: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.4px;
-    margin-top: 2px;
+    letter-spacing: 0.5px;
+    margin-top: 6px;
   }
   .penalty-note {
     display: none;
