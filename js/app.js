@@ -74,7 +74,6 @@ const problemText = document.getElementById('problemText');
 const answerInput = document.getElementById('answerInput');
 const nextBtn = document.getElementById('nextBtn');
 const preview1 = document.getElementById('preview1');
-const preview2 = document.getElementById('preview2');
 
 const resultTitle = document.getElementById('resultTitle');
 const resultHeadline = document.getElementById('resultHeadline');
@@ -323,7 +322,6 @@ function applyLanguage() {
 
   document.getElementById('previewTitle').textContent = s.previewTitle;
   document.getElementById('previewNextLbl').textContent = s.previewNext;
-  document.getElementById('previewThenLbl').textContent = s.previewThen;
   answerInput.setAttribute('aria-label', s.answerAria);
   nextBtn.textContent = s.nextBtn;
 
@@ -609,7 +607,7 @@ function makeBuildProblem() {
 }
 
 function refillQueue() {
-  while (queue.length < 3) queue.push(problemGenerator());
+  while (queue.length < 2) queue.push(problemGenerator());
 }
 
 let problemShownAt = 0;
@@ -618,7 +616,6 @@ function renderCurrent() {
   refillQueue();
   problemText.textContent = queue[0].text;
   preview1.textContent = queue[1].text;
-  preview2.textContent = queue[2].text;
   problemShownAt = performance.now();
 }
 
