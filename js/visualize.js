@@ -146,34 +146,22 @@
       line: themeColor('--border', '#d8cfe0'),
     };
     const text = themeColor('--text', '#221b28');
-    const textMuted = themeColor('--text-muted', '#6f6478');
 
     const cols = divisor, rows = quotient;
     const cell = cellSizeFor(cols, rows);
-    const labelGutter = String(rows).length * 8 + 10;
     const pad = 20;
     const gridW = cols * cell;
     const gridH = rows * cell;
     const barGap = 10;
     const stripH = cell;
 
-    const w = pad + labelGutter + gridW + pad;
+    const w = pad + gridW + pad;
     const h = pad + gridH + barGap + 4 + barGap + stripH + 32;
 
     const svg = baseSvg(w, h, dividend + ' delat med ' + divisor);
-    const gx = pad + labelGutter;
+    const gx = pad;
 
     drawCells(svg, gx, pad, rows, cols, cell, numColors, true);
-
-    // Row numbers 1..quotient beside the numerator, one per row-group.
-    for (let r = 0; r < rows; r++) {
-      const t = svgEl('text', {
-        x: gx - 8, y: pad + r * cell + cell / 2 + 4, 'text-anchor': 'end',
-        'font-family': '"Nunito Sans", sans-serif', 'font-size': 11, fill: textMuted,
-      });
-      t.textContent = String(r + 1);
-      svg.appendChild(t);
-    }
 
     const barY = pad + gridH + barGap;
     svg.appendChild(svgEl('line', {
