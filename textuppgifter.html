@@ -467,6 +467,18 @@
       { text: 'En hiss får bära 500 kg. Fyra personer väger tillsammans 326 kg. Hur mycket vikt finns kvar innan maxgränsen nås?', op: '−', a1: 500, b1: 326, answer: 174, unit: 'kg' },
       { text: 'En elev cyklar 3,5 km varje dag i 6 dagar. Hur långt cyklar eleven sammanlagt?', op: '×', a1: 3.5, b1: 6, answer: 21, unit: 'km' },
       { text: 'Ett äpple kostar 4,50 kr. Vad kostar 8 äpplen?', op: '×', a1: 4.5, b1: 8, answer: 36, unit: 'kr' },
+      { text: 'En biograf har 142 platser upptagna. 36 personer till köper biljetter. Hur många platser är upptagna nu?', op: '+', a1: 142, b1: 36, answer: 178, unit: 'platser' },
+      { text: 'En cistern rymmer 850 liter. 275 liter har tappats ut. Hur mycket är kvar?', op: '−', a1: 850, b1: 275, answer: 575, unit: 'liter' },
+      { text: 'En hylla rymmer 15 böcker. Biblioteket har 9 likadana hyllor. Hur många böcker ryms totalt?', op: '×', a1: 15, b1: 9, answer: 135, unit: 'böcker' },
+      { text: '36 elever ska sitta i grupper om 6. Hur många grupper blir det?', op: '/', a1: 36, b1: 6, answer: 6, unit: 'grupper' },
+      { text: 'Ett paket med 4 muffins kostar 26 kr. Vad kostar en muffin?', op: '/', a1: 26, b1: 4, answer: 6.5, unit: 'kr' },
+      { text: 'Ett recept behöver 120 g socker, 80 g smör och 200 g mjöl. Hur mycket väger ingredienserna tillsammans?', ops: ['+', '+'], a1: 120, b1: 80, mid: 200, a2: 200, b2: 200, answer: 400, unit: 'g', note: 'Lägg ihop två åt gången: 120 + 80 = 200, sedan 200 + 200 = 400.' },
+      { text: 'En buss kör 210 km på 3 timmar. Hur långt kör den på en timme om hastigheten är jämn?', op: '/', a1: 210, b1: 3, answer: 70, unit: 'km' },
+      { text: 'Ett schackbräde har 8 rader med 8 rutor i varje rad. Hur många rutor finns det?', op: '×', a1: 8, b1: 8, answer: 64, unit: 'rutor' },
+      { text: 'Målet är att samla in 300 kr. Klassen har samlat in 184 kr. Hur mycket saknas?', op: '−', a1: 300, b1: 184, answer: 116, unit: 'kr' },
+      { text: 'En bil har en tank på 60 liter. Efter en resa finns 47 liter kvar. Hur mycket bensin har använts?', op: '−', a1: 60, b1: 47, answer: 13, unit: 'liter' },
+      { text: 'En cyklist cyklar 4,2 km varje dag i 5 dagar. Hur långt cyklar cyklisten sammanlagt?', op: '×', a1: 4.2, b1: 5, answer: 21, unit: 'km' },
+      { text: 'En chokladkaka kostar 12,50 kr. Vad kostar 6 chokladkakor?', op: '×', a1: 12.5, b1: 6, answer: 75, unit: 'kr' },
     ],
 
     nyckelord: [
@@ -475,6 +487,11 @@
       { text: 'En låda innehåller 18 pennor. Skolan köper 7 lådor. Hur många pennor köper skolan totalt?', op: '×', a1: 18, b1: 7, answer: 126, unit: 'pennor', note: 'Ordet "totalt" lockar till addition — men här är det lika stora grupper, alltså multiplikation.' },
       { text: 'Ett lag har 84 kr att dela lika mellan 6 spelare. Hur mycket får varje spelare?', op: '/', a1: 84, b1: 6, answer: 14, unit: 'kr', note: 'Ordet "varje" kan kännas som multiplikation — men här delas en summa lika, alltså division.' },
       { text: 'En tårta är delad i 12 bitar. Efter fikat finns 5 bitar kvar. Hur många bitar åt gruppen?', op: '−', a1: 12, b1: 5, answer: 7, unit: 'bitar', note: 'Ordet "delad" lockar till division — men frågan handlar om hur mycket som är borta, alltså subtraktion.' },
+      { text: 'Ali har 45 kr. Det är 15 kr mer än vad Ben har. Hur mycket pengar har Ben?', op: '−', a1: 45, b1: 15, answer: 30, unit: 'kr', note: 'Ordet "mer" lockar till addition — men Ben har mindre än Ali, inte mer.' },
+      { text: 'Elin har 19 kort. Det är 6 färre än vad Fia har. Hur många kort har Fia?', op: '+', a1: 19, b1: 6, answer: 25, unit: 'kort', note: 'Ordet "färre" lockar till subtraktion — men Fia har fler än Elin.' },
+      { text: 'En bokhylla har 9 hyllplan. Varje hyllplan rymmer 14 böcker. Hur många böcker ryms totalt?', op: '×', a1: 9, b1: 14, answer: 126, unit: 'böcker', note: 'Ordet "totalt" lockar till addition — men här är det lika stora grupper, alltså multiplikation.' },
+      { text: 'En klass har 90 kr att dela lika mellan 5 grupper. Hur mycket får varje grupp?', op: '/', a1: 90, b1: 5, answer: 18, unit: 'kr', note: 'Ordet "varje" kan kännas som multiplikation — men här delas en summa lika, alltså division.' },
+      { text: 'En pizza är delad i 8 bitar. Efter middagen finns 3 bitar kvar. Hur många bitar åts?', op: '−', a1: 8, b1: 3, answer: 5, unit: 'bitar', note: 'Ordet "delad" lockar till division — men frågan handlar om hur mycket som är borta, alltså subtraktion.' },
     ],
 
     enheter: [
@@ -487,6 +504,15 @@
       { text: 'En klass gör 12 affischer. Varje affisch behöver 35 cm tejp. Hur många centimeter tejp behövs totalt?', op: '×', a1: 12, b1: 35, answer: 420, unit: 'cm', note: '12 × 35 cm = 420 cm (= 4,2 m).' },
       { text: 'En 5 liter dunk ska fyllas i flaskor som rymmer 250 ml. Hur många flaskor behövs?', op: '/', a1: 5000, b1: 250, answer: 20, unit: 'flaskor', note: '5 liter = 5000 ml.', alt1: { a: 5, b: 0.25, r: 20 } },
       { text: 'En tygbit är 4,8 m lång. Varje kudde behöver 60 cm tyg. Hur många kuddar räcker tyget till?', op: '/', a1: 480, b1: 60, answer: 8, unit: 'kuddar', note: '4,8 m = 480 cm.', alt1: { a: 4.8, b: 0.6, r: 8 } },
+      { text: 'Ett band är 4 m långt och klipps i bitar som är 20 cm långa. Hur många bitar blir det?', op: '/', a1: 400, b1: 20, answer: 20, unit: 'bitar', note: '4 m = 400 cm.', alt1: { a: 4, b: 0.2, r: 20 } },
+      { text: 'En kanna rymmer 2 liter juice. Familjen dricker 13 dl. Hur mycket juice finns kvar?', op: '−', a1: 20, b1: 13, answer: 7, unit: 'dl', note: '2 liter = 20 dl.', alt1: { a: 2, b: 1.3, r: 0.7 } },
+      { text: 'En löpare springer 2,5 km och joggar sedan 400 m. Hur långt rör sig löparen totalt?', op: '+', a1: 2500, b1: 400, answer: 2900, unit: 'm', note: '2,5 km = 2500 m.', alt1: { a: 2.5, b: 0.4, r: 2.9 } },
+      { text: 'En kanna rymmer 300 ml. Den fylls 24 gånger. Hur många milliliter är det totalt?', op: '×', a1: 300, b1: 24, answer: 7200, unit: 'ml', note: '300 ml × 24 = 7200 ml (= 7,2 liter).' },
+      { text: 'En säck innehåller 3,6 kg ris. Varje portion är 400 g. Hur många portioner räcker riset till?', op: '/', a1: 3600, b1: 400, answer: 9, unit: 'portioner', note: '3,6 kg = 3600 g.', alt1: { a: 3.6, b: 0.4, r: 9 } },
+      { text: 'En pinne är 24 cm lång och en annan pinne är 165 mm lång. Hur mycket längre är den första pinnen?', op: '−', a1: 24, b1: 16.5, answer: 7.5, unit: 'cm', note: '165 mm = 16,5 cm.', alt1: { a: 240, b: 165, r: 75 } },
+      { text: 'En klass gör 15 flaggor. Varje flagga behöver 22 cm snöre. Hur många centimeter snöre behövs totalt?', op: '×', a1: 15, b1: 22, answer: 330, unit: 'cm', note: '15 × 22 cm = 330 cm (= 3,3 m).' },
+      { text: 'En 8 liter hink ska fyllas i flaskor som rymmer 400 ml. Hur många flaskor behövs?', op: '/', a1: 8000, b1: 400, answer: 20, unit: 'flaskor', note: '8 liter = 8000 ml.', alt1: { a: 8, b: 0.4, r: 20 } },
+      { text: 'En list är 3,6 m lång. Varje hylla behöver 45 cm list. Hur många hyllor räcker listen till?', op: '/', a1: 360, b1: 45, answer: 8, unit: 'hyllor', note: '3,6 m = 360 cm.', alt1: { a: 3.6, b: 0.45, r: 8 } },
     ],
 
     jamforelse: [
@@ -494,6 +520,10 @@
       { text: 'Mira har 12 kulor. Aron har 4 gånger så många som Mira. Hur många kulor har Aron?', op: '×', a1: 12, b1: 4, answer: 48, unit: 'kulor', note: '"Gånger så många" är en multiplikativ jämförelse — man multiplicerar med faktorn.' },
       { text: 'Sara springer 4 varv på 10 minuter. Efter 15 minuter har hon sprungit 9 varv. Hur många fler varv sprang hon under de sista 5 minuterna?', op: '−', a1: 9, b1: 4, answer: 5, unit: 'varv', note: 'Det ser proportionellt ut (4 varv på 10 minuter), men frågan söker bara skillnaden mellan 9 och 4 varv.' },
       { text: 'En ritning har skalan 1:50. Ett bord är 3 cm långt på ritningen. Hur långt är bordet i verkligheten, i cm?', op: '×', a1: 3, b1: 50, answer: 150, unit: 'cm', note: 'Skalfaktorn multipliceras med ritningens mått: 3 cm × 50 = 150 cm (= 1,5 m).' },
+      { text: 'Nils har 15 kort. Otto har 8 fler än Nils. Hur många kort har Otto?', op: '+', a1: 15, b1: 8, answer: 23, unit: 'kort', note: '"Fler än" är en additiv jämförelse — man lägger till skillnaden.' },
+      { text: 'Nils har 15 kort. Otto har 3 gånger så många som Nils. Hur många kort har Otto?', op: '×', a1: 15, b1: 3, answer: 45, unit: 'kort', note: '"Gånger så många" är en multiplikativ jämförelse — man multiplicerar med faktorn.' },
+      { text: 'Ida simmar 6 längder på 12 minuter. Efter 20 minuter har hon simmat 11 längder. Hur många fler längder simmade hon under de sista 8 minuterna?', op: '−', a1: 11, b1: 6, answer: 5, unit: 'längder', note: 'Det ser proportionellt ut (6 längder på 12 minuter), men frågan söker bara skillnaden mellan 11 och 6 längder.' },
+      { text: 'En ritning har skalan 1:20. En vägg är 8 cm lång på ritningen. Hur lång är väggen i verkligheten, i cm?', op: '×', a1: 8, b1: 20, answer: 160, unit: 'cm', note: 'Skalfaktorn multipliceras med ritningens mått: 8 cm × 20 = 160 cm (= 1,6 m).' },
     ],
 
     division: [
@@ -503,6 +533,12 @@
       { text: '5 m rep ska packas i påsar. Varje påse rymmer 80 cm rep. Hur många påsar behövs?', op: '/', a1: 500, b1: 80, answer: 7, unit: 'påsar', note: 'Samma division som föregående (500/80 = 6,25), men nu behövs en påse extra för resten. Avrunda uppåt.', alt1: { a: 5, b: 0.8, r: 7 } },
       { text: '3 meter rep klipps i bitar som är 0,25 m långa. Hur många bitar blir det?', op: '/', a1: 3, b1: 0.25, answer: 12, unit: 'bitar', note: 'Division med ett tal mindre än 1 ger ett svar som är större än 3.' },
       { text: '0,6 kg äpplen kostar 18 kr. Vad kostar 1 kg äpplen?', op: '/', a1: 18, b1: 0.6, answer: 30, unit: 'kr', note: 'Division kan ge ett svar som är större än talet du delar med.' },
+      { text: '3,6 kg mjöl delas lika i 4 påsar. Hur mycket mjöl får varje påse?', op: '/', a1: 3.6, b1: 4, answer: 0.9, unit: 'kg', note: 'Delningsdivision: gruppstorleken är okänd.' },
+      { text: '3,6 kg mjöl ska packas i påsar med 400 g i varje. Hur många påsar räcker mjölet till?', op: '/', a1: 3600, b1: 400, answer: 9, unit: 'påsar', note: 'Gör om till gram: 3,6 kg = 3600 g. Innehållsdivision: antalet grupper är okänt.', alt1: { a: 3.6, b: 0.4, r: 9 } },
+      { text: 'Ett rep är 4 m långt. Det klipps i bitar som är 90 cm. Hur många hela bitar kan man få?', op: '/', a1: 400, b1: 90, answer: 4, unit: 'hela bitar', note: '400 cm / 90 cm = 4,44 — men man kan bara få 4 HELA bitar. Avrunda nedåt.', alt1: { a: 4, b: 0.9, r: 4 } },
+      { text: '4 m rep ska packas i påsar. Varje påse rymmer 90 cm rep. Hur många påsar behövs?', op: '/', a1: 400, b1: 90, answer: 5, unit: 'påsar', note: 'Samma division som föregående (400/90 = 4,44), men nu behövs en påse extra för resten. Avrunda uppåt.', alt1: { a: 4, b: 0.9, r: 5 } },
+      { text: '2 meter rep klipps i bitar som är 0,4 m långa. Hur många bitar blir det?', op: '/', a1: 2, b1: 0.4, answer: 5, unit: 'bitar', note: 'Division med ett tal mindre än 1 ger ett svar som är större än 2.' },
+      { text: '0,5 kg bananer kostar 12 kr. Vad kostar 1 kg bananer?', op: '/', a1: 12, b1: 0.5, answer: 24, unit: 'kr', note: 'Division kan ge ett svar som är större än talet du delar med.' },
     ],
 
     area: [
@@ -510,6 +546,10 @@
       { text: 'Ett klassrum är 8 m långt och 6 m brett. Hur lång är omkretsen?', ops: ['+', '×'], a1: 8, b1: 6, mid: 14, a2: 14, b2: 2, answer: 28, unit: 'm', note: 'Omkrets = (längd + bredd) × 2, inte area! 8 + 6 = 14, sedan 14 × 2 = 28.' },
       { text: 'En rektangulär matta är 2,4 m lång och 1,5 m bred. Hur många meter kantband behövs runt mattan?', ops: ['+', '×'], a1: 2.4, b1: 1.5, mid: 3.9, a2: 3.9, b2: 2, answer: 7.8, unit: 'm', note: 'Omkrets = (längd + bredd) × 2: 2,4 + 1,5 = 3,9, sedan 3,9 × 2 = 7,8.' },
       { text: 'En skylt är 30 cm bred och 20 cm hög. Vad är skyltens area?', op: '×', a1: 30, b1: 20, answer: 600, unit: 'cm²', note: 'Area = bredd gånger höjd.' },
+      { text: 'Ett kök är 5 m långt och 4 m brett. Hur stor area har köket?', op: '×', a1: 5, b1: 4, answer: 20, unit: 'm²', note: 'Area = längd gånger bredd.' },
+      { text: 'Ett kök är 5 m långt och 4 m brett. Hur lång är omkretsen?', ops: ['+', '×'], a1: 5, b1: 4, mid: 9, a2: 9, b2: 2, answer: 18, unit: 'm', note: 'Omkrets = (längd + bredd) × 2, inte area! 5 + 4 = 9, sedan 9 × 2 = 18.' },
+      { text: 'En rektangulär filt är 1,8 m lång och 1,2 m bred. Hur många meter kantband behövs runt filten?', ops: ['+', '×'], a1: 1.8, b1: 1.2, mid: 3, a2: 3, b2: 2, answer: 6, unit: 'm', note: 'Omkrets = (längd + bredd) × 2: 1,8 + 1,2 = 3, sedan 3 × 2 = 6.' },
+      { text: 'En platta är 40 cm bred och 25 cm hög. Vad är plattans area?', op: '×', a1: 40, b1: 25, answer: 1000, unit: 'cm²', note: 'Area = bredd gånger höjd.' },
     ],
 
     flersteg: [
@@ -529,6 +569,22 @@
       { text: 'En bagare bakar 18 kanelbullar på morgonen och 30 till på eftermiddagen. Bullarna packas i påsar med 6 i varje. Hur många påsar blir det?', ops: ['+', '/'], a1: 18, b1: 30, mid: 48, a2: 48, b2: 6, answer: 8, unit: 'påsar' },
       { text: 'Ett bord kostar 800 kr. Kunden får 150 kr rabatt på varje bord. Kunden köper 3 sådana bord till rabatterat pris. Hur mycket kostar de tre borden totalt?', ops: ['−', '×'], a1: 800, b1: 150, mid: 650, a2: 650, b2: 3, answer: 1950, unit: 'kr', note: 'Först rabatterat pris per bord (800 − 150 = 650 kr), sedan för 3 bord (650 × 3).' },
       { text: 'En klass har 132 kr att dela lika mellan 6 elever för en aktivitet. Varje elev betalar sedan 12 kr av sin del för inträde. Hur mycket har varje elev kvar?', ops: ['/', '−'], a1: 132, b1: 6, mid: 22, a2: 22, b2: 12, answer: 10, unit: 'kr' },
+      { text: 'En klass köper 5 paket pennor. Varje paket innehåller 14 pennor. 12 pennor delas ut direkt. Hur många pennor finns kvar?', ops: ['×', '−'], a1: 5, b1: 14, mid: 70, a2: 70, b2: 12, answer: 58, unit: 'pennor' },
+      { text: 'En elev har 4 meter snöre. Hen klipper bort 60 cm. Resten klipps i bitar som är 20 cm långa. Hur många bitar blir det?', ops: ['−', '/'], a1: 400, b1: 60, mid: 340, a2: 340, b2: 20, answer: 17, unit: 'bitar', note: '4 m = 400 cm.', alt1: { a: 4, b: 0.6, r: 3.4 }, alt2: { a: 3.4, b: 0.2, r: 17 } },
+      { text: 'En affär säljer 5 likadana anteckningsböcker för 60 kr. Vad kostar 8 sådana böcker?', ops: ['/', '×'], a1: 60, b1: 5, mid: 12, a2: 12, b2: 8, answer: 96, unit: 'kr', note: 'Först pris per styck (60/5 = 12 kr), sedan för 8 stycken (12 × 8).' },
+      { text: 'En hink innehåller 6 liter vatten. Eleverna häller upp 10 muggar med 300 ml i varje. Hur många milliliter vatten finns kvar?', ops: ['×', '−'], a1: 10, b1: 300, mid: 3000, a2: 6000, b2: 3000, answer: 3000, unit: 'ml', note: '10 × 300 ml = 3000 ml. Hinken rymmer 6 liter = 6000 ml.', alt2: { a: 6, b: 3, r: 3 } },
+      { text: 'En vandring är 6 km. Klassen har gått 2,4 km före lunch och 1500 m efter lunch. Hur långt är det kvar?', ops: ['+', '−'], a1: 2.4, b1: 1.5, mid: 3.9, a2: 6, b2: 3.9, answer: 2.1, unit: 'km', note: '1500 m = 1,5 km. 2,4 + 1,5 = 3,9 km gått.', alt1: { a: 2400, b: 1500, r: 3900 }, alt2: { a: 6000, b: 3900, r: 2100 } },
+      { text: 'En låda väger 1,2 kg tom. Varje bok väger 250 g. Hur mycket väger lådan med 8 böcker?', ops: ['×', '+'], a1: 8, b1: 0.25, mid: 2, a2: 2, b2: 1.2, answer: 3.2, unit: 'kg', note: '250 g = 0,25 kg. 8 × 0,25 kg = 2 kg.', alt1: { a: 8, b: 250, r: 2000 }, alt2: { a: 2000, b: 1200, r: 3200 } },
+      { text: 'En lärare har 6 paket med 30 papper i varje. Klassen använder 55 papper. Hur många papper finns kvar?', ops: ['×', '−'], a1: 6, b1: 30, mid: 180, a2: 180, b2: 55, answer: 125, unit: 'papper' },
+      { text: 'En rulle tejp är 6 m lång. Klassen använder 11 bitar som är 40 cm vardera. Hur många centimeter tejp finns kvar?', ops: ['×', '−'], a1: 11, b1: 40, mid: 440, a2: 600, b2: 440, answer: 160, unit: 'cm', note: '6 m = 600 cm. (160 cm = 1,6 m)', alt2: { a: 6, b: 4.4, r: 1.6 } },
+      { text: 'En växt är 8 cm på måndag och 15 cm på fredag. En annan växt är 12 cm på måndag. Om den växer lika många centimeter, hur hög är den på fredag?', ops: ['−', '+'], a1: 15, b1: 8, mid: 7, a2: 7, b2: 12, answer: 19, unit: 'cm', note: 'Samma ÖKNING (skillnad), inte samma förhållande: 15 − 8 = 7 är ökningen, sedan 7 + 12 = 19.' },
+      { text: 'Ett recept använder 8 g jäst till 12 dl degvätska. Hur mycket jäst behövs till 24 dl degvätska om förhållandet ska vara samma?', ops: ['/', '×'], a1: 24, b1: 12, mid: 2, a2: 8, b2: 2, answer: 16, unit: 'g', note: 'Samma FÖRHÅLLANDE, inte samma skillnad: 24/12 = 2 är skalfaktorn, sedan 8 × 2 = 16.' },
+      { text: 'En skrivare skriver ut 6 sidor på 10 sekunder. Hur många sidor skriver den ut på 25 sekunder om hastigheten är jämn?', ops: ['/', '×'], a1: 6, b1: 10, mid: 0.6, a2: 25, b2: 0.6, answer: 15, unit: 'sidor', note: 'Proportionalitet: 6/10 = 0,6 sidor/sekund (steg 1), sedan 0,6 × 25 = 15 (steg 2).' },
+      { text: 'En resa kostar 35 euro per person. En familj med 3 personer ska resa. Växelkursen är 11 kr per euro. Hur mycket kostar resan i kronor?', ops: ['×', '×'], a1: 35, b1: 3, mid: 105, a2: 105, b2: 11, answer: 1155, unit: 'kr', note: 'Först totalt i euro (35 × 3 = 105 €), sedan omräknat till kronor (105 × 11).' },
+      { text: 'En bunt med 72 klistermärken delas lika mellan 4 klasser. Varje klass delar sedan sin del lika mellan 3 grupper. Hur många klistermärken får varje grupp?', ops: ['/', '/'], a1: 72, b1: 4, mid: 18, a2: 18, b2: 3, answer: 6, unit: 'klistermärken' },
+      { text: 'En bagare bakar 22 bullar på morgonen och 26 till på eftermiddagen. Bullarna packas i påsar med 8 i varje. Hur många hela påsar blir det?', ops: ['+', '/'], a1: 22, b1: 26, mid: 48, a2: 48, b2: 8, answer: 6, unit: 'påsar' },
+      { text: 'Ett bord kostar 600 kr. Kunden får 80 kr rabatt på varje bord. Kunden köper 4 sådana bord till rabatterat pris. Hur mycket kostar de fyra borden totalt?', ops: ['−', '×'], a1: 600, b1: 80, mid: 520, a2: 520, b2: 4, answer: 2080, unit: 'kr', note: 'Först rabatterat pris per bord (600 − 80 = 520 kr), sedan för 4 bord (520 × 4).' },
+      { text: 'En klass har 150 kr att dela lika mellan 5 elever för en aktivitet. Varje elev betalar sedan 8 kr av sin del för inträde. Hur mycket har varje elev kvar?', ops: ['/', '−'], a1: 150, b1: 5, mid: 30, a2: 30, b2: 8, answer: 22, unit: 'kr' },
     ],
 
     // Each item below has exactly one number that sounds usable (often the
@@ -542,6 +598,12 @@
       { text: 'En fabrik tillverkar 120 muttrar på 15 minuter. Fabriken har 6 anställda som sköter maskinerna. Hur många muttrar tillverkas på 45 minuter om takten är jämn?', ops: ['/', '×'], a1: 120, b1: 15, mid: 8, a2: 8, b2: 45, answer: 360, unit: 'muttrar', note: 'Antalet anställda (6) behövs inte — takten (muttrar per minut) är redan given för hela fabriken.' },
       { text: 'En affär säljer tröjor för 250 kr styck. Affären ger 60 kr rabatt per tröja på rean. Butiken öppnade för 12 år sedan. En kund köper 5 tröjor till rabatterat pris. Hur mycket betalar kunden totalt?', ops: ['−', '×'], a1: 250, b1: 60, mid: 190, a2: 190, b2: 5, answer: 950, unit: 'kr', note: 'Hur länge butiken funnits (12 år) har inget med priset att göra — bara distraherande information.' },
       { text: 'En rektangulär trädgård är 12 m lång och 7 m bred. Gräsmattan i mitten av trädgården är 3 m bred. Hur lång är omkretsen av hela trädgården?', ops: ['+', '×'], a1: 12, b1: 7, mid: 19, a2: 19, b2: 2, answer: 38, unit: 'm', note: 'Gräsmattans bredd (3 m) används inte för omkretsen — bara trädgårdens yttermått (12 m och 7 m) behövs.' },
+      { text: 'En klass med 28 elever åker på skolresa. Bussen kostar 4 200 kr och delas lika mellan eleverna. Varje elev betalar dessutom 15 kr för lunch. Resan är 60 minuter lång. Hur mycket betalar varje elev totalt?', ops: ['/', '+'], a1: 4200, b1: 28, mid: 150, a2: 150, b2: 15, answer: 165, unit: 'kr', note: 'Restiden (60 minuter) behövs inte för att räkna ut kostnaden — bara distraherande information.' },
+      { text: 'En bagare bakar bröd. Ugnen rymmer 6 brödlimpor åt gången och det tar 25 minuter att baka en omgång. Bagaren bakar 5 omgångar och säljer sedan 14 limpor på morgonen. Hur många limpor har hen kvar?', ops: ['×', '−'], a1: 6, b1: 5, mid: 30, a2: 30, b2: 14, answer: 16, unit: 'brödlimpor', note: 'Baktiden (25 minuter) är inte relevant för hur många limpor som bakas — bara distraherande information.' },
+      { text: 'En biograf har 20 rader med 18 platser i varje rad. Filmen som visas är 95 minuter lång. Om 12 platser är avbokade, hur många platser är lediga?', ops: ['×', '−'], a1: 20, b1: 18, mid: 360, a2: 360, b2: 12, answer: 348, unit: 'platser', note: 'Filmens längd (95 minuter) har inget med antalet lediga platser att göra — bara distraherande information.' },
+      { text: 'En fabrik tillverkar 90 muttrar på 10 minuter. Fabriken har 4 anställda som sköter maskinerna. Hur många muttrar tillverkas på 30 minuter om takten är jämn?', ops: ['/', '×'], a1: 90, b1: 10, mid: 9, a2: 9, b2: 30, answer: 270, unit: 'muttrar', note: 'Antalet anställda (4) behövs inte — takten (muttrar per minut) är redan given för hela fabriken.' },
+      { text: 'En affär säljer byxor för 400 kr styck. Affären ger 100 kr rabatt per byxa på rean. Butiken öppnade för 8 år sedan. En kund köper 3 byxor till rabatterat pris. Hur mycket betalar kunden totalt?', ops: ['−', '×'], a1: 400, b1: 100, mid: 300, a2: 300, b2: 3, answer: 900, unit: 'kr', note: 'Hur länge butiken funnits (8 år) har inget med priset att göra — bara distraherande information.' },
+      { text: 'En rektangulär gård är 10 m lång och 6 m bred. Sandlådan i mitten av gården är 2 m bred. Hur lång är omkretsen av hela gården?', ops: ['+', '×'], a1: 10, b1: 6, mid: 16, a2: 16, b2: 2, answer: 32, unit: 'm', note: 'Sandlådans bredd (2 m) används inte för omkretsen — bara gårdens yttermått (10 m och 6 m) behövs.' },
     ],
   };
   const CATEGORY_KEYS = Object.keys(BANK);
