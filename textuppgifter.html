@@ -422,6 +422,14 @@
   //
   // Single-step items: { text, op, a1, b1, answer, unit, note? }
   // Multi-step items:  { text, ops: [op1, op2], a1, b1, mid, a2, b2, answer, unit, note? }
+  //
+  // `alt1` / `alt2` (optional): for a step that reconciles two quantities
+  // originally stated in different units, there are two equally valid
+  // conversion directions (e.g. convert kg to g, or g to kg). `alt1` is
+  // step 1's alternate { a, b, r } triple using the other direction;
+  // `alt2` is step 2's. Both the primary numbers and the alt triple are
+  // fully self-consistent sets, checked as whole alternatives — never
+  // mixed — so either a real, equally correct path is accepted in full.
 
   const BANK = {
     grunderna: [
@@ -448,15 +456,15 @@
     ],
 
     enheter: [
-      { text: 'Ett rep är 3 m långt och klipps i bitar som är 10 cm långa. Hur många bitar blir det?', op: '/', a1: 300, b1: 10, answer: 30, unit: 'bitar', note: 'Gör om till samma enhet först: 3 m = 300 cm.' },
-      { text: 'En flaska innehåller 1,5 liter saft. Klassen dricker 8 dl. Hur mycket saft finns kvar?', op: '−', a1: 15, b1: 8, answer: 7, unit: 'dl', note: '1,5 liter = 15 dl.' },
-      { text: 'En elev springer 1,2 km och går sedan 850 m. Hur långt rör sig eleven totalt?', op: '+', a1: 1200, b1: 850, answer: 2050, unit: 'm', note: '1,2 km = 1200 m.' },
+      { text: 'Ett rep är 3 m långt och klipps i bitar som är 10 cm långa. Hur många bitar blir det?', op: '/', a1: 300, b1: 10, answer: 30, unit: 'bitar', note: 'Gör om till samma enhet först: 3 m = 300 cm.', alt1: { a: 3, b: 0.1, r: 30 } },
+      { text: 'En flaska innehåller 1,5 liter saft. Klassen dricker 8 dl. Hur mycket saft finns kvar?', op: '−', a1: 15, b1: 8, answer: 7, unit: 'dl', note: '1,5 liter = 15 dl.', alt1: { a: 1.5, b: 0.8, r: 0.7 } },
+      { text: 'En elev springer 1,2 km och går sedan 850 m. Hur långt rör sig eleven totalt?', op: '+', a1: 1200, b1: 850, answer: 2050, unit: 'm', note: '1,2 km = 1200 m.', alt1: { a: 1.2, b: 0.85, r: 2.05 } },
       { text: 'En maskin fyller 250 ml i varje flaska. Den fyller 36 flaskor. Hur många milliliter fyller maskinen totalt?', op: '×', a1: 250, b1: 36, answer: 9000, unit: 'ml', note: '250 ml × 36 = 9000 ml (= 9 liter).' },
-      { text: 'En påse innehåller 1,8 kg mjöl. Ett recept behöver 300 g mjöl. Hur många recept räcker mjölet till?', op: '/', a1: 1800, b1: 300, answer: 6, unit: 'recept', note: '1,8 kg = 1800 g.' },
-      { text: 'En penna är 17 cm lång och en annan penna är 128 mm lång. Hur mycket längre är den första pennan?', op: '−', a1: 17, b1: 12.8, answer: 4.2, unit: 'cm', note: '128 mm = 12,8 cm.' },
+      { text: 'En påse innehåller 1,8 kg mjöl. Ett recept behöver 300 g mjöl. Hur många recept räcker mjölet till?', op: '/', a1: 1800, b1: 300, answer: 6, unit: 'recept', note: '1,8 kg = 1800 g.', alt1: { a: 1.8, b: 0.3, r: 6 } },
+      { text: 'En penna är 17 cm lång och en annan penna är 128 mm lång. Hur mycket längre är den första pennan?', op: '−', a1: 17, b1: 12.8, answer: 4.2, unit: 'cm', note: '128 mm = 12,8 cm.', alt1: { a: 170, b: 128, r: 42 } },
       { text: 'En klass gör 12 affischer. Varje affisch behöver 35 cm tejp. Hur många centimeter tejp behövs totalt?', op: '×', a1: 12, b1: 35, answer: 420, unit: 'cm', note: '12 × 35 cm = 420 cm (= 4,2 m).' },
-      { text: 'En 5 liter dunk ska fyllas i flaskor som rymmer 250 ml. Hur många flaskor behövs?', op: '/', a1: 5000, b1: 250, answer: 20, unit: 'flaskor', note: '5 liter = 5000 ml.' },
-      { text: 'En tygbit är 4,8 m lång. Varje kudde behöver 60 cm tyg. Hur många kuddar räcker tyget till?', op: '/', a1: 480, b1: 60, answer: 8, unit: 'kuddar', note: '4,8 m = 480 cm.' },
+      { text: 'En 5 liter dunk ska fyllas i flaskor som rymmer 250 ml. Hur många flaskor behövs?', op: '/', a1: 5000, b1: 250, answer: 20, unit: 'flaskor', note: '5 liter = 5000 ml.', alt1: { a: 5, b: 0.25, r: 20 } },
+      { text: 'En tygbit är 4,8 m lång. Varje kudde behöver 60 cm tyg. Hur många kuddar räcker tyget till?', op: '/', a1: 480, b1: 60, answer: 8, unit: 'kuddar', note: '4,8 m = 480 cm.', alt1: { a: 4.8, b: 0.6, r: 8 } },
     ],
 
     jamforelse: [
@@ -468,9 +476,9 @@
 
     division: [
       { text: '2,4 kg ris delas lika i 6 burkar. Hur mycket ris får varje burk?', op: '/', a1: 2.4, b1: 6, answer: 0.4, unit: 'kg', note: 'Delningsdivision: gruppstorleken är okänd.' },
-      { text: '2,4 kg ris ska packas i påsar med 300 g i varje. Hur många påsar räcker riset till?', op: '/', a1: 2400, b1: 300, answer: 8, unit: 'påsar', note: 'Gör om till gram: 2,4 kg = 2400 g. Innehållsdivision: antalet grupper är okänt.' },
-      { text: 'Ett rep är 5 m långt. Det klipps i bitar som är 80 cm. Hur många hela bitar kan man få?', op: '/', a1: 500, b1: 80, answer: 6, unit: 'hela bitar', note: '500 cm / 80 cm = 6,25 — men man kan bara få 6 HELA bitar. Avrunda nedåt.' },
-      { text: '5 m rep ska packas i påsar. Varje påse rymmer 80 cm rep. Hur många påsar behövs?', op: '/', a1: 500, b1: 80, answer: 7, unit: 'påsar', note: 'Samma division som föregående (500/80 = 6,25), men nu behövs en påse extra för resten. Avrunda uppåt.' },
+      { text: '2,4 kg ris ska packas i påsar med 300 g i varje. Hur många påsar räcker riset till?', op: '/', a1: 2400, b1: 300, answer: 8, unit: 'påsar', note: 'Gör om till gram: 2,4 kg = 2400 g. Innehållsdivision: antalet grupper är okänt.', alt1: { a: 2.4, b: 0.3, r: 8 } },
+      { text: 'Ett rep är 5 m långt. Det klipps i bitar som är 80 cm. Hur många hela bitar kan man få?', op: '/', a1: 500, b1: 80, answer: 6, unit: 'hela bitar', note: '500 cm / 80 cm = 6,25 — men man kan bara få 6 HELA bitar. Avrunda nedåt.', alt1: { a: 5, b: 0.8, r: 6 } },
+      { text: '5 m rep ska packas i påsar. Varje påse rymmer 80 cm rep. Hur många påsar behövs?', op: '/', a1: 500, b1: 80, answer: 7, unit: 'påsar', note: 'Samma division som föregående (500/80 = 6,25), men nu behövs en påse extra för resten. Avrunda uppåt.', alt1: { a: 5, b: 0.8, r: 7 } },
       { text: '3 meter rep klipps i bitar som är 0,25 m långa. Hur många bitar blir det?', op: '/', a1: 3, b1: 0.25, answer: 12, unit: 'bitar', note: 'Division med ett tal mindre än 1 ger ett svar som är större än 3.' },
       { text: '0,6 kg äpplen kostar 18 kr. Vad kostar 1 kg äpplen?', op: '/', a1: 18, b1: 0.6, answer: 30, unit: 'kr', note: 'Division kan ge ett svar som är större än talet du delar med.' },
     ],
@@ -484,13 +492,13 @@
 
     flersteg: [
       { text: 'En klass köper 6 paket pennor. Varje paket innehåller 12 pennor. 17 pennor delas ut direkt. Hur många pennor finns kvar?', ops: ['×', '−'], a1: 6, b1: 12, mid: 72, a2: 72, b2: 17, answer: 55, unit: 'pennor' },
-      { text: 'En elev har 5 meter snöre. Hen klipper bort 80 cm. Resten klipps i bitar som är 20 cm långa. Hur många bitar blir det?', ops: ['−', '/'], a1: 500, b1: 80, mid: 420, a2: 420, b2: 20, answer: 21, unit: 'bitar', note: '5 m = 500 cm.' },
+      { text: 'En elev har 5 meter snöre. Hen klipper bort 80 cm. Resten klipps i bitar som är 20 cm långa. Hur många bitar blir det?', ops: ['−', '/'], a1: 500, b1: 80, mid: 420, a2: 420, b2: 20, answer: 21, unit: 'bitar', note: '5 m = 500 cm.', alt1: { a: 5, b: 0.8, r: 4.2 }, alt2: { a: 4.2, b: 0.2, r: 21 } },
       { text: 'En affär säljer 4 likadana vattenflaskor för 92 kr. Vad kostar 7 sådana flaskor?', ops: ['/', '×'], a1: 92, b1: 4, mid: 23, a2: 23, b2: 7, answer: 161, unit: 'kr', note: 'Först pris per styck (92/4 = 23 kr), sedan för 7 stycken (23 × 7).' },
-      { text: 'En hink innehåller 7,5 liter vatten. Eleverna häller upp 12 muggar med 250 ml i varje. Hur många milliliter vatten finns kvar?', ops: ['×', '−'], a1: 12, b1: 250, mid: 3000, a2: 7500, b2: 3000, answer: 4500, unit: 'ml', note: '12 × 250 ml = 3000 ml. Hinken rymmer 7,5 liter = 7500 ml. (4500 ml = 4,5 liter)' },
-      { text: 'En vandring är 8 km. Klassen har gått 3,25 km före lunch och 1800 m efter lunch. Hur långt är det kvar?', ops: ['+', '−'], a1: 3.25, b1: 1.8, mid: 5.05, a2: 8, b2: 5.05, answer: 2.95, unit: 'km', note: '1800 m = 1,8 km. 3,25 + 1,8 = 5,05 km gått.' },
-      { text: 'En låda väger 1,8 kg tom. Varje bok väger 350 g. Hur mycket väger lådan med 12 böcker?', ops: ['×', '+'], a1: 12, b1: 0.35, mid: 4.2, a2: 4.2, b2: 1.8, answer: 6, unit: 'kg', note: '350 g = 0,35 kg. 12 × 0,35 kg = 4,2 kg.' },
+      { text: 'En hink innehåller 7,5 liter vatten. Eleverna häller upp 12 muggar med 250 ml i varje. Hur många milliliter vatten finns kvar?', ops: ['×', '−'], a1: 12, b1: 250, mid: 3000, a2: 7500, b2: 3000, answer: 4500, unit: 'ml', note: '12 × 250 ml = 3000 ml. Hinken rymmer 7,5 liter = 7500 ml. (4500 ml = 4,5 liter)', alt2: { a: 7.5, b: 3, r: 4.5 } },
+      { text: 'En vandring är 8 km. Klassen har gått 3,25 km före lunch och 1800 m efter lunch. Hur långt är det kvar?', ops: ['+', '−'], a1: 3.25, b1: 1.8, mid: 5.05, a2: 8, b2: 5.05, answer: 2.95, unit: 'km', note: '1800 m = 1,8 km. 3,25 + 1,8 = 5,05 km gått.', alt1: { a: 3250, b: 1800, r: 5050 }, alt2: { a: 8000, b: 5050, r: 2950 } },
+      { text: 'En låda väger 1,8 kg tom. Varje bok väger 350 g. Hur mycket väger lådan med 12 böcker?', ops: ['×', '+'], a1: 12, b1: 0.35, mid: 4.2, a2: 4.2, b2: 1.8, answer: 6, unit: 'kg', note: '350 g = 0,35 kg. 12 × 0,35 kg = 4,2 kg.', alt1: { a: 12, b: 350, r: 4200 }, alt2: { a: 4200, b: 1800, r: 6000 } },
       { text: 'En lärare har 8 paket med 25 papper i varje. Klassen använder 73 papper. Hur många papper finns kvar?', ops: ['×', '−'], a1: 8, b1: 25, mid: 200, a2: 200, b2: 73, answer: 127, unit: 'papper' },
-      { text: 'En rulle tejp är 8 m lång. Klassen använder 14 bitar som är 35 cm vardera. Hur många centimeter tejp finns kvar?', ops: ['×', '−'], a1: 14, b1: 35, mid: 490, a2: 800, b2: 490, answer: 310, unit: 'cm', note: '8 m = 800 cm. (310 cm = 3,1 m)' },
+      { text: 'En rulle tejp är 8 m lång. Klassen använder 14 bitar som är 35 cm vardera. Hur många centimeter tejp finns kvar?', ops: ['×', '−'], a1: 14, b1: 35, mid: 490, a2: 800, b2: 490, answer: 310, unit: 'cm', note: '8 m = 800 cm. (310 cm = 3,1 m)', alt2: { a: 8, b: 4.9, r: 3.1 } },
       { text: 'En växt är 10 cm på måndag och 16 cm på fredag. En annan växt är 20 cm på måndag. Om den växer lika många centimeter, hur hög är den på fredag?', ops: ['−', '+'], a1: 16, b1: 10, mid: 6, a2: 6, b2: 20, answer: 26, unit: 'cm', note: 'Samma ÖKNING (skillnad), inte samma förhållande: 16 − 10 = 6 är ökningen, sedan 6 + 20 = 26.' },
       { text: 'Ett recept använder 10 g jäst till 16 dl degvätska. Hur mycket jäst behövs till 32 dl degvätska om förhållandet ska vara samma?', ops: ['/', '×'], a1: 32, b1: 16, mid: 2, a2: 10, b2: 2, answer: 20, unit: 'g', note: 'Samma FÖRHÅLLANDE, inte samma skillnad: 32/16 = 2 är skalfaktorn, sedan 10 × 2 = 20.' },
       { text: 'En skrivare skriver ut 4 sidor på 10 sekunder. Hur många sidor skriver den ut på 15 sekunder om hastigheten är jämn?', ops: ['/', '×'], a1: 4, b1: 10, mid: 0.4, a2: 15, b2: 0.4, answer: 6, unit: 'sidor', note: 'Proportionalitet: 4/10 = 0,4 sidor/sekund (steg 1), sedan 0,4 × 15 = 6 (steg 2).' },
@@ -646,6 +654,34 @@
     return close(typedA, groundA) && close(typedB, groundB);
   }
 
+  // Some steps combine two quantities that were originally stated in
+  // different units (e.g. "1,8 kg" and "350 g"). There are always two
+  // equally valid ways to reconcile that: convert the first into the
+  // second's unit, or vice versa — both give a correct, self-consistent
+  // set of numbers, just scaled by the same metric factor throughout.
+  // A problem that has this ambiguity carries an optional `alt1`/`alt2`
+  // field: `{ a, b, r }`, the same triple as the primary a/b/result but
+  // expressed via the other conversion direction. Every step is checked
+  // against the primary triple OR (if present) the alt triple — never a
+  // mix of the two — so a fully self-consistent alternate path is always
+  // accepted, and only that path.
+  function stepCandidates(groundA, groundB, groundR, alt) {
+    const list = [{ a: groundA, b: groundB, r: groundR }];
+    if (alt) list.push(alt);
+    return list;
+  }
+  function evalStep(typedA, typedB, typedR, op, candidates) {
+    let operandsGood = false;
+    let fullGood = false;
+    for (const c of candidates) {
+      if (operandsOk(typedA, typedB, c.a, c.b, op)) {
+        operandsGood = true;
+        if (close(typedR, c.r)) { fullGood = true; break; }
+      }
+    }
+    return { operandsGood, fullGood };
+  }
+
   function flashBox(ok) {
     problemBox.classList.remove('flash-correct', 'flash-wrong');
     void problemBox.offsetWidth;
@@ -682,10 +718,10 @@
 
       const op1 = multi ? current.ops[0] : current.op;
       const a1 = readNum(box_a1), b1 = readNum(box_b1), r1 = readNum(box_result1);
-      const operandsGood = operandsOk(a1, b1, current.a1, current.b1, op1);
-      const resultGood = close(r1, multi ? current.mid : current.answer);
+      const candidates1 = stepCandidates(current.a1, current.b1, multi ? current.mid : current.answer, current.alt1);
+      const { operandsGood, fullGood } = evalStep(a1, b1, r1, op1, candidates1);
 
-      if (operandsGood && resultGood) {
+      if (fullGood) {
         step1Done = true;
         if (multi) {
           // Only step 1 of several is done — don't mark the whole problem
@@ -721,10 +757,10 @@
 
     const op2 = current.ops[1];
     const a2 = readNum(box_a2), b2 = readNum(box_b2), r2 = readNum(box_result2);
-    const operandsGood = operandsOk(a2, b2, current.a2, current.b2, op2);
-    const resultGood = close(r2, current.answer);
+    const candidates2 = stepCandidates(current.a2, current.b2, current.answer, current.alt2);
+    const { operandsGood, fullGood } = evalStep(a2, b2, r2, op2, candidates2);
 
-    if (operandsGood && resultGood) {
+    if (fullGood) {
       step2Done = true;
       flashBox(true);
       totalCount++;
