@@ -584,7 +584,7 @@ function makeBuildProblem() {
       return buildMulProblem(n, n);
     }
     const base = step.addsTables[randInt(0, step.addsTables.length - 1)];
-    return buildMulProblem(base, randInt(1, 10));
+    return buildMulProblem(base, randInt(1, MAX_TABLE));
   }
 
   // mix phase: draw from everything unlocked so far, including this step
@@ -594,7 +594,7 @@ function makeBuildProblem() {
     return buildMulProblem(n, n);
   }
   const table = nums[randInt(0, nums.length - 1)];
-  return buildMulProblem(table, randInt(1, 10));
+  return buildMulProblem(table, randInt(1, MAX_TABLE));
 }
 
 function refillQueue() {
