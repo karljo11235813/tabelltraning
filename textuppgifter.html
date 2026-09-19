@@ -285,11 +285,32 @@
     font-style: italic;
   }
 
+  #checkBtn {
+    display: block;
+    width: 100%;
+    min-width: 130px;
+    margin-top: 18px;
+    padding: 12px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  #checkBtn:hover { background: var(--accent-strong); }
+  #checkBtn:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+
   .btn-row {
     display: flex;
     gap: 10px;
     margin-top: 16px;
-    justify-content: center;
+    justify-content: flex-end;
   }
   .btn-row button {
     min-width: 130px;
@@ -389,10 +410,11 @@
       <span class="answer-unit" id="answerUnit"></span>
 
       <div class="feedback" id="feedback"></div>
+
+      <button type="button" id="checkBtn">Kontrollera</button>
     </div>
 
     <div class="btn-row">
-      <button type="button" id="checkBtn">Kontrollera</button>
       <button type="button" class="secondary" id="nextBtn">Nästa</button>
     </div>
 
