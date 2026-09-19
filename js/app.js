@@ -74,6 +74,8 @@ const problemText = document.getElementById('problemText');
 const answerInput = document.getElementById('answerInput');
 const nextBtn = document.getElementById('nextBtn');
 const preview1 = document.getElementById('preview1');
+const vizToggle = document.getElementById('vizToggle');
+const vizPanel = document.getElementById('vizPanel');
 
 const resultTitle = document.getElementById('resultTitle');
 const statCorrect = document.getElementById('statCorrect');
@@ -314,6 +316,7 @@ function applyLanguage() {
   document.getElementById('previewNextLbl').textContent = s.previewNext;
   answerInput.setAttribute('aria-label', s.answerAria);
   nextBtn.textContent = s.nextBtn;
+  vizToggle.textContent = vizOpen ? s.vizHide : s.vizShow;
 
   renderLiveLabel();
   if (hasResult) renderResultText();
@@ -602,12 +605,44 @@ function refillQueue() {
 }
 
 let problemShownAt = 0;
+let vizOpen = false;
+
+function renderViz() {
+  if (!vizOpen || !queue[0]) return;
+  const p = queue[0];
+  // Read the two numbers straight out of the displayed text (rather than
+  // factA/factB, which aren't always in the same order the text shows —
+  // e.g. text may show "2 × 6" while factA/factB store table=6, factor=2)
+  // so the picture always matches what's on screen.
+  const m = p.text.match(/(\d+)\s*[×÷]\s*(\d+)/);
+  if (!m) return;
+  const n1 = parseInt(m[1], 10), n2 = parseInt(m[2], 10);
+  if (p.text.indexOf('÷') !== -1) {
+    MathViz.renderDivision(vizPanel, n1, n2);
+  } else {
+    MathViz.renderMultiplication(vizPanel, n1, n2);
+  }
+}
+
+vizToggle.addEventListener('click', () => {
+  vizOpen = !vizOpen;
+  vizToggle.textContent = vizOpen ? t().vizHide : t().vizShow;
+  vizPanel.style.display = vizOpen ? 'flex' : 'none';
+  renderViz();
+});
+
+function resetViz() {
+  vizOpen = false;
+  vizToggle.textContent = t().vizShow;
+  vizPanel.style.display = 'none';
+}
 
 function renderCurrent() {
   refillQueue();
   problemText.textContent = queue[0].text;
   preview1.textContent = queue[1].text;
   problemShownAt = performance.now();
+  renderViz();
 }
 
 function startRound() {
@@ -619,6 +654,7 @@ function startRound() {
   roundStartTime = performance.now();
   document.body.style.backgroundColor = '';
   problemGenerator = makeProblem;
+  resetViz();
   Audio.startMusic();
 
   showScreen(testScreen);
@@ -686,6 +722,7 @@ function startBuildPhase(phase) {
   hasResult = false;
   problemGenerator = makeBuildProblem;
   document.body.style.backgroundColor = '';
+  resetViz();
   clearInterval(timerId);
   timerId = null;
 
