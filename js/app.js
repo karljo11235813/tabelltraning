@@ -3,7 +3,7 @@ import { getLang, setLang, t } from './i18n.js';
 import * as Audio from './audio.js';
 import { MASTERY_MIN_ATTEMPTS, factKey, getMastery } from './mastery.js';
 import { getFactStats, logAttempt, clearFactStats } from './stats-store.js';
-import { BUILD_STEPS_META, BUILD_FOCUS_LEN, BUILD_MIX_LEN, SQUARE_NUMBERS, buildStepsUpTo } from './build-data.js';
+import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
@@ -92,9 +92,9 @@ let originScreen = 'practice'; // which setup screen to return to on "again"
 
 // ---------- Bygg upp state ----------
 let buildStepIndex = 0;
-let buildPhase = 'focus'; // 'focus' | 'mix'
+let buildPhase = 'order'; // 'order' | 'shuffle2' | 'mix'
 let buildPhaseLen = 0;
-let buildSquaresQueue = []; // shuffled, no-repeat draw order for the squares step's focus phase
+let buildFactQueue = []; // draw order for the 'order' and 'shuffle2' rounds
 let buildCompleted = new Set();
 try {
   const savedProgress = JSON.parse(localStorage.getItem('tabelltraning_build_progress') || '[]');
@@ -578,16 +578,18 @@ function buildMulProblem(a, b) {
 function makeBuildProblem() {
   const step = BUILD_STEPS_META[buildStepIndex];
 
-  if (buildPhase === 'focus') {
-    if (step.kind === 'squares') {
-      // Draw without repeats so every square (2² through 10²) gets covered
-      // before any repeats — falls back to random once the set is exhausted
-      // (only ever happens for unanswered preview slots, never a real question).
-      const n = buildSquaresQueue.length > 0 ? buildSquaresQueue.pop() : randInt(2, 10);
-      return buildMulProblem(n, n);
+  if (buildPhase === 'order' || buildPhase === 'shuffle2') {
+    // Draw from the pre-built queue so 'order' stays in ascending order and
+    // 'shuffle2' stays a fixed shuffled-with-every-fact-twice sequence —
+    // falls back to a fresh random fact from this step only for the one
+    // unanswered preview slot after the queue empties.
+    if (buildFactQueue.length > 0) {
+      const [a, b] = buildFactQueue.shift();
+      return buildMulProblem(a, b);
     }
-    const base = step.addsTables[randInt(0, step.addsTables.length - 1)];
-    return buildMulProblem(base, randInt(1, MAX_TABLE));
+    const pairs = stepFactPairs(step, MAX_TABLE);
+    const [a, b] = pairs[randInt(0, pairs.length - 1)];
+    return buildMulProblem(a, b);
   }
 
   // mix phase: draw from everything unlocked so far, including this step
@@ -708,13 +710,20 @@ function endRound() {
   renderResultText();
 }
 
-// ---------- Bygg upp: untimed focus -> mix phases per step ----------
+// ---------- Bygg upp: order -> shuffle2 -> mix rounds per step ----------
 function startBuildPhase(phase) {
   mode = 'build';
   buildPhase = phase;
-  const isSquaresFocus = phase === 'focus' && BUILD_STEPS_META[buildStepIndex].kind === 'squares';
-  buildPhaseLen = isSquaresFocus ? SQUARE_NUMBERS.length : (phase === 'focus' ? BUILD_FOCUS_LEN : BUILD_MIX_LEN);
-  if (isSquaresFocus) buildSquaresQueue = shuffled(SQUARE_NUMBERS);
+  const step = BUILD_STEPS_META[buildStepIndex];
+
+  if (phase === 'order') {
+    buildFactQueue = stepFactPairs(step, MAX_TABLE);
+  } else if (phase === 'shuffle2') {
+    const pairs = stepFactPairs(step, MAX_TABLE);
+    buildFactQueue = shuffled(pairs.concat(pairs));
+  }
+  buildPhaseLen = (phase === 'order' || phase === 'shuffle2') ? buildFactQueue.length : BUILD_MIX_LEN;
+
   correctCount = 0;
   wrongCount = 0;
   queue = [];
@@ -728,7 +737,7 @@ function startBuildPhase(phase) {
 
   showScreen(testScreen);
   answerInput.value = '';
-  timerDisplay.textContent = phase === 'focus' ? t().phaseFocus : t().phaseMix;
+  timerDisplay.textContent = phase === 'order' ? t().phaseOrder : phase === 'shuffle2' ? t().phaseShuffle : t().phaseMix;
   timerBar.style.width = '0%';
   renderLiveLabel();
   renderCurrent();
@@ -737,7 +746,11 @@ function startBuildPhase(phase) {
 
 function completeBuildPhase() {
   running = false;
-  if (buildPhase === 'focus') {
+  if (buildPhase === 'order') {
+    startBuildPhase('shuffle2');
+    return;
+  }
+  if (buildPhase === 'shuffle2') {
     startBuildPhase('mix');
     return;
   }
@@ -794,7 +807,7 @@ function openBuildStepIntro(index) {
   showScreen(buildStepIntroScreen);
 }
 
-buildStartBtn.addEventListener('click', () => startBuildPhase('focus'));
+buildStartBtn.addEventListener('click', () => startBuildPhase('order'));
 
 function statsTabLabels() {
   const s = t();

@@ -18,7 +18,6 @@ export const BUILD_STEPS_META = [
   { kind: 'table',   addsTables: [7] },
 ];
 
-export const BUILD_FOCUS_LEN = 6;
 export const BUILD_MIX_LEN = 10;
 export const SQUARE_NUMBERS = [2, 3, 4, 5, 6, 7, 8, 9, 10]; // all squares trained in the "Kvadrater" step
 
@@ -31,4 +30,18 @@ export function buildStepsUpTo(index) {
     else step.addsTables.forEach(n => nums.add(n));
   }
   return { nums: Array.from(nums), includeSquares };
+}
+
+// Every fact this step introduces, as [a, b] pairs, in a fixed canonical
+// order (table by table, factor 1..maxTable; squares in SQUARE_NUMBERS
+// order) — used to drive the "in order" and "shuffled, twice" rounds.
+export function stepFactPairs(step, maxTable) {
+  if (step.kind === 'squares') {
+    return SQUARE_NUMBERS.map(n => [n, n]);
+  }
+  const pairs = [];
+  for (const table of step.addsTables) {
+    for (let n = 1; n <= maxTable; n++) pairs.push([table, n]);
+  }
+  return pairs;
 }

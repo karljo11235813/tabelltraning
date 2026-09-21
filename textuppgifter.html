@@ -206,9 +206,15 @@
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
-  .op-choice-row button.active {
-    background: var(--accent);
+  .op-choice-row button.correct {
+    background: var(--success);
     color: #fff;
+    border-color: var(--success);
+  }
+  .op-choice-row button.wrong {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
   }
   .op-choice-row button:focus-visible {
     outline: 3px solid var(--accent-strong);
@@ -681,7 +687,7 @@
     step1Label.textContent = multi ? 'Steg 1: vilket räknesätt?' : 'Vilket räknesätt passar?';
     step2Block.style.display = 'none';
 
-    [opRow1, opRow2].forEach(row => row.querySelectorAll('button').forEach(b => b.classList.remove('active')));
+    [opRow1, opRow2].forEach(row => row.querySelectorAll('button').forEach(b => b.classList.remove('correct', 'wrong')));
     [opFeedback1, opFeedback2].forEach(f => { f.textContent = ''; f.className = 'op-feedback'; });
     [calcRow1, calcRow2].forEach(r => r.style.display = 'none');
     [box_a1, box_b1, box_result1, box_a2, box_b2, box_result2].forEach(b => b.value = '');
@@ -708,9 +714,10 @@
     rowEl.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-op]');
       if (!btn) return;
-      rowEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+      rowEl.querySelectorAll('button').forEach(b => b.classList.remove('correct', 'wrong'));
       const expected = getExpectedOp();
       const correct = btn.dataset.op === expected;
+      btn.classList.add(correct ? 'correct' : 'wrong');
       feedbackEl.textContent = correct ? 'Rätt!' : 'Fel, försök igen.';
       feedbackEl.className = 'op-feedback ' + (correct ? 'correct' : 'wrong');
       if (correct) {
