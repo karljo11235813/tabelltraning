@@ -77,7 +77,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Det hela får man genom att multiplicera delen med andelen.`,
-    explanation: String.raw`Det hela = delen / andelen: 4&nbsp;kr / 0,08 = 50&nbsp;kr. Multiplikation ger 4 · 0,08 = 0,32&nbsp;kr, som är mindre än delen. Det hela kan aldrig vara mindre än en del av det.`,
+    explanation: String.raw`Det hela = delen / andelen. Om delen är 4&nbsp;kr och andelen 8&nbsp;% = 0,08 blir det hela 4 / 0,08 = 50&nbsp;kr. Multiplikation ger 4 · 0,08 = 0,32&nbsp;kr, som är mindre än delen. Det hela kan aldrig vara mindre än en del av det.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -127,7 +127,7 @@ export default [
     answer: "sant",
     star: true,
     text: String.raw`X är 75&nbsp;% av Y och Z är 60&nbsp;% av Y. Då är Z 80&nbsp;% av X, och X är 25&nbsp;% större än Z.`,
-    explanation: String.raw`Prova Y = 100: X = 75 och Z = 60. Z / X = 60 / 75 = 0,8 = 80&nbsp;%. X / Z = 75 / 60 = 1,25, alltså 25&nbsp;% större. Samma skillnad (15) blir 20&nbsp;% eller 25&nbsp;% beroende på vilket tal som är det hela.`,
+    explanation: String.raw`Prova Y = 100: X = 75 och Z = 60. Z / X = 60 / 75 = 0,8 = 80&nbsp;%. X / Z = 75 / 60 = 1,25, alltså 25&nbsp;% större. Samma skillnad, 75 − 60 = 15, är 20&nbsp;% av 75 men 25&nbsp;% av 60. Procenten beror på vilket tal som är det hela.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -187,7 +187,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`En ökning med 200&nbsp;% innebär att slutvärdet är tre gånger startvärdet.`,
-    explanation: String.raw`ff = 100&nbsp;% + 200&nbsp;% = 300&nbsp;% = 3. Det är en vanlig fälla att tro att +200&nbsp;% betyder dubbelt så mycket.`,
+    explanation: String.raw`Förändringsfaktorn = 100&nbsp;% + 200&nbsp;% = 300&nbsp;% = 3. Det är en vanlig fälla att tro att +200&nbsp;% betyder dubbelt så mycket.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -197,7 +197,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Förändringsfaktorn är kvoten av slutvärdet och startvärdet.`,
-    explanation: String.raw`ff = slutvärdet / startvärdet. Till exempel 4&nbsp;800 / 6&nbsp;000 = 0,8.`,
+    explanation: String.raw`Förändringsfaktorn = slutvärdet / startvärdet. Om ett pris sänks från 6&nbsp;000&nbsp;kr till 4&nbsp;800&nbsp;kr är förändringsfaktorn 4&nbsp;800 / 6&nbsp;000 = 0,8.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -207,7 +207,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Den procentuella förändringen får man genom att ta startvärdet delat med skillnaden.`,
-    explanation: String.raw`pf = skillnaden / startvärdet. Sänkningen från 6&nbsp;000&nbsp;kr till 4&nbsp;800&nbsp;kr ger 1&nbsp;200 / 6&nbsp;000 = 0,2 = 20&nbsp;%. Omvänt blir det 6&nbsp;000 / 1&nbsp;200 = 5, vilket inte betyder något.`,
+    explanation: String.raw`Den procentuella förändringen = skillnaden / startvärdet. Sänkningen från 6&nbsp;000&nbsp;kr till 4&nbsp;800&nbsp;kr ger 1&nbsp;200 / 6&nbsp;000 = 0,2 = 20&nbsp;%. Omvänt blir det 6&nbsp;000 / 1&nbsp;200 = 5, vilket inte betyder något.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -227,7 +227,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`När ett pris minskar från 250&nbsp;kr till 200&nbsp;kr är minskningen 25&nbsp;%.`,
-    explanation: String.raw`50 / 250 = 0,2, så minskningen är 20&nbsp;%. Skillnaden är densamma som i förra påståendet, men startvärdet är större.`,
+    explanation: String.raw`Skillnaden är 50&nbsp;kr och startvärdet 250&nbsp;kr: 50 / 250 = 0,2, så minskningen är 20&nbsp;%. Procenten räknas alltid på startvärdet. Åt andra hållet, från 200&nbsp;kr till 250&nbsp;kr, är skillnaden också 50&nbsp;kr, men då är startvärdet mindre och ökningen blir 50 / 200 = 25&nbsp;%.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -277,7 +277,7 @@ export default [
     answer: "sant",
     star: true,
     text: String.raw`Ett pris ökade med 60&nbsp;kr, och förändringsfaktorn var 1,15. Då var priset efter ökningen 460&nbsp;kr.`,
-    explanation: String.raw`ff 1,15 betyder en ökning med 15&nbsp;%. Startvärdet = skillnaden / pf = 60 / 0,15 = 400&nbsp;kr. Slutvärdet = 400 + 60 = 460&nbsp;kr, eller 400 · 1,15 = 460&nbsp;kr.`,
+    explanation: String.raw`Förändringsfaktorn 1,15 betyder en ökning med 15&nbsp;%. Startvärdet = skillnaden / den procentuella förändringen = 60 / 0,15 = 400&nbsp;kr. Slutvärdet = 400 + 60 = 460&nbsp;kr, eller 400 · 1,15 = 460&nbsp;kr.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -287,7 +287,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Startvärdet kan beräknas som slutvärdet delat med förändringsfaktorn.`,
-    explanation: String.raw`slutvärdet = startvärdet · ff, och därför är startvärdet = slutvärdet / ff.`,
+    explanation: String.raw`Slutvärdet = startvärdet · förändringsfaktorn, och därför är startvärdet = slutvärdet / förändringsfaktorn. Till exempel: efter en ökning med 25&nbsp;% kostar en vara 500&nbsp;kr, så startpriset var 500 / 1,25 = 400&nbsp;kr.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -297,7 +297,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Efter 20&nbsp;% rabatt kostar en vara 240&nbsp;kr. Före rabatten kostade den 300&nbsp;kr.`,
-    explanation: String.raw`ff = 0,8, så startvärdet = 240 / 0,8 = 300&nbsp;kr. Kontroll: 300 · 0,8 = 240.`,
+    explanation: String.raw`Efter 20&nbsp;% rabatt är förändringsfaktorn 0,8, så startvärdet = 240 / 0,8 = 300&nbsp;kr. Kontroll: 300 · 0,8 = 240.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -317,7 +317,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Startvärdet är kvoten av skillnaden och den procentuella förändringen.`,
-    explanation: String.raw`pf = skillnaden / startvärdet, och därför är startvärdet = skillnaden / pf. Till exempel 1&nbsp;200 / 0,20 = 6&nbsp;000&nbsp;kr. Den procentuella förändringen skrivs då i decimalform.`,
+    explanation: String.raw`Den procentuella förändringen = skillnaden / startvärdet, och därför är startvärdet = skillnaden / den procentuella förändringen. Till exempel: ett pris sänks med 1&nbsp;200&nbsp;kr, vilket är 20&nbsp;%. Då var startvärdet 1&nbsp;200 / 0,20 = 6&nbsp;000&nbsp;kr. Den procentuella förändringen skrivs då i decimalform.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -327,7 +327,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om man vet slutvärdet och skillnaden kan man räkna ut den procentuella förändringen.`,
-    explanation: String.raw`Startvärdet = slutvärdet − skillnaden, och sedan är pf = skillnaden / startvärdet. Slutvärde 4&nbsp;800&nbsp;kr och sänkning 1&nbsp;200&nbsp;kr ger startvärdet 6&nbsp;000&nbsp;kr och 1&nbsp;200 / 6&nbsp;000 = 20&nbsp;%.`,
+    explanation: String.raw`Räkna först fram startvärdet: vid en ökning är startvärdet = slutvärdet − skillnaden, och vid en minskning är startvärdet = slutvärdet + skillnaden. Sedan är den procentuella förändringen = skillnaden / startvärdet. Slutvärde 4&nbsp;800&nbsp;kr och sänkning 1&nbsp;200&nbsp;kr ger startvärdet 4&nbsp;800 + 1&nbsp;200 = 6&nbsp;000&nbsp;kr och 1&nbsp;200 / 6&nbsp;000 = 20&nbsp;%.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -407,7 +407,7 @@ export default [
     answer: "falskt",
     star: true,
     text: String.raw`Lisas lön ökade med 600&nbsp;kr, vilket var en ökning med 2,5&nbsp;%. Kalles lön ökade med 900&nbsp;kr, vilket var en ökning med 4&nbsp;%. Då hade Kalle högre lön än Lisa före ökningen.`,
-    explanation: String.raw`Startvärdet = skillnaden / pf. Lisa: 600 / 0,025 = 24&nbsp;000&nbsp;kr. Kalle: 900 / 0,04 = 22&nbsp;500&nbsp;kr. Kalle fick fler kronor, men hade lägre lön. Även efter ökningen har Lisa mer: 24&nbsp;600&nbsp;kr mot 23&nbsp;400&nbsp;kr.`,
+    explanation: String.raw`Startvärdet = skillnaden / den procentuella förändringen. Lisa: 600 / 0,025 = 24&nbsp;000&nbsp;kr. Kalle: 900 / 0,04 = 22&nbsp;500&nbsp;kr. Kalle fick fler kronor, men hade lägre lön. Även efter ökningen har Lisa mer: 24&nbsp;600&nbsp;kr mot 23&nbsp;400&nbsp;kr.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -577,7 +577,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om andelen elever som cyklar ökar från 20&nbsp;% till 30&nbsp;% har andelen ökat med 50&nbsp;%.`,
-    explanation: String.raw`30 / 20 = 1,5, alltså en ökning med 50&nbsp;%. Både detta och förra påståendet är sanna: samma förändring beskriven på två sätt.`,
+    explanation: String.raw`30 / 20 = 1,5, alltså en ökning med 50&nbsp;%. Samma förändring kan också beskrivas som en ökning med 30 − 20 = 10 procentenheter. Båda beskrivningarna stämmer.`,
     source: "jonzone_sant_falskt_procent",
   },
   {

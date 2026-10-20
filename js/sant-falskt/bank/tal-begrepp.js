@@ -177,7 +177,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(\dfrac{1}{3} + \dfrac{1}{4} = \dfrac{2}{7}\)`,
-    explanation: String.raw`Man får inte addera nämnarna. Med MGN \(12\): \(\frac{4}{12} + \frac{3}{12} = \frac{7}{12}\).`,
+    explanation: String.raw`Man får inte addera nämnarna. Skriv om bråken med minsta gemensamma nämnare, \(12\): \(\frac{4}{12} + \frac{3}{12} = \frac{7}{12}\).`,
     source: "jonzone_sant_falskt_begrepp",
   },
   {

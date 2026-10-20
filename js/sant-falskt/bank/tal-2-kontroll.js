@@ -7,7 +7,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(17\) tillhör de naturliga talen.`,
-    explanation: String.raw`\(17\) finns med i uppräkningen \(0, 1, 2, 3, \ldots\)`,
+    explanation: String.raw`De naturliga talen är \(0, 1, 2, 3, \ldots\), och \(17\) finns med i den uppräkningen.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -97,7 +97,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\((-3)^2\) tillhör de naturliga talen.`,
-    explanation: String.raw`\((-3)^2 = (-3)\cdot(-3) = 9\). Jämnt antal negativa faktorer ger positivt svar.`,
+    explanation: String.raw`\((-3)^2 = (-3)\cdot(-3) = 9\), och \(9\) är ett naturligt tal. Jämnt antal negativa faktorer ger positivt svar.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -217,7 +217,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om kvoten är \(-5\) och nämnaren är \(4\), så måste täljaren vara \(-20\).`,
-    explanation: String.raw`\(\frac{-20}{4} = -5\). Jämför med påstående 17.`,
+    explanation: String.raw`Täljare = kvot · nämnare \(= (-5) \cdot 4 = -20\). Kontroll: \(\frac{-20}{4} = -5\).`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
