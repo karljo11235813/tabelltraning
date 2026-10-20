@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sant eller falskt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/sant-falskt.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+
+<header>
+  <a class="header-title" href="index.html">Tabellträning</a>
+  <span class="sf-header-sub">Sant eller falskt</span>
+</header>
+
+<main class="sf-main">
+
+  <!-- START -->
+  <section id="sfStart" class="card">
+    <a class="back-link" href="index.html">← Tillbaka</a>
+    <h1 class="sf-title">Sant, falskt eller beror på?</h1>
+    <h2>Välj kapitel</h2>
+    <div class="sf-chips" id="sfChapters"></div>
+    <h2>Välj läge</h2>
+    <div class="landing-choices" id="sfModes"></div>
+    <div class="hint" id="sfStartHint"></div>
+  </section>
+
+  <!-- PÅSTÅENDE -->
+  <section id="sfRun" hidden>
+    <div class="top-row">
+      <div class="timer" id="sfTimer"></div>
+      <button type="button" class="sf-quit" id="sfQuit">Avsluta</button>
+    </div>
+    <div class="timer-bar-track" id="sfTimerTrack"><div class="timer-bar-fill" id="sfTimerBar"></div></div>
+
+    <div class="sf-scoreboard">
+      <div class="sf-tile"><div class="sf-tile-val" id="sfLiveScore">0</div><div class="sf-tile-lbl">Poäng</div></div>
+      <div class="sf-tile sf-tile-correct"><div class="sf-tile-val" id="sfLiveCorrect">0</div><div class="sf-tile-lbl">Rätt</div></div>
+      <div class="sf-tile sf-tile-wrong"><div class="sf-tile-val" id="sfLiveWrong">0</div><div class="sf-tile-lbl">Fel</div></div>
+    </div>
+
+    <div class="sf-card">
+      <div class="sf-meta" id="sfMeta"></div>
+      <div class="sf-statement" id="sfStatement" aria-live="polite"></div>
+      <div class="sf-answers">
+        <button type="button" class="sf-answer" data-answer="sant"><span>SANT</span><span class="sf-key">S · 1</span></button>
+        <button type="button" class="sf-answer" data-answer="beror"><span>BEROR PÅ</span><span class="sf-key">B · 2</span></button>
+        <button type="button" class="sf-answer" data-answer="falskt"><span>FALSKT</span><span class="sf-key">F · 3</span></button>
+      </div>
+      <div class="sf-explain" id="sfExplain" hidden>
+        <div class="sf-explain-verdict" id="sfVerdict"></div>
+        <div class="sf-explain-text" id="sfExplainText"></div>
+        <button type="button" class="start-btn" id="sfNext">Nästa →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTAT -->
+  <section id="sfResult" hidden>
+    <div class="result-card">
+      <h2 id="sfResultTitle"></h2>
+      <div class="result-stats">
+        <div class="result-stat"><div class="val" id="sfStatScore">0</div><div class="lbl">Poäng</div></div>
+        <div class="result-stat"><div class="val sf-val-correct" id="sfStatCorrect">0</div><div class="lbl">Rätt</div></div>
+        <div class="result-stat"><div class="val sf-val-wrong" id="sfStatWrong">0</div><div class="lbl">Fel</div></div>
+      </div>
+      <div class="sf-record" id="sfRecord" hidden>Nytt rekord!</div>
+      <div class="sf-result-list" id="sfResultList"></div>
+      <div class="sf-result-buttons">
+        <button type="button" class="again-btn" id="sfAgain">Kör igen</button>
+        <button type="button" class="sf-secondary-btn" id="sfChangeMode">Byt läge</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module" src="js/sant-falskt/app.js"></script>
+</body>
+</html>

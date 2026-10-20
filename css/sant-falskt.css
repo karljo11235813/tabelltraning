@@ -1,0 +1,211 @@
+/* Sant eller falskt — sidans egna stilar. Färger och typsnitt kommer från styles.css. */
+
+.sf-main { max-width: 880px; }
+.sf-main [hidden] { display: none !important; }
+a.header-title, a.back-link { text-decoration: none; }
+.sf-header-sub { font-weight: 700; opacity: 0.85; }
+
+/* ---------- START ---------- */
+.sf-title {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  color: var(--accent);
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+.sf-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.sf-chip {
+  padding: 10px 16px;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  border-radius: 999px;
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sf-chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.sf-chip:disabled { border-color: var(--border); color: var(--text-muted); background: var(--surface); cursor: not-allowed; }
+.landing-card:disabled { opacity: 0.5; cursor: not-allowed; }
+.sf-record-badge { display: block; margin-top: 6px; font-size: 0.85rem; font-weight: 800; color: var(--accent-strong); }
+
+.sf-chip:focus-visible,
+.sf-answer:focus-visible,
+.sf-quit:focus-visible,
+.sf-secondary-btn:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+
+/* ---------- PÅSTÅENDE ---------- */
+.sf-main .top-row { align-items: center; gap: 12px; }
+.sf-main .top-row .sf-quit { margin-left: auto; }
+.timer.sf-progress { font-size: 1.1rem; color: var(--text-muted); }
+.sf-quit {
+  background: none;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+/* Poäng, rätt och fel: stora nog att läsas på ett par meters avstånd. */
+.sf-scoreboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.sf-tile {
+  background: var(--surface);
+  border-radius: 12px;
+  border-top: 5px solid var(--accent);
+  box-shadow: var(--shadow);
+  padding: 10px 8px 8px;
+  text-align: center;
+}
+.sf-tile-correct { border-top-color: var(--success); }
+.sf-tile-wrong { border-top-color: var(--danger); }
+.sf-tile-val {
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.sf-tile-correct .sf-tile-val { color: var(--success); }
+.sf-tile-wrong .sf-tile-val { color: var(--danger); }
+.sf-tile-lbl {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sf-card {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: clamp(20px, 4vw, 44px) clamp(16px, 4vw, 40px);
+  text-align: center;
+}
+.sf-meta {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 18px;
+}
+.sf-statement {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 3.2vw, 2.4rem);
+  line-height: 1.35;
+  max-width: 32ch;
+  min-height: 2.7em;
+  margin: 0 auto 28px;
+  overflow-wrap: anywhere;
+}
+.sf-statement.sf-long { font-size: clamp(1.15rem, 2.6vw, 1.9rem); }
+/* Höga uttryck (\dfrac) ska ta sin fulla höjd, annars krockar de när påståendet radbryts. */
+.sf-statement .katex,
+.sf-row-text .katex { display: inline-block; margin: 0.12em 0; }
+.sf-statement .katex-display,
+.sf-explain-text .katex-display,
+.sf-row .katex-display { overflow-x: auto; overflow-y: hidden; }
+
+.sf-answers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.sf-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 8px;
+  border: 3px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  border-radius: 12px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.sf-answer:hover:not(:disabled) { background: var(--accent-soft); }
+.sf-key {
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+.sf-answer:disabled { cursor: default; }
+.sf-answer:disabled:not(.sf-chosen-right):not(.sf-chosen-wrong):not(.sf-correct) { opacity: 0.4; }
+.sf-answer.sf-chosen-right { background: var(--success); border-color: var(--success); color: var(--surface); }
+.sf-answer.sf-chosen-wrong { background: var(--danger); border-color: var(--danger); color: var(--surface); }
+.sf-answer.sf-chosen-right .sf-key,
+.sf-answer.sf-chosen-wrong .sf-key { color: var(--surface); opacity: 0.85; }
+.sf-answer.sf-correct {
+  border-color: var(--success);
+  color: var(--success);
+  background: var(--success-soft);
+  box-shadow: 0 0 0 3px var(--success-soft);
+}
+
+.sf-explain { margin-top: 24px; padding-top: 18px; border-top: 2px solid var(--border); text-align: left; }
+.sf-explain-verdict { font-family: "Baloo 2", sans-serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; }
+.sf-explain-verdict.is-right { color: var(--success); }
+.sf-explain-verdict.is-wrong { color: var(--danger); }
+.sf-explain-text { font-size: clamp(1rem, 1.8vw, 1.25rem); line-height: 1.5; }
+.sf-explain .start-btn { margin-top: 18px; }
+
+@media (max-width: 520px) {
+  .sf-answers { grid-template-columns: 1fr; }
+  .sf-answer { flex-direction: row; justify-content: space-between; padding: 14px 18px; }
+}
+
+/* ---------- RESULTAT ---------- */
+.result-stat .val.sf-val-correct { color: var(--success); }
+.result-stat .val.sf-val-wrong { color: var(--danger); }
+.sf-record {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--accent-strong);
+  margin: -12px 0 20px;
+}
+.sf-result-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; text-align: left; }
+.sf-row { border: 2px solid var(--border); border-radius: 10px; background: var(--surface); }
+.sf-row-wrong { border-color: var(--danger); background: var(--danger-soft); }
+.sf-row > summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1.6em 1fr;
+  gap: 4px 8px;
+  padding: 12px 14px;
+}
+.sf-row > summary::-webkit-details-marker { display: none; }
+.sf-row-icon { grid-row: span 2; font-weight: 800; font-size: 1.1rem; }
+.sf-row-wrong .sf-row-icon { color: var(--danger); }
+.sf-row-correct .sf-row-icon { color: var(--success); }
+.sf-row-unanswered .sf-row-icon { color: var(--text-muted); }
+.sf-row-text { font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.sf-row-answer { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+.sf-row-explain { padding: 0 14px 14px calc(14px + 1.6em + 8px); line-height: 1.5; }
+.sf-empty { color: var(--text-muted); text-align: center; }
+.sf-result-buttons { display: flex; flex-direction: column; gap: 10px; }
+.sf-secondary-btn {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  border-radius: 9px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-answer { transition: none; }
+}

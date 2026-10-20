@@ -289,6 +289,8 @@ function applyLanguage() {
   document.getElementById('landingDecimalDesc').textContent = s.landingDecimalDesc;
   document.getElementById('landingWordProblemsTitle').textContent = s.landingWordProblemsTitle;
   document.getElementById('landingWordProblemsDesc').textContent = s.landingWordProblemsDesc;
+  document.getElementById('landingTrueFalseTitle').textContent = s.landingTrueFalseTitle;
+  document.getElementById('landingTrueFalseDesc').textContent = s.landingTrueFalseDesc;
 
   backFromTest.textContent = s.back;
   backFromPractice.textContent = s.back;
