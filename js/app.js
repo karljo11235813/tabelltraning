@@ -5,11 +5,12 @@ import { MASTERY_MIN_ATTEMPTS, factKey, getMastery } from './mastery.js';
 import { getFactStats, logAttempt, clearFactStats } from './stats-store.js';
 import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
 import { describeScope, roundPoints, formatPoints } from './result-scope.js';
+import { LEVELS, assessLevels, levelHint, levelRequirement } from './levels.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
 const MAX_TABLE = 12;
-const ACCEPTABLE_THRESHOLD = 2; // seconds/question — green cutoff & ladder marker
+const ACCEPTABLE_THRESHOLD = 2; // seconds/question — where the result background turns fully green
 const BG_WORST_AT = 8; // seconds/question — fully orange beyond this
 const WRONG_PENALTY_SECONDS = 5; // added per wrong answer before ranking (not shown in raw speed stat)
 
@@ -252,6 +253,44 @@ function renderScope(s) {
   scopeTables.setAttribute('aria-label', s.scopeTablesLabel + ': ' + chosen);
 }
 
+// Self-marking levels: only on a real test. The levels are per minute, so the
+// 100-question test only gets a note saying they apply to the 1-minute test.
+function renderLevels(s) {
+  const wrap = document.getElementById('levels');
+  if (!describeScope(lastRun, s).isTest) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+  const heading = document.getElementById('levelsHeading');
+  const row = document.getElementById('levelsRow');
+  const hint = document.getElementById('levelsHint');
+  row.textContent = '';
+  if (lastRun.mode !== 'time') {
+    heading.textContent = '';
+    hint.textContent = s.levelsOnlyOneMinute;
+    return;
+  }
+  heading.textContent = s.levelsHeading;
+  const result = assessLevels({ correct: correctCount, wrong: wrongCount });
+  LEVELS.forEach((level, i) => {
+    const box = document.createElement('div');
+    box.className = 'level-box' + (result.reached[i] ? ' reached' : '') + (i === result.highest ? ' yours' : '');
+    const add = (cls, text) => {
+      const el = document.createElement('span');
+      el.className = cls;
+      el.textContent = text;
+      box.appendChild(el);
+    };
+    add('level-check', result.reached[i] ? '✓' : '');
+    add('level-name', s.levelNames[i]);
+    add('level-req', levelRequirement(level, s));
+    if (i === result.highest) add('level-yours', s.levelYours);
+    row.appendChild(box);
+  });
+  hint.textContent = levelHint(result, s);
+}
+
 function renderResultText() {
   const s = t();
   const totalAnswered = correctCount + wrongCount;
@@ -291,6 +330,7 @@ function renderResultText() {
     penaltyNote.classList.remove('visible');
   }
 
+  renderLevels(s);
   renderRankLadder(rankSpeed, totalAnswered);
 
   if (totalAnswered > 0) {
@@ -436,16 +476,8 @@ function renderRankLadder(avgSpeedSeconds, totalAnswered) {
   }
   const tiers = t().tiers;
   const youLabel = t().tierYou;
-  const markerLabel = t().acceptableLabel;
   rankLadder.style.display = 'flex';
   const achievedIndex = tiers.findIndex(tier => avgSpeedSeconds <= tier.max);
-  const markerAt = tiers.findIndex(tier => tier.max > ACCEPTABLE_THRESHOLD);
-
-  const markerHtml = '<div class="rank-marker">'
-    + '<span class="rank-marker-line"></span>'
-    + '<span class="rank-marker-label">' + markerLabel + '</span>'
-    + '<span class="rank-marker-line"></span>'
-    + '</div>';
 
   rankLadder.innerHTML = tiers.map((tier, i) => {
     const achieved = i === achievedIndex;
@@ -461,7 +493,7 @@ function renderRankLadder(avgSpeedSeconds, totalAnswered) {
       + '</span>'
       + (achieved ? '<span class="tier-you">' + youLabel + '</span>' : '')
       + '</div>';
-    return (i === markerAt ? markerHtml : '') + tierHtml;
+    return tierHtml;
   }).join('');
 }
 

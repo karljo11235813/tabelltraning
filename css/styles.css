@@ -559,6 +559,50 @@
     letter-spacing: 0.5px;
   }
   .result-card.is-test { border: 6px solid var(--warning); overflow: hidden; }
+
+  /* ---------- RESULT: self-marking levels (1-minute test) ---------- */
+  .levels { margin: -6px 0 26px; }
+  .levels-heading {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .levels-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .level-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 4px 10px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    background: var(--surface);
+    opacity: 0.6;
+  }
+  .level-box.reached { opacity: 1; border-color: var(--success); background: var(--success-soft); color: var(--text); }
+  .level-box.yours { border-width: 4px; box-shadow: 0 0 0 3px var(--success-soft); }
+  .level-check { font-size: 1.3rem; font-weight: 800; line-height: 1; min-height: 1.3rem; color: var(--success); }
+  .level-name { font-family: "Baloo 2", sans-serif; font-size: 0.85rem; font-weight: 800; line-height: 1.1; hyphens: manual; overflow-wrap: anywhere; }
+  .level-req { font-size: 0.72rem; font-weight: 700; line-height: 1.3; white-space: pre-line; }
+  .level-yours {
+    margin-top: 4px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--success);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .levels-hint { margin-top: 10px; font-weight: 700; color: var(--text); }
+  @media (max-width: 520px) {
+    .levels-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
   .result-card.is-test .scope-badge { background: var(--warning); color: #221b28; }
   .result-card.is-test .scope-cell.on { background: var(--warning); border-color: var(--warning); color: #221b28; }
   @media (max-width: 420px) {
@@ -572,26 +616,6 @@
     gap: 6px;
     text-align: left;
     margin: 4px 0 24px;
-  }
-  .rank-marker {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 2px 0;
-  }
-  .rank-marker-line {
-    flex: 1;
-    height: 0;
-    border-top: 2px dashed var(--success);
-  }
-  .rank-marker-label {
-    font-family: "Nunito Sans", sans-serif;
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    color: var(--success);
-    text-transform: uppercase;
-    white-space: nowrap;
   }
   .rank-tier {
     display: flex;
