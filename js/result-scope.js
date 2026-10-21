@@ -23,10 +23,9 @@ export function describeScope({ origin, operation, tables, mode }, s) {
   };
 }
 
-// Test score: one point per right answer, minus one per wrong. Only test runs
-// are scored this way; practice returns null so no points are shown.
-export function testPoints({ origin, correct, wrong }) {
-  return origin === 'test' ? correct - wrong : null;
+// Round score for both Test and Öva: one point per right answer, minus one per wrong.
+export function roundPoints({ correct, wrong }) {
+  return correct - wrong;
 }
 
 export function formatPoints(n) {
