@@ -362,6 +362,28 @@
   }
   .live-score b { color: var(--success); font-family: "Baloo 2", sans-serif; }
   .live-score b.live-points { color: var(--accent); }
+  .restart-btn {
+    margin-left: 12px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    align-self: center;
+  }
+  .restart-btn:hover { background: var(--accent-soft); }
+  .restart-btn:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+  .timer, .restart-btn { white-space: nowrap; }
+  @media (max-width: 420px) {
+    #testScreen .top-row { gap: 8px; align-items: center; }
+    #testScreen .timer { font-size: 1.4rem; }
+    #testScreen .live-score { font-size: 0.9rem; text-align: center; }
+    .restart-btn { margin-left: 0; padding: 5px 9px; font-size: 0.8rem; }
+  }
 
   .timer-bar-track {
     width: 100%;
@@ -464,34 +486,31 @@
   }
   .viz-panel svg { max-width: 260px; }
 
-  .preview-box {
+  /* The upcoming question, as a slim bar directly above the current one. */
+  .next-bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 8px 16px;
     background: var(--accent-soft);
     border: 1.5px dashed var(--accent);
     border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 0.95rem;
-    color: var(--text-muted);
   }
-  .preview-box .preview-title {
+  .next-bar-lbl {
+    font-size: 0.78rem;
     font-weight: 800;
-    color: var(--accent);
-    margin-bottom: 6px;
-    font-size: 0.78rem;
-    text-transform: uppercase;
     letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--accent);
   }
-  .preview-box .preview-item {
+  .next-bar-q {
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.6rem;
-    color: var(--text);
-    margin: 3px 0;
-    font-variant-numeric: tabular-nums;
-  }
-  .preview-box .preview-item span.lbl {
-    font-family: "Nunito Sans", sans-serif;
-    font-size: 0.78rem;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: var(--text-muted);
-    margin-right: 6px;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ---------- RESULT SCREEN ---------- */

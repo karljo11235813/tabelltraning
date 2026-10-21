@@ -166,8 +166,14 @@
     <div class="top-row">
       <div class="timer" id="timerDisplay">60</div>
       <div class="live-score" id="liveScoreLabel">Rätt: <b id="liveScore">0</b></div>
+      <button type="button" class="restart-btn" id="restartBtn">Starta om</button>
     </div>
     <div class="timer-bar-track"><div class="timer-bar-fill" id="timerBar"></div></div>
+
+    <div class="next-bar">
+      <span class="next-bar-lbl" id="previewNextLbl">Nästa fråga</span>
+      <span class="next-bar-q" id="preview1"></span>
+    </div>
 
     <div class="problem-box" id="problemBox">
       <div class="problem-text" id="problemText">–</div>
@@ -177,11 +183,6 @@
 
     <button type="button" class="viz-toggle" id="vizToggle">Visa bild</button>
     <div class="viz-panel" id="vizPanel" style="display:none;"></div>
-
-    <div class="preview-box">
-      <div class="preview-title" id="previewTitle">Kommande fråga</div>
-      <div class="preview-item"><span class="lbl" id="previewNextLbl">Nästa:</span><span id="preview1"></span></div>
-    </div>
   </div>
 
   <!-- RESULT -->

@@ -92,6 +92,7 @@ const statSpeed = document.getElementById('statSpeed');
 const penaltyNote = document.getElementById('penaltyNote');
 const rankLadder = document.getElementById('rankLadder');
 const againBtn = document.getElementById('againBtn');
+const restartBtn = document.getElementById('restartBtn');
 
 let mode = 'time';
 let operation = 'mul';
@@ -345,6 +346,7 @@ function applyLanguage() {
   document.documentElement.lang = getLang();
   document.title = s.title;
   headerTitle.textContent = s.title;
+  restartBtn.textContent = s.restart;
   soundToggle.textContent = s.soundLabel;
   updateSoundToggleUI();
   langToggle.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.lang === getLang()));
@@ -391,7 +393,6 @@ function applyLanguage() {
 
   syncModeUI();
 
-  document.getElementById('previewTitle').textContent = s.previewTitle;
   document.getElementById('previewNextLbl').textContent = s.previewNext;
   answerInput.setAttribute('aria-label', s.answerAria);
   nextBtn.textContent = s.nextBtn;
@@ -725,8 +726,10 @@ function startRound() {
   running = true;
   hasResult = false;
   roundStartTime = performance.now();
+  tickAccum = 0; // a restart mid-second must not shorten the first second
   document.body.style.backgroundColor = '';
   problemGenerator = makeProblem;
+  restartBtn.style.display = '';
   resetViz();
   Audio.startMusic();
 
@@ -803,6 +806,7 @@ function startBuildPhase(phase) {
   hasResult = false;
   problemGenerator = makeBuildProblem;
   document.body.style.backgroundColor = '';
+  restartBtn.style.display = 'none'; // Bygg upp has its own phased flow
   resetViz();
   clearInterval(timerId);
   timerId = null;
@@ -1018,6 +1022,13 @@ testStartBtn.addEventListener('click', () => {
 
 startBtn.addEventListener('click', () => {
   originScreen = 'practice';
+  startRound();
+});
+
+// Starts the same round over from scratch (same tables, operation and format).
+// The interrupted round gets no result screen.
+restartBtn.addEventListener('click', () => {
+  if (!running || mode === 'build') return;
   startRound();
 });
 
