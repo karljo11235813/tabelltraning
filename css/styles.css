@@ -503,6 +503,68 @@
     box-shadow: var(--shadow);
   }
   .result-card h2 { color: var(--accent); margin: 0 0 20px 0; font-size: 1.3rem; }
+
+  /* ---------- RESULT: what was tested (readable from across the room) ---------- */
+  .result-scope { margin: 0 0 22px; }
+  .scope-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+  }
+  .scope-badge {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+  .scope-op {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .scope-format { font-size: 1rem; font-weight: 700; color: var(--text-muted); }
+  .scope-tables { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+  .scope-cell {
+    padding: 6px 0;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    opacity: 0.55;
+    font-variant-numeric: tabular-nums;
+  }
+  .scope-cell.on { background: var(--accent); border-color: var(--accent); color: #fff; opacity: 1; }
+
+  /* The full test (started from Test, all tables, × and ÷): gold frame and band. */
+  .scope-band[hidden] { display: none; }
+  .scope-band {
+    margin: -32px -22px 20px;
+    padding: 12px 16px;
+    border-radius: 6px 6px 0 0;
+    background: var(--warning);
+    color: #221b28;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .result-card.is-test { border: 6px solid var(--warning); overflow: hidden; }
+  .result-card.is-test .scope-badge { background: var(--warning); color: #221b28; }
+  .result-card.is-test .scope-cell.on { background: var(--warning); border-color: var(--warning); color: #221b28; }
+  @media (max-width: 420px) {
+    .scope-cell { font-size: 0.7rem; padding: 5px 0; }
+    .scope-op { font-size: 1.25rem; }
+    .scope-band { font-size: 0.9rem; padding: 10px 8px; }
+  }
   .rank-ladder {
     display: flex;
     flex-direction: column;

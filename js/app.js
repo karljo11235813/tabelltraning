@@ -4,6 +4,7 @@ import * as Audio from './audio.js';
 import { MASTERY_MIN_ATTEMPTS, factKey, getMastery } from './mastery.js';
 import { getFactStats, logAttempt, clearFactStats } from './stats-store.js';
 import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
+import { describeScope } from './result-scope.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
@@ -78,6 +79,12 @@ const vizToggle = document.getElementById('vizToggle');
 const vizPanel = document.getElementById('vizPanel');
 
 const resultTitle = document.getElementById('resultTitle');
+const resultCard = document.getElementById('resultCard');
+const scopeBand = document.getElementById('scopeBand');
+const scopeBadge = document.getElementById('scopeBadge');
+const scopeOp = document.getElementById('scopeOp');
+const scopeFormat = document.getElementById('scopeFormat');
+const scopeTables = document.getElementById('scopeTables');
 const statCorrect = document.getElementById('statCorrect');
 const statWrong = document.getElementById('statWrong');
 const statSpeed = document.getElementById('statSpeed');
@@ -115,6 +122,7 @@ let secondsLeft = ROUND_SECONDS;
 let roundStartTime = 0;
 let lastElapsedSeconds = 0;
 let hasResult = false;
+let lastRun = null; // what the finished round covered, frozen at endRound so later setting changes can't alter the result screen
 let timerId = null;
 let running = false;
 
@@ -218,6 +226,26 @@ function renderLiveLabel() {
   }
 }
 
+// The "what was tested" block: badge, operation, format and the 1–12 strip.
+function renderScope(s) {
+  const d = describeScope(lastRun, s);
+  resultCard.classList.toggle('is-test', d.isTest);
+  scopeBand.hidden = !d.band;
+  scopeBand.textContent = d.band || '';
+  scopeBadge.textContent = d.badge;
+  scopeOp.textContent = d.operationText;
+  scopeFormat.textContent = d.formatText;
+  scopeTables.textContent = '';
+  d.tables.forEach(({ n, included }) => {
+    const cell = document.createElement('span');
+    cell.className = included ? 'scope-cell on' : 'scope-cell';
+    cell.textContent = n;
+    scopeTables.appendChild(cell);
+  });
+  const chosen = d.tables.filter(x => x.included).map(x => x.n).join(', ');
+  scopeTables.setAttribute('aria-label', s.scopeTablesLabel + ': ' + chosen);
+}
+
 function renderResultText() {
   const s = t();
   const totalAnswered = correctCount + wrongCount;
@@ -232,6 +260,7 @@ function renderResultText() {
     ? (lastElapsedSeconds + wrongCount * WRONG_PENALTY_SECONDS) / correctCount
     : Infinity;
 
+  renderScope(s);
   resultTitle.textContent = mode === 'time' ? s.resultTitleTime : s.resultTitleCount;
   document.getElementById('lblStatCorrect').textContent = s.statCorrect;
   document.getElementById('lblStatWrong').textContent = s.statWrong;
@@ -708,6 +737,7 @@ function endRound() {
     ? ROUND_SECONDS
     : (performance.now() - roundStartTime) / 1000;
   hasResult = true;
+  lastRun = { origin: originScreen, operation, tables: new Set(selectedTables), mode };
 
   renderResultText();
 }
