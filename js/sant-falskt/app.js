@@ -117,6 +117,7 @@ function startRun(mode, chapters) {
     flashTimer: null,
   };
   $("sfQuit").hidden = isTimed(mode);
+  $("sfRestart").hidden = !isTimed(mode);
   $("sfTimerTrack").hidden = !isTimed(mode);
   $("sfTimer").classList.toggle("sf-progress", !isTimed(mode));
   if (isTimed(mode)) {
@@ -288,6 +289,8 @@ function resultRow(item, kind, answerLine) {
 for (const button of answerButtons()) button.addEventListener("click", () => choose(button.dataset.answer));
 $("sfNext").addEventListener("click", goNext);
 $("sfQuit").addEventListener("click", finishRun);
+// Startar en ny sprint direkt. Den avbrutna räknas inte: inget rekord, ingen resultatskärm.
+$("sfRestart").addEventListener("click", () => startRun(run.mode, run.chapters));
 $("sfAgain").addEventListener("click", () => startRun(run.mode, run.chapters));
 $("sfChangeMode").addEventListener("click", () => {
   stopTimers();
