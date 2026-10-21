@@ -22,3 +22,13 @@ export function describeScope({ origin, operation, tables, mode }, s) {
     tables: strip,
   };
 }
+
+// Test score: one point per right answer, minus one per wrong. Only test runs
+// are scored this way; practice returns null so no points are shown.
+export function testPoints({ origin, correct, wrong }) {
+  return origin === 'test' ? correct - wrong : null;
+}
+
+export function formatPoints(n) {
+  return n < 0 ? '−' + (-n) : String(n);
+}

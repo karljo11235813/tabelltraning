@@ -4,7 +4,7 @@ import * as Audio from './audio.js';
 import { MASTERY_MIN_ATTEMPTS, factKey, getMastery } from './mastery.js';
 import { getFactStats, logAttempt, clearFactStats } from './stats-store.js';
 import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
-import { describeScope } from './result-scope.js';
+import { describeScope, testPoints, formatPoints } from './result-scope.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
@@ -214,12 +214,18 @@ function setAllTablesSelected() {
 }
 
 // ---------- Language ----------
+// Test runs also show their points (right − wrong) live, so wrong answers visibly cost.
+function livePointsHtml() {
+  const points = testPoints({ origin: originScreen, correct: correctCount, wrong: wrongCount });
+  return points === null ? '' : t().livePoints + '<b class="live-points">' + formatPoints(points) + '</b>&nbsp;&nbsp;';
+}
+
 function renderLiveLabel() {
   if (mode === 'time') {
-    liveScoreLabel.innerHTML = t().liveCorrect + '<b id="liveScore">' + correctCount + '</b>';
+    liveScoreLabel.innerHTML = livePointsHtml() + t().liveCorrect + '<b id="liveScore">' + correctCount + '</b>';
   } else if (mode === 'count') {
     const totalAnswered = correctCount + wrongCount;
-    liveScoreLabel.innerHTML = t().liveQuestion + '<b id="liveScore">' + totalAnswered + '</b> / ' + COUNT_TARGET;
+    liveScoreLabel.innerHTML = livePointsHtml() + t().liveQuestion + '<b id="liveScore">' + totalAnswered + '</b> / ' + COUNT_TARGET;
   } else {
     const totalAnswered = correctCount + wrongCount;
     liveScoreLabel.innerHTML = t().liveQuestion + '<b id="liveScore">' + totalAnswered + '</b> / ' + buildPhaseLen;
@@ -268,6 +274,10 @@ function renderResultText() {
   againBtn.textContent = s.again;
   statCorrect.textContent = correctCount;
   statWrong.textContent = wrongCount;
+  const points = testPoints({ origin: lastRun.origin, correct: correctCount, wrong: wrongCount });
+  document.getElementById('statPointsWrap').style.display = points === null ? 'none' : '';
+  document.getElementById('statPoints').textContent = points === null ? '' : formatPoints(points);
+  document.getElementById('lblStatPoints').textContent = s.statPoints;
   statSpeed.textContent = rawSpeed !== null
     ? (rawSpeed.toFixed(2).replace('.', ',') + ' s')
     : '–';
