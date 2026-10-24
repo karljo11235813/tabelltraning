@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Negativa tal — Övning</title>
+<title>Negativa tal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <style>
   :root {
     --bg: #f3eef9;
@@ -93,7 +96,7 @@
   .header-title:hover { opacity: 0.85; }
   main {
     width: 100%;
-    max-width: 560px;
+    max-width: 880px;
     padding: 20px;
     flex: 1;
     display: flex;
@@ -108,7 +111,7 @@
   }
   .card h2 {
     margin: 0 0 10px 0;
-    font-size: 1.05rem;
+    font-size: clamp(1.05rem, 2.4vw, 1.6rem);
     font-weight: 700;
     color: var(--accent);
   }
@@ -135,7 +138,7 @@
     color: var(--accent);
     border-radius: 999px;
     font-family: "Nunito Sans", sans-serif;
-    font-size: 0.82rem;
+    font-size: clamp(0.82rem, 1.6vw, 1.05rem);
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
@@ -150,7 +153,7 @@
   }
 
   .score-line {
-    font-size: 0.85rem;
+    font-size: clamp(0.85rem, 1.8vw, 1.2rem);
     color: var(--text-muted);
     margin-bottom: 14px;
     font-variant-numeric: tabular-nums;
@@ -171,27 +174,27 @@
   .problem-box.flash-wrong { border-color: var(--danger); background: var(--danger-soft); }
 
   .problem-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: 10px;
+    font-size: clamp(1.2rem, 3.4vw, 2.3rem);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
   }
   .problem-text {
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.9rem;
+    font-size: clamp(1.9rem, 5vw, 3.4rem);
     font-weight: 700;
     color: var(--text);
     margin-bottom: 18px;
     font-variant-numeric: tabular-nums;
     line-height: 1.3;
+    overflow-wrap: anywhere;
   }
-  .problem-text sup {
-    font-size: 0.6em;
-    top: -0.6em;
-  }
+  .problem-text .katex-display,
+  .problem-label .katex-display { overflow-x: auto; overflow-y: hidden; }
   #answerInput {
-    width: 150px;
+    width: clamp(150px, 24vw, 260px);
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.7rem;
+    font-size: clamp(1.7rem, 4.2vw, 2.8rem);
     text-align: center;
     padding: 10px;
     border: 2px solid var(--accent);
@@ -207,7 +210,7 @@
   .feedback {
     min-height: 1.3em;
     margin-top: 14px;
-    font-size: 0.95rem;
+    font-size: clamp(1.15rem, 3.2vw, 2.2rem);
     font-weight: 700;
   }
   .feedback.correct { color: var(--success); }
@@ -220,14 +223,14 @@
     justify-content: center;
   }
   .btn-row button {
-    min-width: 130px;
-    padding: 12px 20px;
+    min-width: clamp(130px, 18vw, 200px);
+    padding: clamp(12px, 1.6vw, 16px) 20px;
     background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 9px;
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.05rem;
+    font-size: clamp(1.05rem, 2vw, 1.4rem);
     font-weight: 700;
     cursor: pointer;
   }
@@ -243,12 +246,12 @@
   }
 
   .hint {
-    font-size: 0.8rem;
+    font-size: clamp(0.95rem, 2vw, 1.35rem);
     color: var(--text-muted);
     margin-top: 14px;
     text-align: center;
   }
-  /* Sidans bild bredvid rubriken — samma bild som på startsidans kort. */
+  /* Sidans bild bredvid rubriken, samma bild som på startsidans kort. */
   .page-title-row {
     display: flex;
     align-items: center;
@@ -275,7 +278,7 @@
     <a class="back-link" href="index.html">← Tillbaka</a>
     <div class="page-title-row">
       <img class="page-title-img" src="img/pages/negativa-tal.png" alt="">
-      <h2>Negativa tal — övning</h2>
+      <h2>Negativa tal</h2>
     </div>
 
     <div class="category-row" id="categoryRow">
@@ -316,41 +319,42 @@
     do { n = randInt(min, max); } while (n === 0);
     return n;
   }
-  // Excludes ±1 too — a coefficient of 1 reads oddly ("1x = 8").
+  // Excludes ±1 too, since a coefficient of 1 reads oddly ("1x = 8").
   function randCoefficient(min, max) {
     let n;
     do { n = randInt(min, max); } while (n === 0 || Math.abs(n) === 1);
     return n;
   }
-  // Plain signed display: "−6" or "6" — used for a leading term.
+  // Plain signed LaTeX: "-6" or "6", used for a leading term.
   function num(n) {
-    return n < 0 ? '−' + (-n) : String(n);
+    return n < 0 ? '-' + (-n) : String(n);
   }
   // Wraps a negative operand in parens so it reads unambiguously after
-  // an operator: "6 + (−2)", "(−3) · 4". Positive operands are bare.
+  // an operator: "6 + (-2)", "(-3) \cdot 4". Positive operands are bare.
   function op(n) {
-    return n < 0 ? '(−' + (-n) + ')' : String(n);
+    return n < 0 ? '(-' + (-n) + ')' : String(n);
   }
   function pow(base, exp) {
     return Math.pow(base, exp);
   }
 
-  // Each generator returns { label, text, answer }. `text` is HTML
-  // (so exponents can use <sup>); `answer` is the integer the input
-  // must match exactly.
+  // Each generator returns { label, tex, answer }. `tex` is LaTeX without
+  // delimiters; `label` is text that may hold \( … \) math; `answer` is
+  // the integer the input must match exactly. String.raw keeps the
+  // backslashes in the LaTeX.
 
   function genAddSub() {
     const variant = randInt(1, 8);
     const a = randInt(2, 15), b = randInt(2, 15), c = randInt(2, 15), d = randInt(2, 15);
     switch (variant) {
-      case 1: return { text: `${a} − ${b} =`, answer: a - b };
-      case 2: return { text: `−${a} − ${b} =`, answer: -a - b };
-      case 3: return { text: `${a} + (−${b}) =`, answer: a - b };
-      case 4: return { text: `(−${a}) + ${b} =`, answer: b - a };
-      case 5: return { text: `(−${a}) + (−${b}) =`, answer: -a - b };
-      case 6: return { text: `${a} − ${b} + ${c} − ${d} =`, answer: a - b + c - d };
-      case 7: return { text: `−${a} − (−${b}) =`, answer: -a + b };
-      default: return { text: `${a} − (${b} − ${c}) =`, answer: a - b + c };
+      case 1: return { tex: `${a} - ${b} =`, answer: a - b };
+      case 2: return { tex: `-${a} - ${b} =`, answer: -a - b };
+      case 3: return { tex: `${a} + (-${b}) =`, answer: a - b };
+      case 4: return { tex: `(-${a}) + ${b} =`, answer: b - a };
+      case 5: return { tex: `(-${a}) + (-${b}) =`, answer: -a - b };
+      case 6: return { tex: `${a} - ${b} + ${c} - ${d} =`, answer: a - b + c - d };
+      case 7: return { tex: `-${a} - (-${b}) =`, answer: -a + b };
+      default: return { tex: `${a} - (${b} - ${c}) =`, answer: a - b + c };
     }
   }
 
@@ -358,26 +362,26 @@
     const variant = randInt(1, 8);
     const a = randNonZero(2, 12), b = randNonZero(2, 12), c = randNonZero(2, 9);
     switch (variant) {
-      case 1: return { text: `${a} · ${b} =`, answer: a * b };
-      case 2: return { text: `(−${a}) · ${b} =`, answer: -a * b };
-      case 3: return { text: `(−${a}) · (−${b}) =`, answer: a * b };
-      case 4: return { text: `${a} · (−${b}) · (−${c}) =`, answer: a * b * c };
+      case 1: return { tex: String.raw`${a} \cdot ${b} =`, answer: a * b };
+      case 2: return { tex: String.raw`(-${a}) \cdot ${b} =`, answer: -a * b };
+      case 3: return { tex: String.raw`(-${a}) \cdot (-${b}) =`, answer: a * b };
+      case 4: return { tex: String.raw`${a} \cdot (-${b}) \cdot (-${c}) =`, answer: a * b * c };
       case 5: {
         const quotient = randNonZero(2, 12);
         const dividend = a * quotient;
-        return { text: `${dividend} / ${a} =`, answer: quotient };
+        return { tex: String.raw`${dividend} \mathbin{/} ${a} =`, answer: quotient };
       }
       case 6: {
         const quotient = randNonZero(2, 12);
         const dividend = a * quotient;
-        return { text: `(−${dividend}) / (−${a}) =`, answer: quotient };
+        return { tex: String.raw`(-${dividend}) \mathbin{/} (-${a}) =`, answer: quotient };
       }
       case 7: {
         const quotient = randNonZero(2, 12);
         const dividend = a * quotient;
-        return { text: `(−${dividend}) / ${a} =`, answer: -quotient };
+        return { tex: String.raw`(-${dividend}) \mathbin{/} ${a} =`, answer: -quotient };
       }
-      default: return { text: `(${a} − ${b}) · (${b} − ${a}) =`, answer: (a - b) * (b - a) };
+      default: return { tex: String.raw`(${a} - ${b}) \cdot (${b} - ${a}) =`, answer: (a - b) * (b - a) };
     }
   }
 
@@ -385,10 +389,10 @@
     const variant = randInt(1, 4);
     const a = randNonZero(2, 9), b = randInt(2, 12), c = randInt(2, 12);
     switch (variant) {
-      case 1: return { text: `${a} · (−${b}) − ${c} =`, answer: a * -b - c };
-      case 2: return { text: `${a} · (−${b} − ${c}) =`, answer: a * (-b - c) };
-      case 3: return { text: `${a} · (−${b} − (−${c})) =`, answer: a * (-b + c) };
-      default: return { text: `(−${a}) · (${b} − (−${c})) =`, answer: -a * (b + c) };
+      case 1: return { tex: String.raw`${a} \cdot (-${b}) - ${c} =`, answer: a * -b - c };
+      case 2: return { tex: String.raw`${a} \cdot (-${b} - ${c}) =`, answer: a * (-b - c) };
+      case 3: return { tex: String.raw`${a} \cdot (-${b} - (-${c})) =`, answer: a * (-b + c) };
+      default: return { tex: String.raw`(-${a}) \cdot (${b} - (-${c})) =`, answer: -a * (b + c) };
     }
   }
 
@@ -396,11 +400,11 @@
     const variant = randInt(1, 3);
     const a = randInt(2, 6);
     switch (variant) {
-      case 1: return { text: `(−${a})<sup>2</sup> =`, answer: pow(-a, 2) };
-      case 2: return { text: `(−${a})<sup>3</sup> =`, answer: pow(-a, 3) };
+      case 1: return { tex: `(-${a})^{2} =`, answer: pow(-a, 2) };
+      case 2: return { tex: `(-${a})^{3} =`, answer: pow(-a, 3) };
       default: {
         const b = randInt(2, 5);
-        return { text: `(−${a})<sup>2</sup> + (−${b})<sup>3</sup> =`, answer: pow(-a, 2) + pow(-b, 3) };
+        return { tex: `(-${a})^{2} + (-${b})^{3} =`, answer: pow(-a, 2) + pow(-b, 3) };
       }
     }
   }
@@ -409,43 +413,43 @@
     const variant = randInt(1, 6);
     const x = randNonZero(-9, 9);
     const y = randNonZero(-9, 9);
-    const label = `Om x = ${num(x)} och y = ${num(y)}:`;
+    const label = String.raw`Om \(x = ${num(x)}\) och \(y = ${num(y)}\):`;
     switch (variant) {
-      case 1: return { label, text: 'x + y =', answer: x + y };
-      case 2: return { label, text: 'x − y =', answer: x - y };
-      case 3: return { label, text: '−x + y =', answer: -x + y };
-      case 4: return { label, text: '7 − 2x =', answer: 7 - 2 * x };
-      case 5: return { label, text: '7 − 2xy =', answer: 7 - 2 * x * y };
-      default: return { label, text: '4x − xy =', answer: 4 * x - x * y };
+      case 1: return { label, tex: 'x + y =', answer: x + y };
+      case 2: return { label, tex: 'x - y =', answer: x - y };
+      case 3: return { label, tex: '-x + y =', answer: -x + y };
+      case 4: return { label, tex: '7 - 2x =', answer: 7 - 2 * x };
+      case 5: return { label, tex: '7 - 2xy =', answer: 7 - 2 * x * y };
+      default: return { label, tex: '4x - xy =', answer: 4 * x - x * y };
     }
   }
 
   function genEquations() {
     const variant = randInt(1, 5);
     const x = randNonZero(-12, 12);
-    const label = 'Lös ekvationen — vad är x?';
+    const label = String.raw`Lös ekvationen. Vad är \(x\)?`;
     switch (variant) {
       case 1: {
         const a = randInt(2, 15);
-        return { label, text: `${a} + x = ${a + x} `, answer: x };
+        return { label, tex: `${a} + x = ${a + x}`, answer: x };
       }
       case 2: {
         const a = randInt(2, 15);
-        return { label, text: `${a} − x = ${a - x} `, answer: x };
+        return { label, tex: `${a} - x = ${a - x}`, answer: x };
       }
       case 3: {
         const c = randCoefficient(-9, 9);
-        return { label, text: `${op(c)}x = ${c * x} `, answer: x };
+        return { label, tex: `${op(c)}x = ${c * x}`, answer: x };
       }
       case 4: {
         const c = randCoefficient(-9, 9);
         const a = randInt(2, 12);
-        return { label, text: `${op(c)} · (${a} − x) = ${c * (a - x)} `, answer: x };
+        return { label, tex: String.raw`${op(c)} \cdot (${a} - x) = ${c * (a - x)}`, answer: x };
       }
       default: {
         const c = randCoefficient(-9, 9);
         const a = randInt(-12, -2);
-        return { label, text: `(${num(a)} − x) · ${op(c)} = ${c * (a - x)} `, answer: x };
+        return { label, tex: String.raw`(${num(a)} - x) \cdot ${op(c)} = ${c * (a - x)}`, answer: x };
       }
     }
   }
@@ -477,6 +481,18 @@
   const checkBtn = document.getElementById('checkBtn');
   const nextBtn = document.getElementById('nextBtn');
 
+  // Puts HTML into an element and renders its \( … \) math with KaTeX.
+  // Without KaTeX (e.g. offline) the raw LaTeX shows, but the page works.
+  function renderMath(element, html) {
+    element.innerHTML = html;
+    if (typeof window.renderMathInElement === 'function') {
+      window.renderMathInElement(element, {
+        delimiters: [{ left: '\\(', right: '\\)', display: false }],
+        throwOnError: false,
+      });
+    }
+  }
+
   function pickGenerator() {
     const key = currentCategory === 'mixed'
       ? CATEGORY_KEYS[randInt(0, CATEGORY_KEYS.length - 1)]
@@ -486,9 +502,9 @@
 
   function newProblem() {
     current = pickGenerator();
-    problemLabel.textContent = current.label || '';
+    renderMath(problemLabel, current.label || '');
     problemLabel.style.display = current.label ? 'block' : 'none';
-    problemText.innerHTML = current.text;
+    renderMath(problemText, '\\(' + current.tex + '\\)');
     answerInput.value = '';
     feedback.textContent = '';
     feedback.className = 'feedback';
@@ -520,7 +536,7 @@
       feedback.className = 'feedback correct';
     } else {
       problemBox.classList.add('flash-wrong');
-      feedback.textContent = 'Fel — rätt svar är ' + current.answer + '.';
+      renderMath(feedback, 'Fel. Rätt svar är \\(' + current.answer + '\\).');
       feedback.className = 'feedback wrong';
     }
     awaitingNext = true;
@@ -544,7 +560,8 @@
     }
   });
 
-  newProblem();
+  // KaTeX loads with defer, so it is ready only once the page has parsed.
+  document.addEventListener('DOMContentLoaded', newProblem);
 })();
 </script>
 
