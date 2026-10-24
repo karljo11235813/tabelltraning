@@ -184,7 +184,9 @@ a.header-title, a.back-link { text-decoration: none; }
 .rp-part { fill: var(--surface); stroke: var(--text-muted); stroke-width: 1.5; }
 .rp-picture-hundraruta .rp-part { stroke-width: 0.8; }
 .rp-dot { stroke-width: 2; }
-.rp-part.is-on { fill: var(--accent); }
+/* Färgade delar får linjer i bakgrundens färg: den grå linjen syns knappt mot accentfärgen, så delarna gick inte att räkna. */
+.rp-part.is-on { fill: var(--accent); stroke: var(--surface); stroke-width: 2.5; }
+.rp-picture-hundraruta .rp-part.is-on { stroke-width: 1.6; }
 .rp-row-handle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; cursor: pointer; }
 .rp-picture.is-interactive .rp-svg {
   touch-action: none;

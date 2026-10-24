@@ -1,0 +1,218 @@
+/* Bråktrappan — sidans egna stilar. Färger och typsnitt kommer från styles.css, bilderna från representationer.css. */
+
+.bt-main { max-width: 760px; }
+.bt-main [hidden] { display: none !important; }
+a.header-title, a.back-link { text-decoration: none; }
+.bt-header-sub { font-weight: 700; opacity: 0.85; }
+
+.bt-title { font-size: clamp(1.4rem, 3vw, 1.9rem); color: var(--accent); margin: 0 0 6px; line-height: 1.2; }
+.bt-intro { color: var(--text-muted); margin: 0 0 10px; line-height: 1.5; }
+.bt-of { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.bt-link {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  color: var(--accent);
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.bt-small-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.bt-link:focus-visible,
+.bt-small-btn:focus-visible,
+.bt-stair:focus-visible,
+.bt-symbol-btn:focus-visible,
+.bt-secondary-btn:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+
+/* ---------- KARTAN ---------- */
+.bt-count { font-weight: 800; color: var(--accent-strong); margin: 0 0 8px; }
+.bt-all-done { padding: 10px 14px; border-radius: 10px; background: var(--success-soft); font-weight: 700; }
+.bt-part { margin-top: 18px; }
+.bt-part-title { font-size: 1.05rem; margin: 0 0 8px; }
+.bt-stairs { display: grid; gap: 8px; }
+.bt-stair {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.bt-stair.is-current { border-color: var(--accent); background: var(--accent-soft); }
+.bt-stair.is-mastered .bt-stair-icon { color: var(--success); }
+.bt-stair.is-locked { cursor: not-allowed; opacity: 0.55; }
+.bt-stair-icon { width: 1.4em; text-align: center; }
+.bt-stair-number { min-width: 1.6em; font-family: "Baloo 2", sans-serif; color: var(--text-muted); }
+.bt-reset { margin-top: 22px; }
+.bt-reset-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--danger-soft);
+}
+
+/* ---------- EXEMPEL ---------- */
+.bt-form-rule { padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-weight: 700; line-height: 1.45; }
+.bt-example-label { font-size: 1.05rem; margin: 18px 0 6px; }
+.bt-example { padding: 12px 14px; border: 2px dashed var(--border); border-radius: 12px; margin-bottom: 16px; }
+
+/* ---------- FRÅGA ---------- */
+.bt-top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.bt-dots { display: flex; gap: 8px; }
+.bt-dot { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--accent); background: var(--surface); }
+.bt-dot.is-on { background: var(--accent); }
+.bt-card {
+  background: var(--surface);
+  border: 3px solid transparent;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: clamp(16px, 4vw, 32px);
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+.bt-card.is-right { border-color: var(--success); background: var(--success-soft); }
+.bt-card.is-wrong { border-color: var(--danger); background: var(--danger-soft); }
+.bt-prompt { font-weight: 700; font-size: clamp(1.05rem, 2.4vw, 1.25rem); margin: 6px 0 12px; line-height: 1.4; }
+.bt-answer { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.bt-answer .start-btn { width: 100%; max-width: 320px; }
+.bt-shake { animation: bt-shake 0.35s; }
+@keyframes bt-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ---------- RADER OCH BRÅK ---------- */
+.bt-rows { display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 6px 0 12px; max-width: 100%; }
+.bt-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 10px;
+  max-width: 100%;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.35rem, 4.5vw, 1.85rem);
+  font-weight: 700;
+  color: var(--text);
+}
+.bt-seg { display: inline-flex; align-items: center; gap: 0.3em; white-space: nowrap; }
+.bt-row-pictures .bt-seg { flex-wrap: wrap; justify-content: center; white-space: normal; }
+/* Led utan likhetstecken att bryta vid — jämförelser, rader med en ledtext, bilder att färga — får brytas var som helst. */
+.bt-seg:has(.bt-symbol),
+.bt-seg:has(> .bt-text),
+.bt-seg:has(.bt-shade) { flex-wrap: wrap; justify-content: center; white-space: normal; max-width: 100%; }
+.bt-text { font-family: "Nunito Sans", sans-serif; font-size: 0.68em; font-weight: 700; }
+.bt-frac { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.bt-frac-top { padding: 0 0.2em 0.06em; border-bottom: 0.07em solid currentColor; }
+.bt-frac-bottom { padding: 0.06em 0.2em 0; }
+.bt-frac .bt-text { font-family: "Baloo 2", sans-serif; font-size: 0.8em; }
+.bt-mixed { display: inline-flex; align-items: center; gap: 0.12em; }
+.bt-filled { color: var(--success); }
+.bt-row .rp-picture { display: inline-flex; }
+.bt-row .rp-svg { width: clamp(64px, 17vw, 110px); }
+.bt-row .rp-picture-remsa .rp-svg { width: clamp(150px, 46vw, 280px); }
+
+/* ---------- RUTOR ---------- */
+.bt-input {
+  width: 2.6em;
+  padding: 2px 4px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+}
+.bt-input:focus { outline: none; border-color: var(--accent); }
+.bt-frac-input { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+.bt-frac-line { width: 100%; height: 3px; border-radius: 2px; background: currentColor; }
+.bt-mixed-input { display: inline-flex; align-items: center; gap: 6px; }
+.bt-frac-top .bt-input, .bt-frac-bottom .bt-input { width: 2.2em; font-size: 0.85em; }
+.bt-symbol { display: inline-flex; gap: 6px; }
+.bt-symbol-btn {
+  min-width: 2.2em;
+  padding: 0 6px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.bt-symbol-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--surface); }
+.bt-shade { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+.bt-shade .rp-svg { width: clamp(160px, 50vw, 240px); }
+.bt-shade .rp-picture-remsa .rp-svg { width: clamp(200px, 70vw, 360px); max-width: 100%; }
+.bt-shade, .bt-shade .rp-picture { max-width: 100%; }
+.bt-box.is-wrong { outline: 3px solid var(--danger); outline-offset: 3px; border-radius: 10px; }
+
+/* ---------- ÅTERKOPPLING OCH LÖSNING ---------- */
+.bt-feedback { margin-top: 20px; padding-top: 14px; border-top: 2px solid var(--border); text-align: left; }
+.bt-verdict { font-family: "Baloo 2", sans-serif; font-size: 1.3rem; font-weight: 800; }
+.bt-verdict.is-right { color: var(--success); }
+.bt-verdict.is-wrong { color: var(--danger); }
+.bt-tip { margin: 10px 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); line-height: 1.45; }
+.bt-tip:empty { display: none; }
+.bt-solution-title { font-size: 1.05rem; margin: 14px 0 6px; }
+/* Egen numrering: ett vanligt listnummer hamnar vid bildens underkant när steget bara är en bild. */
+.bt-steps { margin: 0 0 10px; padding: 0; list-style: none; counter-reset: step; text-align: left; }
+.bt-step { display: grid; grid-template-columns: 1.6em 1fr; margin: 8px 0; counter-increment: step; }
+.bt-step::before { content: counter(step) "."; grid-row: 1 / span 2; font-weight: 700; color: var(--text-muted); }
+.bt-step > * { grid-column: 2; }
+.bt-step-text { margin: 0 0 4px; line-height: 1.45; }
+.bt-rows-step, .bt-rows-filled { align-items: flex-start; margin: 4px 0; }
+.bt-rows-step .bt-row, .bt-rows-filled .bt-row { justify-content: flex-start; font-size: clamp(1.1rem, 3.6vw, 1.45rem); }
+.bt-answer-label {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+}
+.bt-feedback .start-btn { margin-top: 8px; }
+
+/* ---------- KLART ---------- */
+.bt-done-text { line-height: 1.5; margin: 0 0 20px; }
+.bt-done-buttons { display: flex; flex-direction: column; gap: 10px; }
+.bt-secondary-btn {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  border-radius: 9px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bt-shake { animation: none; }
+  .bt-card { transition: none; }
+}

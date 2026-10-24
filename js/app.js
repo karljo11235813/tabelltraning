@@ -372,6 +372,8 @@ function applyLanguage() {
   document.getElementById('landingTrueFalseDesc').textContent = s.landingTrueFalseDesc;
   document.getElementById('landingRepresentationsTitle').textContent = s.landingRepresentationsTitle;
   document.getElementById('landingRepresentationsDesc').textContent = s.landingRepresentationsDesc;
+  document.getElementById('landingBraktrappanTitle').textContent = s.landingBraktrappanTitle;
+  document.getElementById('landingBraktrappanDesc').textContent = s.landingBraktrappanDesc;
 
   backFromTest.textContent = s.back;
   backFromPractice.textContent = s.back;

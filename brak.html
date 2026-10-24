@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bråktrappan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/representationer.css">
+<link rel="stylesheet" href="css/brak.css">
+</head>
+<body>
+
+<header>
+  <a class="header-title" href="index.html">Tabellträning</a>
+  <span class="bt-header-sub">Bråktrappan</span>
+</header>
+
+<main class="bt-main">
+
+  <!-- KARTAN -->
+  <section id="btMap" class="card">
+    <a class="back-link" href="index.html">← Tillbaka</a>
+    <div class="page-title-row">
+      <img class="page-title-img" src="img/pages/representationer.png" alt="">
+      <h1 class="bt-title">Bråktrappan</h1>
+    </div>
+    <p class="bt-intro">Ta ett steg i taget. Svara rätt sex gånger i rad för att låsa upp nästa steg. Det är ingen tidsgräns.</p>
+    <p class="bt-count" id="btCount"></p>
+    <p class="bt-all-done" id="btAllDone" hidden>Du har klarat hela trappan! Du kan repetera vilket steg du vill.</p>
+    <div id="btParts"></div>
+    <div class="bt-reset">
+      <button type="button" class="bt-link" id="btReset">Börja om</button>
+      <div class="bt-reset-confirm" id="btResetConfirm" hidden>
+        <span>Vill du börja om från början? Alla klara steg låses igen.</span>
+        <button type="button" class="bt-small-btn" id="btResetYes">Ja, börja om</button>
+        <button type="button" class="bt-small-btn" id="btResetNo">Avbryt</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXEMPEL -->
+  <section id="btExample" class="card" hidden>
+    <button type="button" class="back-link" data-back>← Kartan</button>
+    <div class="bt-of" id="btExampleOf"></div>
+    <h1 class="bt-title" id="btExampleTitle"></h1>
+    <p class="bt-intro" id="btExampleIntro"></p>
+    <p class="bt-form-rule" id="btFormRule" hidden></p>
+    <h2 class="bt-example-label">Exempel</h2>
+    <div class="bt-example" id="btExampleBody"></div>
+    <button type="button" class="start-btn" id="btReady">Jag är redo</button>
+  </section>
+
+  <!-- FRÅGA -->
+  <section id="btQuestion" hidden>
+    <div class="bt-top-row">
+      <button type="button" class="bt-link" data-back>← Kartan</button>
+      <div class="bt-dots" id="btDots" role="img"></div>
+      <button type="button" class="bt-link" id="btShowExample">Visa exemplet</button>
+    </div>
+    <div class="bt-card" id="btCard">
+      <div class="bt-of" id="btQuestionTitle"></div>
+      <p class="bt-prompt" id="btPrompt"></p>
+      <form class="bt-answer" id="btAnswer" autocomplete="off" novalidate>
+        <div id="btRowsHost"></div>
+        <button type="submit" class="start-btn" id="btSubmit">Svara</button>
+      </form>
+      <div class="bt-feedback" id="btFeedback" aria-live="polite" hidden>
+        <div class="bt-verdict" id="btVerdict"></div>
+        <div class="bt-tip" id="btTip"></div>
+        <div class="bt-solution" id="btSolution"></div>
+        <button type="button" class="start-btn" id="btNext">Nästa →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- KLART -->
+  <section id="btDone" hidden>
+    <div class="result-card">
+      <h2 id="btDoneTitle"></h2>
+      <p class="bt-done-text" id="btDoneText"></p>
+      <div class="bt-done-buttons">
+        <button type="button" class="again-btn" id="btDoneNext">Nästa steg →</button>
+        <button type="button" class="bt-secondary-btn" id="btDoneMap">Till kartan</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module" src="js/brak/app.js"></script>
+</body>
+</html>
