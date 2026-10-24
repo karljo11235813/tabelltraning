@@ -7,8 +7,17 @@ import talBegrepp from "./tal-begrepp.js";
 import tal1 from "./tal-1.js";
 import tal2Kontroll from "./tal-2-kontroll.js";
 import talRaknesatt from "./tal-raknesatt.js";
+// Tvillingar: liknar ett original (twinOf) på ytan men har ett annat svar.
+import tvProcent from "./tvillingar-procent.js";
+import tvTalBegrepp from "./tvillingar-tal-begrepp.js";
+import tvTal1 from "./tvillingar-tal-1.js";
+import tvTal2Kontroll from "./tvillingar-tal-2-kontroll.js";
+import tvTalRaknesatt from "./tvillingar-tal-raknesatt.js";
 
-const SOURCES = [procent, talBegrepp, tal1, tal2Kontroll, talRaknesatt];
+const SOURCES = [
+  procent, talBegrepp, tal1, tal2Kontroll, talRaknesatt,
+  tvProcent, tvTalBegrepp, tvTal1, tvTal2Kontroll, tvTalRaknesatt,
+];
 
 export { CHAPTERS, SOURCES };
 export const STATEMENTS = validateStatements(SOURCES.flat(), CHAPTERS);
