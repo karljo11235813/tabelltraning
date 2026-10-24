@@ -30,18 +30,22 @@
     <div class="landing-section-label" id="landingMulDivLabel">Multiplikation &amp; division</div>
     <div class="landing-choices">
       <button type="button" class="landing-card" id="chooseTestBtn">
+        <img class="landing-card-img" src="img/pages/test.png" alt="">
         <span class="landing-card-title" id="landingTestTitle">Test</span>
         <span class="landing-card-desc" id="landingTestDesc">Utvärdera dig själv — alla tabeller, multiplikation och division.</span>
       </button>
       <button type="button" class="landing-card" id="choosePracticeBtn">
+        <img class="landing-card-img" src="img/pages/practice.png" alt="">
         <span class="landing-card-title" id="landingPracticeTitle">Öva</span>
         <span class="landing-card-desc" id="landingPracticeDesc">Träna fritt — välj tabeller och räknesätt själv.</span>
       </button>
       <button type="button" class="landing-card" id="chooseBuildBtn">
+        <img class="landing-card-img" src="img/pages/build.png" alt="">
         <span class="landing-card-title" id="landingBuildTitle">Bygg upp</span>
         <span class="landing-card-desc" id="landingBuildDesc">Lär tabellerna i rätt ordning, med strategier — inte bara utantill.</span>
       </button>
       <button type="button" class="landing-card" id="chooseStatsBtn">
+        <img class="landing-card-img" src="img/pages/stats.png" alt="">
         <span class="landing-card-title" id="landingStatsTitle">Statistik</span>
         <span class="landing-card-desc" id="landingStatsDesc">Se dina starka och svaga fakta.</span>
       </button>
@@ -51,22 +55,27 @@
       <div class="landing-section-label" id="landingOtherLabel">Andra ämnen</div>
       <div class="landing-choices">
         <a class="landing-card" href="negativa-tal.html">
+          <img class="landing-card-img" src="img/pages/negativa-tal.png" alt="">
           <span class="landing-card-title" id="landingNegativeTitle">Negativa tal</span>
           <span class="landing-card-desc" id="landingNegativeDesc">Öva addition, subtraktion, multiplikation, division, potenser och ekvationer med negativa tal.</span>
         </a>
         <a class="landing-card" href="decimaltal.html">
+          <img class="landing-card-img" src="img/pages/decimaltal.png" alt="">
           <span class="landing-card-title" id="landingDecimalTitle">Decimaltal</span>
           <span class="landing-card-desc" id="landingDecimalDesc">Öva räkning med tal i decimalform — addition, multiplikation med 10/100/1000, bråkform och mer.</span>
         </a>
         <a class="landing-card" href="textuppgifter.html">
+          <img class="landing-card-img" src="img/pages/textuppgifter.png" alt="">
           <span class="landing-card-title" id="landingWordProblemsTitle">Textuppgifter</span>
           <span class="landing-card-desc" id="landingWordProblemsDesc">Öva läsförståelse — läs en textuppgift, välj rätt räknesätt och räkna ut svaret.</span>
         </a>
         <a class="landing-card" href="sant-falskt.html">
+          <img class="landing-card-img" src="img/pages/sant-falskt.png" alt="">
           <span class="landing-card-title" id="landingTrueFalseTitle">Sant eller falskt</span>
           <span class="landing-card-desc" id="landingTrueFalseDesc">Avgör om påståenden om tal, procent och mer är sanna, falska eller beror på.</span>
         </a>
         <a class="landing-card" href="representationer.html">
+          <img class="landing-card-img" src="img/pages/representationer.png" alt="">
           <span class="landing-card-title" id="landingRepresentationsTitle">Bråk, decimal &amp; procent</span>
           <span class="landing-card-desc" id="landingRepresentationsDesc">Översätt mellan bråk, decimaltal, procent, ord och bilder.</span>
         </a>
@@ -77,7 +86,10 @@
   <!-- BUILD UP: overview -->
   <div id="buildOverviewScreen" class="card" style="display:none;">
     <button type="button" class="back-link" id="backFromBuildOverview">← Tillbaka</button>
-    <h2 id="buildOverviewHeading">Bygg upp tabellerna</h2>
+    <div class="page-title-row">
+      <img class="page-title-img" src="img/pages/build.png" alt="">
+      <h2 id="buildOverviewHeading">Bygg upp tabellerna</h2>
+    </div>
     <p class="choice-sub" id="buildOverviewIntro">Varje steg lär dig en tabell genom en strategi.</p>
     <div class="rank-ladder" id="buildLadder" style="display:flex; margin-top:14px;"></div>
   </div>
@@ -98,7 +110,10 @@
   <!-- STATISTIK -->
   <div id="statsScreen" class="card" style="display:none;">
     <button type="button" class="back-link" id="backFromStats">← Tillbaka</button>
-    <h2 id="statsHeading">Din statistik</h2>
+    <div class="page-title-row">
+      <img class="page-title-img" src="img/pages/stats.png" alt="">
+      <h2 id="statsHeading">Din statistik</h2>
+    </div>
 
     <div id="statsEmpty" class="stats-empty" style="display:none;"></div>
 
@@ -126,7 +141,10 @@
   <!-- TEST SETUP (fixed scope) -->
   <div id="testSetupScreen" class="card" style="display:none;">
     <button type="button" class="back-link" id="backFromTest">← Tillbaka</button>
-    <h2 id="testSetupHeading">Test</h2>
+    <div class="page-title-row">
+      <img class="page-title-img" src="img/pages/test.png" alt="">
+      <h2 id="testSetupHeading">Test</h2>
+    </div>
     <div class="choice-sub" id="testSetupInfo">Alla tabeller (1–12), multiplikation och division blandat.</div>
     <div class="choice-row" id="testModeChoice" style="margin-top: 14px;">
       <button type="button" data-mode="time" class="active"></button>
@@ -140,7 +158,10 @@
   <div id="setupScreen" class="card" style="display:none;">
     <button type="button" class="back-link" id="backFromPractice">← Tillbaka</button>
 
-    <h2 id="labelChooseMode">Välj läge</h2>
+    <div class="page-title-row">
+      <img class="page-title-img" src="img/pages/practice.png" alt="">
+      <h2 id="labelChooseMode">Välj läge</h2>
+    </div>
     <div class="choice-row" id="modeChoice">
       <button type="button" data-mode="time" class="active"></button>
       <button type="button" data-mode="count"></button>

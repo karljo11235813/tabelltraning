@@ -347,6 +347,20 @@
     margin-top: 14px;
     text-align: center;
   }
+  /* Sidans bild bredvid rubriken — samma bild som på startsidans kort. */
+  .page-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 12px;
+  }
+  .page-title-img {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+  }
+  .card .page-title-row > :is(h1, h2) { margin: 0; }
 </style>
 </head>
 <body>
@@ -358,7 +372,10 @@
 <main>
   <div class="card">
     <a class="back-link" href="index.html">← Tillbaka</a>
-    <h2>Textuppgifter — övning</h2>
+    <div class="page-title-row">
+      <img class="page-title-img" src="img/pages/textuppgifter.png" alt="">
+      <h2>Textuppgifter — övning</h2>
+    </div>
 
     <div class="category-row" id="categoryRow">
       <button type="button" data-cat="mixed" class="active">Blandat</button>
