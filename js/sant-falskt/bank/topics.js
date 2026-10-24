@@ -11,6 +11,7 @@ export const CHAPTERS = {
       "potenser & grundpotensform",
       "kvadratrötter",
       "multiplikation & division",
+      "när talen i en räkning ändras",
     ],
   },
   2: {
