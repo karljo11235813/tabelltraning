@@ -27,7 +27,29 @@ a.header-title, a.back-link { text-decoration: none; }
 .sf-chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .sf-chip:disabled { border-color: var(--border); color: var(--text-muted); background: var(--surface); cursor: not-allowed; }
 .landing-card:disabled { opacity: 0.5; cursor: not-allowed; }
-.sf-record-badge { display: block; margin-top: 6px; font-size: 0.85rem; font-weight: 800; color: var(--accent-strong); }
+/* Rekord och senaste omgång på lägeskortet. */
+.sf-runs { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.sf-run {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sf-run-details { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-width: 0; }
+.sf-run-label {
+  flex-shrink: 0;
+  min-width: 4.6em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+.sf-run-score { font-weight: 800; color: var(--text); }
+.sf-run-correct { font-weight: 700; color: var(--success); }
+.sf-run-wrong { font-weight: 700; color: var(--danger); }
 
 .sf-chip:focus-visible,
 .sf-answer:focus-visible,

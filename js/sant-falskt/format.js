@@ -1,4 +1,4 @@
-// Små formateringshjälpare för klocka, poäng och försök.
+// Små formateringshjälpare för klocka, poäng, försök och sparade omgångar.
 
 export function formatClock(ms) {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -21,4 +21,34 @@ const ORDINALS = ["", "första", "andra", "tredje", "fjärde", "femte", "sjätte
 export function attemptLabel(n) {
   if (n <= 1) return "";
   return n < ORDINALS.length ? `Rätt på ${ORDINALS[n]} försöket` : `Rätt på försök ${n}`;
+}
+
+const TIME_UNITS = [
+  { ms: 365 * 24 * 60 * 60 * 1000, one: "år", many: "år" },
+  { ms: 30 * 24 * 60 * 60 * 1000, one: "månad", many: "månader" },
+  { ms: 7 * 24 * 60 * 60 * 1000, one: "vecka", many: "veckor" },
+  { ms: 24 * 60 * 60 * 1000, one: "dag", many: "dagar" },
+  { ms: 60 * 60 * 1000, one: "timme", many: "timmar" },
+  { ms: 60 * 1000, one: "minut", many: "minuter" },
+];
+
+// "för 3 dagar sedan": största hela enheten, avrundat nedåt. En tid i framtiden
+// (om datorns klocka har ställts om) blir "nyss".
+export function timeAgo(at, now) {
+  const elapsed = now - at;
+  for (const unit of TIME_UNITS) {
+    const n = Math.floor(elapsed / unit.ms);
+    if (n >= 1) return `för ${n} ${n === 1 ? unit.one : unit.many} sedan`;
+  }
+  return "nyss";
+}
+
+// Texterna för en sparad omgång (rekord eller senaste). Det som inte sparats blir null.
+export function runParts(run, now) {
+  return {
+    score: `${formatScore(run.score)} poäng`,
+    correct: run.correct === null ? null : `${run.correct} rätt`,
+    wrong: run.wrong === null ? null : `${run.wrong} fel`,
+    when: run.at === null ? null : timeAgo(run.at, now),
+  };
 }

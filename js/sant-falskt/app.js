@@ -6,8 +6,8 @@ import { MODES } from "./modes.js";
 import { createSession } from "./session.js";
 import { renderInto } from "./render.js";
 import { summarize } from "./results.js";
-import { formatClock, formatScore, attemptLabel, scoreTiles } from "./format.js";
-import { createStore, recordKey, readRecord, updateRecord } from "./storage.js";
+import { formatClock, formatScore, attemptLabel, scoreTiles, runParts } from "./format.js";
+import { createStore, recordKey, latestKey, readRecord, readLatest, updateRecord, saveLatest } from "./storage.js";
 
 const FLASH_MS = 600;
 const LONG_TEXT_CHARS = 140;
@@ -79,18 +79,45 @@ function renderStart(focusChapter = null) {
     desc.textContent = mode.description;
     card.append(title, desc);
     if (mode.trackRecord) {
-      const record = readRecord(store, recordKey(mode.id, selectedChapters));
-      if (record !== null) {
-        const badge = document.createElement("span");
-        badge.className = "sf-record-badge";
-        badge.textContent = `Rekord: ${formatScore(record)}`;
-        card.appendChild(badge);
+      const saved = [
+        ["Rekord", readRecord(store, recordKey(mode.id, selectedChapters))],
+        ["Senast", readLatest(store, latestKey(mode.id, selectedChapters))],
+      ].filter(([, savedRun]) => savedRun !== null);
+      if (saved.length > 0) {
+        const runs = document.createElement("span");
+        runs.className = "sf-runs";
+        const now = Date.now();
+        for (const [label, savedRun] of saved) runs.appendChild(runRow(label, savedRun, now));
+        card.appendChild(runs);
       }
     }
     card.addEventListener("click", () => startRun(mode, selectedChapters));
     modes.appendChild(card);
   }
   $("sfStartHint").textContent = empty ? "Välj minst ett kapitel med påståenden." : "";
+}
+
+// En rad på lägeskortet: "REKORD 12 poäng · 15 rätt · 3 fel · för 2 dagar sedan".
+function runRow(label, savedRun, now) {
+  const parts = runParts(savedRun, now);
+  const span = (className, text) => {
+    const el = document.createElement("span");
+    el.className = className;
+    el.textContent = text;
+    return el;
+  };
+  // Siffrorna och tiden radbryts för sig, så att en bruten rad hamnar under siffrorna och inte under etiketten.
+  const details = span("sf-run-details", "");
+  const items = [
+    ["sf-run-score", parts.score],
+    ["sf-run-correct", parts.correct],
+    ["sf-run-wrong", parts.wrong],
+    ["sf-run-when", parts.when],
+  ];
+  for (const [className, text] of items) if (text !== null) details.appendChild(span(className, text));
+  const row = span("sf-run", "");
+  row.append(span("sf-run-label", label), details);
+  return row;
 }
 
 function toggleChapter(id) {
@@ -224,9 +251,12 @@ function finishRun() {
   stopTimers();
   const state = run.session.state();
   const pending = isTimed(run.mode) ? run.session.pending() : null;
-  const isNew = run.mode.trackRecord
-    ? updateRecord(store, recordKey(run.mode.id, run.chapters), state.score).isNew
-    : false;
+  let isNew = false;
+  if (run.mode.trackRecord) {
+    const result = { score: state.score, correct: state.correct, wrong: state.wrong, at: Date.now() };
+    isNew = updateRecord(store, recordKey(run.mode.id, run.chapters), result).isNew;
+    saveLatest(store, latestKey(run.mode.id, run.chapters), result);
+  }
   renderResult(state, pending, isNew);
   showScreen("sfResult");
   $("sfAgain").focus();
