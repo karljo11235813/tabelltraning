@@ -221,11 +221,10 @@
   .landing-section-box .landing-section-label { margin: 0 2px 10px; }
   .landing-section-box .landing-choices { margin-top: 0; }
   .landing-card {
-    display: grid;
-    grid-template-columns: 64px 1fr;
-    align-items: center;
-    column-gap: 16px;
-    row-gap: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     padding: 20px;
     border: 2px solid var(--accent);
     border-radius: 12px;
@@ -240,21 +239,29 @@
     outline: 3px solid var(--accent-strong);
     outline-offset: 2px;
   }
+  /* Startsidans kort har en bild till vänster om rubrik och beskrivning.
+     Lägeskorten på andra sidor saknar bild och behåller kolumnlayouten. */
+  .landing-card:has(> .landing-card-img) {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    align-items: center;
+    column-gap: 16px;
+  }
   .landing-card-img {
     grid-row: span 2;
     width: 64px;
     height: 64px;
     object-fit: contain;
   }
+  .landing-card-img ~ .landing-card-title { align-self: end; }
+  .landing-card-img ~ .landing-card-desc { align-self: start; }
   .landing-card-title {
-    align-self: end;
     font-family: "Baloo 2", sans-serif;
     font-weight: 800;
     font-size: 1.3rem;
     color: var(--accent);
   }
   .landing-card-desc {
-    align-self: start;
     font-family: "Nunito Sans", sans-serif;
     font-size: 0.85rem;
     color: var(--text-muted);
