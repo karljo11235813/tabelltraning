@@ -8,15 +8,15 @@ import { createStore } from "../sant-falskt/storage.js";
 
 const NEXT_GUARD_MS = 250; // ett nedhållet Enter ska inte hoppa förbi återkopplingen
 const SCREENS = ["btMap", "btExample", "btQuestion", "btDone"];
-const ICONS = { mastered: "✓", current: "▶", locked: "🔒" };
-const STATUS_LABELS = { mastered: "klar", current: "nästa steg", locked: "låst" };
+const ICONS = { mastered: "✓", current: "▶", open: "○" };
+const STATUS_LABELS = { mastered: "klar", current: "föreslaget nästa steg", open: "inte klar än" };
 const FORM_RULE = "Enklaste form: förkortat så långt det går, i blandad form om talet är större än 1, och som heltal om det blir ett heltal.";
 
 const $ = (id) => document.getElementById(id);
 const store = createStore(() => window.localStorage);
 const progress = createProgress(store.get(STORAGE_KEY), CATEGORIES.map((c) => c.id));
 
-let run = null; // { category, question, controls, locked, lockedAt, done, unlocked }
+let run = null; // { category, question, controls, locked, lockedAt, done, next }
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -53,7 +53,6 @@ function renderMap() {
       const status = progress.statusOf(category.id);
       const button = el("button", `bt-stair is-${status}`);
       button.type = "button";
-      button.disabled = status === "locked";
       button.setAttribute("aria-label", `${stepNumber(category)}. ${category.title} (${STATUS_LABELS[status]})`);
       button.append(
         el("span", "bt-stair-icon", ICONS[status]),
@@ -73,7 +72,7 @@ function renderMap() {
 
 function openCategory(id) {
   if (!progress.start(id)) return;
-  run = { category: getCategory(id), question: null, controls: {}, locked: false, lockedAt: 0, done: false, unlocked: null };
+  run = { category: getCategory(id), question: null, controls: {}, locked: false, lockedAt: 0, done: false, next: null };
   showExample();
 }
 
@@ -156,7 +155,7 @@ function submitAnswer() {
   $("btShowExample").hidden = true;
   const outcome = progress.answer(right);
   run.done = outcome.done;
-  run.unlocked = outcome.unlocked;
+  run.next = outcome.next;
   if (outcome.done) save();
   renderDots(outcome.streak);
   $("btCard").classList.add(right ? "is-right" : "is-wrong");
@@ -190,22 +189,23 @@ function focusField(field) {
 function showDone() {
   const { category } = run;
   const review = progress.active().review;
-  const next = run.unlocked ? getCategory(run.unlocked) : null;
+  const next = run.next ? getCategory(run.next) : null;
+  const suggestion = next ? ` Förslag på nästa steg: ${next.title}.` : "";
   let title;
   let message;
   if (review) {
     title = "Bra repetition!";
-    message = `Du klarade ${category.title} ${STREAK_TO_MASTER} gånger i rad igen.`;
+    message = `Du klarade ${category.title} ${STREAK_TO_MASTER} gånger i rad igen.${suggestion}`;
   } else if (!next) {
     title = "Du har klarat Bråktrappan!";
     message = `Alla ${CATEGORIES.length} steg är klara. Du kan repetera vilket steg du vill från kartan.`;
   } else {
     title = "Klart!";
-    message = `Du har klarat ${category.title}. Nästa steg är upplåst: ${next.title}.`;
+    message = `Du har klarat ${category.title}.${suggestion}`;
   }
   $("btDoneTitle").textContent = title;
   $("btDoneText").textContent = message;
-  const showNext = !review && next !== null;
+  const showNext = next !== null;
   $("btDoneNext").hidden = !showNext;
   $("btDoneNext").dataset.id = showNext ? next.id : "";
   showScreen("btDone");

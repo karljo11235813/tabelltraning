@@ -1,4 +1,4 @@
-// Bråktrappans kategorier i ordning. Ordningen är trappan: en kategori låses upp när den förra är klar.
+// Bråktrappans kategorier i ordning. Ordningen är ett förslag: alla kategorier är öppna från kartan.
 import { mulberry32 } from "../../representationer/random.js";
 import { DEL1 } from "./del1.js";
 import { DEL2 } from "./del2.js";
