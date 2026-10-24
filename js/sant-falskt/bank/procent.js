@@ -27,7 +27,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`3/5 är detsamma som 35&nbsp;%.`,
-    explanation: String.raw`3/5 = 0,6 = 60&nbsp;%. Man kan inte skriva täljare och nämnare efter varandra. Förläng: 3/5 = 60/100.`,
+    explanation: String.raw`Procent betyder hundradelar. En femtedel är 20 hundradelar, så 3/5 = 60/100 = 60&nbsp;%. Man kan inte skriva täljaren och nämnaren efter varandra.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -67,7 +67,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om 20&nbsp;% av ett tal är 14 är talet 70.`,
-    explanation: String.raw`Det hela = delen / andelen = 14 / 0,2 = 70. Kontroll: 0,2 · 70 = 14.`,
+    explanation: String.raw`14 är 20&nbsp;% av talet, alltså en femtedel av det. Hela talet är då 5 · 14 = 70. Med en formel: det hela = delen / andelen = 14 / 0,2 = 70. Kontroll: 0,2 · 70 = 14.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -87,7 +87,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Om andelen röda kulor i en påse ökar, har antalet röda kulor ökat.`,
-    explanation: String.raw`Antalet kan ha ökat, men andelen ökar också om andra kulor tas bort. 2&nbsp;röda av 10 är 20&nbsp;%, och 2&nbsp;röda av 5 är 40&nbsp;%, med samma antal röda.`,
+    explanation: String.raw`Det beror på hur påsen har ändrats. Från början finns 2&nbsp;röda och 8&nbsp;blå kulor. Andelen röda är 20&nbsp;%. Om vi lägger till 2&nbsp;röda blir andelen 4/12, ungefär 33&nbsp;%, och antalet röda har ökat. Om vi i stället tar bort 5&nbsp;blå blir andelen 2/5 = 40&nbsp;%, trots att antalet röda är oförändrat. En större andel betyder alltså inte automatiskt ett större antal.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -97,7 +97,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Om andelen flickor är större i klass A än i klass B, så går det fler flickor i klass A.`,
-    explanation: String.raw`Det beror på hur stora klasserna är. 60&nbsp;% av 20&nbsp;elever är 12 flickor, men 40&nbsp;% av 35&nbsp;elever är 14 flickor.`,
+    explanation: String.raw`Det beror på hur stora klasserna är. Om båda klasserna har 25&nbsp;elever är 60&nbsp;% 15 flickor och 40&nbsp;% 10 flickor, och då går det fler flickor i klass A. Men om klass A har 20&nbsp;elever och klass B 35&nbsp;elever är 60&nbsp;% av 20 bara 12 flickor, medan 40&nbsp;% av 35 är 14 flickor.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -137,7 +137,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`En minskning med 30&nbsp;% har förändringsfaktorn 0,7.`,
-    explanation: String.raw`100&nbsp;% − 30&nbsp;% = 70&nbsp;% = 0,7.`,
+    explanation: String.raw`Efter en minskning med 30&nbsp;% återstår 100&nbsp;% − 30&nbsp;% = 70&nbsp;% av startvärdet. Förändringsfaktorn är det som återstår, skrivet i decimalform: 0,7.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -207,7 +207,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Den procentuella förändringen får man genom att ta startvärdet delat med skillnaden.`,
-    explanation: String.raw`Den procentuella förändringen = skillnaden / startvärdet. Sänkningen från 6&nbsp;000&nbsp;kr till 4&nbsp;800&nbsp;kr ger 1&nbsp;200 / 6&nbsp;000 = 0,2 = 20&nbsp;%. Omvänt blir det 6&nbsp;000 / 1&nbsp;200 = 5, vilket inte betyder något.`,
+    explanation: String.raw`Den procentuella förändringen jämför skillnaden med startvärdet: skillnaden / startvärdet. Sänkningen från 6&nbsp;000&nbsp;kr till 4&nbsp;800&nbsp;kr är 1&nbsp;200&nbsp;kr, och 1&nbsp;200 / 6&nbsp;000 = 0,2 = 20&nbsp;%. Startvärdet delat med skillnaden, 6&nbsp;000 / 1&nbsp;200 = 5, besvarar en annan fråga: hur många gånger sänkningen ryms i startvärdet.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -237,7 +237,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`En vara som blir 100&nbsp;kr dyrare har ökat i pris med 10&nbsp;%.`,
-    explanation: String.raw`Det beror på startpriset. Det stämmer bara om varan kostade 1&nbsp;000&nbsp;kr. En vara som kostade 200&nbsp;kr har ökat med 100 / 200 = 50&nbsp;%.`,
+    explanation: String.raw`Det beror på startpriset. Om varan kostade 1&nbsp;000&nbsp;kr är ökningen 100 / 1&nbsp;000 = 10&nbsp;%. Men om den kostade 200&nbsp;kr är ökningen 100 / 200 = 50&nbsp;%.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -247,7 +247,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Två varor som ökar i pris med samma procentsats blir lika många kronor dyrare.`,
-    explanation: String.raw`Det stämmer bara om varorna kostade lika mycket från början. 10&nbsp;% av 100&nbsp;kr är 10&nbsp;kr, men 10&nbsp;% av 1&nbsp;000&nbsp;kr är 100&nbsp;kr.`,
+    explanation: String.raw`Det beror på vad varorna kostade från början. Två varor som båda kostade 100&nbsp;kr och ökar med 10&nbsp;% blir båda 10&nbsp;kr dyrare. Men om den ena kostade 100&nbsp;kr och den andra 1&nbsp;000&nbsp;kr blir de 10&nbsp;kr respektive 100&nbsp;kr dyrare.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -286,8 +286,8 @@ export default [
     topic: "räkna baklänges",
     answer: "sant",
     star: false,
-    text: String.raw`Startvärdet kan beräknas som slutvärdet delat med förändringsfaktorn.`,
-    explanation: String.raw`Slutvärdet = startvärdet · förändringsfaktorn, och därför är startvärdet = slutvärdet / förändringsfaktorn. Till exempel: efter en ökning med 25&nbsp;% kostar en vara 500&nbsp;kr, så startpriset var 500 / 1,25 = 400&nbsp;kr.`,
+    text: String.raw`Startvärdet kan beräknas som slutvärdet delat med förändringsfaktorn (när förändringsfaktorn inte är 0).`,
+    explanation: String.raw`Slutvärdet = startvärdet · förändringsfaktorn, och baklänges delar man: startvärdet = slutvärdet / förändringsfaktorn. Till exempel: efter en ökning med 25&nbsp;% kostar en vara 500&nbsp;kr. 500&nbsp;kr är då 125&nbsp;% av startpriset, så startpriset var 500 / 1,25 = 400&nbsp;kr. Förändringsfaktorn 0 betyder 100&nbsp;% rabatt. Då är slutvärdet 0 vad startvärdet än var, så det går inte att räkna baklänges.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -297,7 +297,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Efter 20&nbsp;% rabatt kostar en vara 240&nbsp;kr. Före rabatten kostade den 300&nbsp;kr.`,
-    explanation: String.raw`Efter 20&nbsp;% rabatt är förändringsfaktorn 0,8, så startvärdet = 240 / 0,8 = 300&nbsp;kr. Kontroll: 300 · 0,8 = 240.`,
+    explanation: String.raw`Efter 20&nbsp;% rabatt återstår 80&nbsp;% av priset före rabatten. 240&nbsp;kr motsvarar alltså 80&nbsp;%, inte 100&nbsp;%. Priset före rabatten är 240 / 0,8 = 300&nbsp;kr. Kontroll: 300 · 0,8 = 240.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -307,7 +307,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om slutvärdet är 600&nbsp;kr efter en ökning med 20&nbsp;% var startvärdet 480&nbsp;kr.`,
-    explanation: String.raw`Startvärdet är 600 / 1,2 = 500&nbsp;kr. 600 · 0,8 = 480 tar 20&nbsp;% av <em>slutvärdet</em>. Kontroll: 480 · 1,2 = 576, inte 600.`,
+    explanation: String.raw`Efter ökningen med 20&nbsp;% är 600&nbsp;kr lika med 120&nbsp;% av startvärdet, så startvärdet är 600 / 1,2 = 500&nbsp;kr. Beräkningen 600 · 0,8 = 480 minskar <em>slutvärdet</em> med 20&nbsp;%. Men höjningen beräknades på startvärdet, som är mindre än 600&nbsp;kr. Kontroll: 480 · 1,2 = 576, inte 600.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -316,8 +316,8 @@ export default [
     topic: "räkna baklänges",
     answer: "sant",
     star: false,
-    text: String.raw`Startvärdet är kvoten av skillnaden och den procentuella förändringen.`,
-    explanation: String.raw`Den procentuella förändringen = skillnaden / startvärdet, och därför är startvärdet = skillnaden / den procentuella förändringen. Till exempel: ett pris sänks med 1&nbsp;200&nbsp;kr, vilket är 20&nbsp;%. Då var startvärdet 1&nbsp;200 / 0,20 = 6&nbsp;000&nbsp;kr. Den procentuella förändringen skrivs då i decimalform.`,
+    text: String.raw`Startvärdet är kvoten av skillnaden och den procentuella förändringen (när förändringen inte är 0&nbsp;%).`,
+    explanation: String.raw`Den procentuella förändringen säger hur stor del av startvärdet skillnaden är. Om ett pris sänks med 1&nbsp;200&nbsp;kr och det är 20&nbsp;%, så är 1&nbsp;200&nbsp;kr 20&nbsp;% av startvärdet. Startvärdet = skillnaden / den procentuella förändringen = 1&nbsp;200 / 0,20 = 6&nbsp;000&nbsp;kr, med förändringen i decimalform. Vid förändringen 0&nbsp;% är skillnaden också 0, och då går det inte att räkna ut startvärdet.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -337,7 +337,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Ett partis stöd ökade med 40&nbsp;% till 21&nbsp;% av rösterna. Då hade partiet 15&nbsp;% av rösterna innan.`,
-    explanation: String.raw`21 / 1,4 = 15. Kontroll: 15 · 1,4 = 21.`,
+    explanation: String.raw`Efter ökningen med 40&nbsp;% är 21&nbsp;% lika med 140&nbsp;% av det gamla stödet. Det gamla stödet är 21 / 1,4 = 15&nbsp;%. Kontroll: 15 · 1,4 = 21.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -347,7 +347,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Ett parti fick 25,6&nbsp;% av rösterna efter att ha minskat sitt stöd med 20&nbsp;%. Då hade partiet 45,6&nbsp;% i valet innan.`,
-    explanation: String.raw`Startvärdet är 25,6 / 0,8 = 32&nbsp;%. Att addera 20 behandlar 20&nbsp;% som 20&nbsp;procentenheter. Kontroll: 45,6 · 0,8 = 36,48, inte 25,6.`,
+    explanation: String.raw`Efter minskningen med 20&nbsp;% är 25,6&nbsp;% lika med 80&nbsp;% av det gamla stödet, så det gamla stödet var 25,6 / 0,8 = 32&nbsp;%. Att addera 20 behandlar 20&nbsp;% som 20&nbsp;procentenheter. Kontroll: 45,6 · 0,8 = 36,48, inte 25,6.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -357,7 +357,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Efter en sänkning med 20&nbsp;% kostar en vara 400&nbsp;kr. Om sänkningen i stället hade varit 40&nbsp;% hade varan kostat 200&nbsp;kr.`,
-    explanation: String.raw`Startpriset är 400 / 0,8 = 500&nbsp;kr. En sänkning med 40&nbsp;% ger 500 · 0,6 = 300&nbsp;kr. Dubbelt så stor sänkning betyder inte halva priset.`,
+    explanation: String.raw`Efter sänkningen med 20&nbsp;% är 400&nbsp;kr lika med 80&nbsp;% av startpriset, så startpriset är 400 / 0,8 = 500&nbsp;kr. En sänkning med 40&nbsp;% ger 500 · 0,6 = 300&nbsp;kr. Dubbelt så stor sänkning betyder inte halva priset.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -367,7 +367,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Efter en rea på 30&nbsp;% kostar en tv 4&nbsp;893&nbsp;kr. Före rean kostade den 4&nbsp;893 · 1,3&nbsp;kr.`,
-    explanation: String.raw`Före rean kostade tv:n 4&nbsp;893 / 0,7 = 6&nbsp;990&nbsp;kr. 4&nbsp;893 · 1,3 = 6&nbsp;360,90&nbsp;kr lägger på 30&nbsp;% av <em>reapriset</em>, men rabatten räknades på det högre ordinarie priset.`,
+    explanation: String.raw`Efter 30&nbsp;% rabatt återstår 70&nbsp;% av ordinarie pris. De 4&nbsp;893 kronorna motsvarar alltså 70&nbsp;%, inte 100&nbsp;%. Ordinarie pris blir 4&nbsp;893 / 0,7 = 6&nbsp;990&nbsp;kr. Beräkningen 4&nbsp;893 · 1,3 = 6&nbsp;360,90&nbsp;kr lägger på 30&nbsp;% av <em>reapriset</em>, men rabatten räknades på det högre ordinarie priset.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -377,7 +377,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om ett pris har ökat med 25&nbsp;% kommer man tillbaka till startpriset genom att sänka det nya priset med 20&nbsp;%.`,
-    explanation: String.raw`1,25 · 0,8 = 1. Sänkningen räknas på det högre priset: 100 → 125&nbsp;kr, och 25 / 125 = 20&nbsp;%. En sänkning med 25&nbsp;% ger 1,25 · 0,75 = 0,9375, alltså för lågt.`,
+    explanation: String.raw`Sänkningen räknas på det högre priset. Från 100&nbsp;kr blir priset 125&nbsp;kr, och för att komma tillbaka ska det sänkas med 25&nbsp;kr. 25 / 125 = 20&nbsp;%. Med förändringsfaktorer: 1,25 · 0,8 = 1. En sänkning med 25&nbsp;% ger 1,25 · 0,75 = 0,9375, alltså för lågt.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -457,7 +457,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`En ökning med 25&nbsp;% följd av en minskning med 20&nbsp;% ger tillbaka startvärdet.`,
-    explanation: String.raw`1,25 · 0,8 = 1. Faktorn 0,8 är det omvända till 1,25.`,
+    explanation: String.raw`Från 100&nbsp;kr blir priset 125&nbsp;kr. 20&nbsp;% av 125&nbsp;kr är 25&nbsp;kr, så efter minskningen är priset 100&nbsp;kr igen. Med förändringsfaktorer: 1,25 · 0,8 = 1.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -567,7 +567,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om andelen elever som cyklar ökar från 20&nbsp;% till 30&nbsp;% har andelen ökat med 10&nbsp;procentenheter.`,
-    explanation: String.raw`Skillnaden 30 − 20 = 10 mäts i procentenheter.`,
+    explanation: String.raw`Skillnaden mellan två procentsatser mäts i procentenheter: 30 − 20 = 10&nbsp;procentenheter.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -647,7 +647,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Två partier som båda ökar med 5&nbsp;procentenheter har ökat lika mycket i procent.`,
-    explanation: String.raw`Det stämmer bara om partierna hade samma startvärde. 80&nbsp;% → 85&nbsp;% är en ökning med 6,25&nbsp;%, men 2&nbsp;% → 7&nbsp;% är en ökning med 250&nbsp;%.`,
+    explanation: String.raw`Det beror på startvärdena. Om båda partierna går från 20&nbsp;% till 25&nbsp;% har båda ökat med 5 / 20 = 25&nbsp;%. Men 80&nbsp;% → 85&nbsp;% är en ökning med 6,25&nbsp;%, medan 2&nbsp;% → 7&nbsp;% är en ökning med 250&nbsp;%.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -666,8 +666,8 @@ export default [
     topic: "procentenheter",
     answer: "beror",
     star: false,
-    text: String.raw`Om andelen som klarar ett prov ökar med 10&nbsp;procentenheter har ytterligare 10&nbsp;elever klarat provet.`,
-    explanation: String.raw`Det stämmer bara om exakt 100&nbsp;elever skrev provet. Med 30&nbsp;elever är 10&nbsp;procentenheter 0,10 · 30 = 3&nbsp;elever.`,
+    text: String.raw`Lika många elever skriver ett prov vid två tillfällen. Om andelen som klarar provet ökar med 10&nbsp;procentenheter, har ytterligare 10&nbsp;elever klarat provet.`,
+    explanation: String.raw`Det beror på hur många elever som skriver provet. Med 100&nbsp;elever är 10&nbsp;procentenheter 0,10 · 100 = 10&nbsp;elever, t.ex. från 60 till 70. Med 30&nbsp;elever är det bara 0,10 · 30 = 3&nbsp;elever.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -707,7 +707,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om en kvadrats sidor fördubblas ökar arean med 100&nbsp;%.`,
-    explanation: String.raw`Arean blir 2 · 2 = 4 gånger så stor, alltså en ökning med 300&nbsp;%.`,
+    explanation: String.raw`En kvadrat med sidan 1&nbsp;cm har arean 1&nbsp;cm². Med sidan 2&nbsp;cm blir arean 2 · 2 = 4&nbsp;cm², alltså 4 gånger så stor. 4 gånger så stor är 400&nbsp;% av startvärdet, en ökning med 300&nbsp;%.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -757,7 +757,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`En rektangels längd ökar med 20&nbsp;% och bredden minskar med 20&nbsp;%. Då ökar omkretsen.`,
-    explanation: String.raw`Omkretsen ändras med 2 · (0,2 · längden − 0,2 · bredden). Den ökar om längden är större än bredden, är oförändrad för en kvadrat och minskar om bredden är störst.`,
+    explanation: String.raw`Det beror på vilken av sidorna som är längre. En rektangel som är 10&nbsp;cm lång och 5&nbsp;cm bred blir 12&nbsp;cm lång och 4&nbsp;cm bred, och omkretsen går från 30&nbsp;cm till 32&nbsp;cm. Men om den är 10&nbsp;cm lång och 20&nbsp;cm bred blir den 12&nbsp;cm lång och 16&nbsp;cm bred, och omkretsen går från 60&nbsp;cm till 56&nbsp;cm. 20&nbsp;% av den längre sidan är fler centimeter. För en kvadrat är omkretsen oförändrad.`,
     source: "jonzone_sant_falskt_procent",
   },
   {
@@ -797,7 +797,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`I en klass klarar 50&nbsp;% av eleverna ett prov och i en annan klass klarar 90&nbsp;%. Totalt klarar 70&nbsp;% av eleverna provet.`,
-    explanation: String.raw`Det stämmer bara om klasserna är lika stora. Med 20&nbsp;elever (10 klarar) och 10&nbsp;elever (9 klarar) klarar 19 / 30 ≈ 63&nbsp;%.`,
+    explanation: String.raw`Det beror på hur stora klasserna är. Med 20&nbsp;elever i varje klass klarar 10 + 18 = 28 av 40, alltså 70&nbsp;%. Men med 20&nbsp;elever (10 klarar) och 10&nbsp;elever (9 klarar) klarar 19 / 30 ≈ 63&nbsp;%.`,
     source: "jonzone_sant_falskt_procent",
   },
   {

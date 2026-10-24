@@ -17,7 +17,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(-12\) tillhör heltalen.`,
-    explanation: String.raw`Heltalen är \(\ldots, -2, -1, 0, 1, 2, \ldots\) — även negativa tal utan decimaler räknas.`,
+    explanation: String.raw`Heltalen är \(\ldots, -2, -1, 0, 1, 2, \ldots\) och fortsätter åt båda hållen, så även negativa tal som \(-12\) är heltal.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -27,7 +27,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(5{,}2\) tillhör de naturliga talen.`,
-    explanation: String.raw`Naturliga tal saknar decimaler. \(5{,}2\) ligger mellan \(5\) och \(6\) (men är rationellt: \(\frac{52}{10}\)).`,
+    explanation: String.raw`\(5{,}2\) ligger mellan de naturliga talen \(5\) och \(6\) och är därför inte ett naturligt tal. Det är däremot rationellt: \(\frac{52}{10}\).`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -37,7 +37,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(-1\) är ett naturligt tal.`,
-    explanation: String.raw`Negativa tal ingår inte bland de naturliga talen \(0, 1, 2, \ldots\) \(-1\) är däremot ett heltal.`,
+    explanation: String.raw`Negativa tal ingår inte bland de naturliga talen \(0, 1, 2, \ldots\), men \(-1\) är ett heltal.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -127,7 +127,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om kvoten är \(0{,}5\) och täljaren är \(8\), så måste nämnaren vara \(16\).`,
-    explanation: String.raw`Kontroll: \(\frac{8}{16} = 0{,}5\). Nämnare = täljare / kvot \(= \frac{8}{0{,}5} = 16\).`,
+    explanation: String.raw`Kvoten \(0{,}5\) betyder att täljaren är hälften av nämnaren. Då är nämnaren dubbelt så stor som \(8\): nämnare = täljare / kvot \(= \frac{8}{0{,}5} = 16\). Kontroll: \(\frac{8}{16} = 0{,}5\).`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -167,7 +167,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om kvoten är \(-5\) och nämnaren är \(4\), så måste täljaren vara \(-1{,}25\).`,
-    explanation: String.raw`\(-1{,}25\) är \(\frac{-5}{4}\) — man har delat i stället för att multiplicera. Täljare = kvot · nämnare \(= (-5) \cdot 4 = -20\).`,
+    explanation: String.raw`Kvoten \(-5\) betyder att täljaren är \(-5\) gånger nämnaren: täljare = kvot · nämnare \(= (-5) \cdot 4 = -20\). Kontroll: \(\frac{-20}{4} = -5\). Talet \(-1{,}25 = \frac{-5}{4}\) får man om man delar i stället för att multiplicera.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -197,7 +197,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`\(a^3\) är större än \(a\).`,
-    explanation: String.raw`Sant för t.ex. \(a = 2\) (\(8 > 2\)). Falskt för \(a = 1\) (\(1 = 1\)), \(a = 0{,}5\) (\(0{,}125 < 0{,}5\)) och \(a = -2\) (\(-8 < -2\)).`,
+    explanation: String.raw`Det beror på \(a\). Sant för t.ex. \(a = 2\) (\(8 > 2\)). Falskt för \(a = 1\) (\(1 = 1\)), \(a = 0{,}5\) (\(0{,}125 < 0{,}5\)) och \(a = -2\) (\(-8 < -2\)).`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -237,7 +237,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Ett tal vars decimalutveckling följer ett mönster måste vara rationellt.`,
-    explanation: String.raw`Rationella tal har <em>periodisk</em> eller avslutad decimalutveckling. Ett mönster räcker inte: \(0{,}12112111211112\ldots\) (en etta till varje gång) har ett mönster men upprepar aldrig samma block — talet är irrationellt.`,
+    explanation: String.raw`Rationella tal har <em>periodisk</em> eller avslutad decimalutveckling. Periodisk betyder att samma sifferblock från en viss decimal upprepas om och om igen i all oändlighet. Ett mönster räcker inte: \(0{,}12112111211112\ldots\) (en etta till varje gång) följer ett mönster, men inget block upprepas på det sättet. Talet är irrationellt.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -315,9 +315,9 @@ export default [
     chapter: 1,
     topic: "talmängder",
     answer: "sant",
-    star: false,
+    star: true,
     text: String.raw`Differensen mellan ett irrationellt tal och ett rationellt tal är alltid irrationell.`,
-    explanation: String.raw`Anta att \(x - q = r\) med \(q, r\) rationella och \(x\) irrationellt. Då är \(x = r + q\), en summa av två rationella tal — alltså rationell. Det motsäger att \(x\) är irrationellt, så differensen måste vara irrationell.`,
+    explanation: String.raw`Exempel: \(\pi - 3 = 0{,}14159\ldots\) blir aldrig periodiskt. Varför gäller det alltid? Anta att \(x - q = r\) med \(q, r\) rationella och \(x\) irrationellt. Då är \(x = r + q\), en summa av två rationella tal, alltså rationell. Men \(x\) var irrationellt, så differensen kan inte vara rationell.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -337,7 +337,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om täljaren i ett bråk är ett kvadrattal men nämnaren inte är det, så är kvadratroten ur bråket ett rationellt tal.`,
-    explanation: String.raw`Motexempel: \(\sqrt{\frac{4}{2}} = \sqrt{2}\), irrationellt. Eller \(\sqrt{\frac{9}{5}} = \frac{3}{\sqrt{5}}\) — nämnaren blir irrationell.`,
+    explanation: String.raw`Roten ur ett bråk är roten ur täljaren delad med roten ur nämnaren. Roten ur täljaren blir ett heltal, men roten ur nämnaren blir irrationell, och då blir kvoten irrationell. T.ex. \(\sqrt{\frac{9}{5}} = \frac{3}{\sqrt{5}}\) och \(\sqrt{\frac{4}{2}} = \sqrt{2}\).`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -367,7 +367,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Om basen är ett positivt tal, så blir potensen större ju större exponenten är.`,
-    explanation: String.raw`Bas större än \(1\): växer (\(3, 9, 27, \ldots\)). Bas mellan \(0\) och \(1\): minskar (\(0{,}1;\ 0{,}01;\ 0{,}001\)). Bas \(1\): alltid \(1\).`,
+    explanation: String.raw`Det beror på basen. Bas större än \(1\): växer (\(3, 9, 27, \ldots\)). Bas mellan \(0\) och \(1\): minskar (\(0{,}1;\ 0{,}01;\ 0{,}001\)). Bas \(1\): alltid \(1\).`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
   {
@@ -415,9 +415,9 @@ export default [
     chapter: 1,
     topic: "talmängder",
     answer: "falskt",
-    star: false,
+    star: true,
     text: String.raw`Summan och differensen av två irrationella tal kan båda vara heltal.`,
-    explanation: String.raw`Om \(a + b = m\) och \(a - b = n\) (heltal), så ger addition av likheterna \(2a = m + n\), dvs. \(a = \frac{m+n}{2}\) — en kvot av heltal, alltså rationellt. Det motsäger att \(a\) är irrationellt.`,
+    explanation: String.raw`Exempel: \(a = 1 + \sqrt{2}\) och \(b = \sqrt{2}\) har differensen \(1\), men summan \(1 + 2\sqrt{2}\) är inget heltal. Varför kan inte båda vara heltal? Om \(a + b = m\) och \(a - b = n\) är heltal, så ger addition av likheterna \(2a = m + n\), dvs. \(a = \frac{m+n}{2}\), en kvot av heltal. Då vore \(a\) rationellt, men \(a\) var irrationellt.`,
     source: "jonzone_sant_falskt_tal_2_kontroll",
   },
 ];

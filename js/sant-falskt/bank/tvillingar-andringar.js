@@ -10,7 +10,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om \(a\) och \(b\) är positiva tal, \(a \cdot b = c\) och både \(a\) och \(b\) fördubblas, så blir produkten \(2c\).`,
-    explanation: String.raw`\(2a \cdot 2b = 4 \cdot a \cdot b = 4c\). Produkten fördubblas en gång för varje faktor. Till exempel är \(6 \cdot 8 = 48\) och \(12 \cdot 16 = 192 = 4 \cdot 48\).`,
+    explanation: String.raw`Till exempel är \(6 \cdot 8 = 48\) och \(12 \cdot 16 = 192 = 4 \cdot 48\). Produkten fördubblas en gång för varje faktor, så den blir fyra gånger så stor. Med bokstäver: \(2a \cdot 2b = 4 \cdot a \cdot b = 4c\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -21,7 +21,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`I en multiplikation ökas den ena faktorn med \(3\) och den andra minskas med \(3\). Då ändras inte produkten.`,
-    explanation: String.raw`Oftast ändras produkten: \(4 \cdot 10 = 40\) men \(7 \cdot 7 = 49\). Men \(2 \cdot 5 = 10\) och \(5 \cdot 2 = 10\), där faktorerna bara har bytt plats. Att lägga till och dra bort lika mycket bevarar en summa, inte en produkt.`,
+    explanation: String.raw`Det beror på faktorerna. Oftast ändras produkten: \(4 \cdot 10 = 40\) men \(7 \cdot 7 = 49\). Men \(2 \cdot 5 = 10\) och \(5 \cdot 2 = 10\), där faktorerna bara har bytt plats. Att lägga till och dra bort lika mycket bevarar en summa, inte en produkt.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -32,7 +32,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Om \(a \cdot b = c\) och \(a\) ökas med \(3\) medan \(b\) är oförändrad, så blir produkten \(c + 3\).`,
-    explanation: String.raw`\((a + 3) \cdot b = a \cdot b + 3b = c + 3b\). Produkten ökar med \(3b\), alltså med \(3\) bara om \(b = 1\). Till exempel är \(5 \cdot 4 = 20\) och \(8 \cdot 4 = 32\), en ökning med \(12\).`,
+    explanation: String.raw`Det beror på \(b\). Om \(b = 1\) stämmer det: \(5 \cdot 1 = 5\) och \(8 \cdot 1 = 8 = 5 + 3\). Men \(5 \cdot 4 = 20\) och \(8 \cdot 4 = 32\), en ökning med \(12\). Man tar \(b\) tre gånger till, så produkten ökar med \(3b\): \((a + 3) \cdot b = a \cdot b + 3b = c + 3b\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -43,7 +43,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om båda faktorerna i en multiplikation av två positiva tal fördubblas, så blir produkten fyra gånger så stor.`,
-    explanation: String.raw`Produkten fördubblas två gånger: \(2a \cdot 2b = 4ab\). Till exempel är \(3 \cdot 5 = 15\) och \(6 \cdot 10 = 60 = 4 \cdot 15\).`,
+    explanation: String.raw`Till exempel är \(3 \cdot 5 = 15\) och \(6 \cdot 10 = 60 = 4 \cdot 15\). Produkten fördubblas en gång för varje faktor, alltså två gånger. Med bokstäver: \(2a \cdot 2b = 4ab\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -54,7 +54,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om båda faktorerna i en multiplikation av två positiva tal halveras, så halveras produkten.`,
-    explanation: String.raw`Produkten halveras två gånger, så den blir en fjärdedel så stor: \(\frac{a}{2} \cdot \frac{b}{2} = \frac{a \cdot b}{4}\). Till exempel är \(8 \cdot 6 = 48\) men \(4 \cdot 3 = 12\).`,
+    explanation: String.raw`Till exempel är \(8 \cdot 6 = 48\) men \(4 \cdot 3 = 12\), en fjärdedel så mycket. Produkten halveras en gång för varje faktor, alltså två gånger. Med bokstäver: \(\frac{a}{2} \cdot \frac{b}{2} = \frac{a \cdot b}{4}\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -120,7 +120,7 @@ export default [
     answer: "falskt",
     star: true,
     text: String.raw`Om var och en av faktorerna i en multiplikation av tre positiva tal fördubblas, så blir produkten sex gånger så stor.`,
-    explanation: String.raw`Varje fördubbling gör produkten dubbelt så stor, så den blir \(2 \cdot 2 \cdot 2 = 8\) gånger så stor, inte \(2 + 2 + 2 = 6\). Till exempel är \(1 \cdot 2 \cdot 3 = 6\) och \(2 \cdot 4 \cdot 6 = 48 = 8 \cdot 6\).`,
+    explanation: String.raw`Till exempel är \(1 \cdot 2 \cdot 3 = 6\) och \(2 \cdot 4 \cdot 6 = 48 = 8 \cdot 6\). Varje fördubbling gör produkten dubbelt så stor, så den blir \(2 \cdot 2 \cdot 2 = 8\) gånger så stor, inte \(2 + 2 + 2 = 6\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -131,7 +131,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om den ena faktorn i en multiplikation av två positiva tal blir större och den andra är oförändrad, så blir produkten större.`,
-    explanation: String.raw`Man tar ett positivt tal fler gånger, så produkten växer. Till exempel är \(3 \cdot 5 = 15\) och \(4 \cdot 5 = 20\). Med en negativ faktor hade det blivit tvärtom.`,
+    explanation: String.raw`Till exempel är \(3 \cdot 5 = 15\) och \(4 \cdot 5 = 20\). Man tar ett positivt tal fler gånger, så produkten växer. Med en negativ faktor hade det blivit tvärtom.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -142,7 +142,7 @@ export default [
     answer: "sant",
     star: true,
     text: String.raw`Om den ena faktorn i en multiplikation av två positiva tal multipliceras med \(1{,}1\) och den andra med \(0{,}9\), så multipliceras produkten med \(0{,}99\).`,
-    explanation: String.raw`\(1{,}1a \cdot 0{,}9b = 1{,}1 \cdot 0{,}9 \cdot a \cdot b = 0{,}99 \cdot a \cdot b\). Till exempel är \(10 \cdot 10 = 100\) och \(11 \cdot 9 = 99\). Produkten blir alltså lite mindre, fast den ena faktorn ökade lika mycket som den andra minskade.`,
+    explanation: String.raw`Till exempel är \(10 \cdot 10 = 100\) och \(11 \cdot 9 = 99 = 0{,}99 \cdot 100\). Produkten blir lite mindre, fast den ena faktorn ökade med lika många procent som den andra minskade. Med bokstäver: \(1{,}1a \cdot 0{,}9b = 1{,}1 \cdot 0{,}9 \cdot a \cdot b = 0{,}99 \cdot a \cdot b\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
 
@@ -155,7 +155,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om \(a + b = c\) och både \(a\) och \(b\) ökas med \(5\), så blir summan \(c + 5\).`,
-    explanation: String.raw`\((a + 5) + (b + 5) = a + b + 10 = c + 10\). Båda termerna bidrar med \(5\) var. Till exempel är \(38 + 57 = 95\) och \(43 + 62 = 105\).`,
+    explanation: String.raw`Till exempel är \(38 + 57 = 95\) och \(43 + 62 = 105\). Båda termerna bidrar med \(5\) var, så summan ökar med \(10\). Med bokstäver: \((a + 5) + (b + 5) = a + b + 10 = c + 10\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -166,7 +166,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`I en addition fördubblas den ena termen och den andra halveras. Då ändras inte summan.`,
-    explanation: String.raw`Oftast ändras summan: \(4 + 10 = 14\) men \(8 + 5 = 13\). Men \(3 + 6 = 9\) och \(6 + 3 = 9\), där termerna bara har bytt plats. Att fördubbla och halvera bevarar en produkt, inte en summa.`,
+    explanation: String.raw`Det beror på termerna. Oftast ändras summan: \(4 + 10 = 14\) men \(8 + 5 = 13\). Men \(3 + 6 = 9\) och \(6 + 3 = 9\), där termerna bara har bytt plats. Att fördubbla och halvera bevarar en produkt, inte en summa.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -177,7 +177,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om båda termerna i en addition ökas med \(2\), så blir summan \(2\) större.`,
-    explanation: String.raw`Båda termerna bidrar med \(2\) var, så summan blir \(4\) större: \((a + 2) + (b + 2) = a + b + 4\). Till exempel är \(3 + 5 = 8\) och \(5 + 7 = 12\).`,
+    explanation: String.raw`Till exempel är \(3 + 5 = 8\) och \(5 + 7 = 12\). Båda termerna bidrar med \(2\) var, så summan blir \(4\) större. Med bokstäver: \((a + 2) + (b + 2) = a + b + 4\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -199,7 +199,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`I en multiplikation av två positiva tal fördubblas den ena faktorn. Då blir produkten dubbelt så stor.`,
-    explanation: String.raw`\(2a \cdot b = 2 \cdot (a \cdot b)\). Till exempel är \(3 \cdot 5 = 15\) och \(6 \cdot 5 = 30\). I en summa räcker det inte att fördubbla den ena termen: \(6 + 5 = 11\), inte \(16\).`,
+    explanation: String.raw`Till exempel är \(3 \cdot 5 = 15\) och \(6 \cdot 5 = 30\). Man tar \(5\) dubbelt så många gånger. Med bokstäver: \(2a \cdot b = 2 \cdot (a \cdot b)\). I en summa räcker det inte att fördubbla den ena termen: \(6 + 5 = 11\), inte \(16\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -223,7 +223,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om \(a - b = c\) och \(a\) ökas med \(4\) medan \(b\) minskas med \(4\), så är differensen fortfarande \(c\).`,
-    explanation: String.raw`\((a + 4) - (b - 4) = a - b + 8 = c + 8\). Talen flyttas isär, så avståndet mellan dem växer. Till exempel är \(83 - 27 = 56\) men \(87 - 23 = 64\). Att öka det ena och minska det andra bevarar en summa, inte en differens.`,
+    explanation: String.raw`Till exempel är \(83 - 27 = 56\) men \(87 - 23 = 64\). Man har \(4\) mer från början och drar bort \(4\) mindre, så differensen ökar med \(8\). Med bokstäver: \((a + 4) - (b - 4) = a - b + 8 = c + 8\). Att öka det ena och minska det andra bevarar en summa, inte en differens.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -234,7 +234,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`I en subtraktion ökas det första talet med \(5\) och det tal man drar bort minskas med \(5\). Då ändras inte differensen.`,
-    explanation: String.raw`Det första talet blir större och man drar bort mindre, så differensen ökar med \(10\). Till exempel är \(20 - 9 = 11\) men \(25 - 4 = 21\).`,
+    explanation: String.raw`Till exempel är \(20 - 9 = 11\) men \(25 - 4 = 21\). Det första talet blir större och man drar bort mindre, så differensen ökar med \(10\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -256,7 +256,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`I en subtraktion blir det första talet större, medan det tal man drar bort är oförändrat. Då blir differensen mindre.`,
-    explanation: String.raw`Man har mer från början och drar bort lika mycket, så det blir mer kvar. Till exempel är \(20 - 6 = 14\) och \(23 - 6 = 17\).`,
+    explanation: String.raw`Till exempel är \(20 - 6 = 14\) och \(23 - 6 = 17\). Man har mer från början och drar bort lika mycket, så det blir mer kvar.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -267,7 +267,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om båda talen i en subtraktion ökas med \(10\), så blir differensen \(10\) större.`,
-    explanation: String.raw`Differensen ändras inte: \((a + 10) - (b + 10) = a - b\). Båda talen flyttas lika långt, så avståndet mellan dem är detsamma. Till exempel är \(9 - 4 = 5\) och \(19 - 14 = 5\).`,
+    explanation: String.raw`Till exempel är \(9 - 4 = 5\) och \(19 - 14 = 5\). Man har \(10\) mer från början men drar också bort \(10\) mer, så differensen ändras inte. Med bokstäver: \((a + 10) - (b + 10) = a - b\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -300,7 +300,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om \(a - b = c\) och \(b\) minskas med \(3\), så blir differensen \(c - 3\).`,
-    explanation: String.raw`Man drar bort mindre, så det blir mer kvar: \(a - (b - 3) = a - b + 3 = c + 3\). Till exempel är \(20 - 6 = 14\) och \(20 - 3 = 17\).`,
+    explanation: String.raw`Till exempel är \(20 - 6 = 14\) och \(20 - 3 = 17\). Man drar bort \(3\) mindre, så det blir \(3\) mer kvar. Med bokstäver: \(a - (b - 3) = a - b + 3 = c + 3\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
 
@@ -313,7 +313,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om \(a\) och \(b\) är positiva tal, \(\dfrac{a}{b} = c\) och \(a\) fördubblas medan \(b\) halveras, så är kvoten fortfarande \(c\).`,
-    explanation: String.raw`En dubbelt så stor täljare gör kvoten dubbelt så stor, och en hälften så stor nämnare gör den dubbelt så stor igen. Kvoten blir \(4c\). Till exempel är \(\frac{12}{4} = 3\) men \(\frac{24}{2} = 12\). Att fördubbla och halvera bevarar en produkt, inte en kvot.`,
+    explanation: String.raw`Till exempel är \(\frac{12}{4} = 3\) men \(\frac{24}{2} = 12\). En dubbelt så stor täljare gör kvoten dubbelt så stor, och en hälften så stor nämnare gör den dubbelt så stor igen. Kvoten blir \(4c\). Att fördubbla och halvera bevarar en produkt, inte en kvot.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -324,7 +324,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`I en division ökas både täljaren och nämnaren med \(3\). Då ändras inte kvoten.`,
-    explanation: String.raw`Oftast ändras kvoten: \(\frac{6}{2} = 3\) men \(\frac{9}{5} = 1{,}8\). Men om täljaren och nämnaren är lika stora är kvoten \(1\) både före och efter, som \(\frac{4}{4} = \frac{7}{7} = 1\). Att lägga till lika mycket bevarar en differens, inte en kvot.`,
+    explanation: String.raw`Det beror på talen. Oftast ändras kvoten: \(\frac{6}{2} = 3\) men \(\frac{9}{5} = 1{,}8\). Men om täljaren och nämnaren är lika stora är kvoten \(1\) både före och efter, som \(\frac{4}{4} = \frac{7}{7} = 1\). Att lägga till lika mycket bevarar en differens, inte en kvot.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -335,7 +335,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`I en division av två positiva tal blir täljaren större medan nämnaren är oförändrad. Då blir kvoten mindre.`,
-    explanation: String.raw`En större mängd delas i lika många delar, så varje del blir större. Till exempel är \(\frac{12}{3} = 4\) och \(\frac{15}{3} = 5\).`,
+    explanation: String.raw`Till exempel är \(\frac{12}{3} = 4\) och \(\frac{15}{3} = 5\). En större mängd delas i lika många delar, så varje del blir större.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -346,7 +346,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om \(a\) och \(b\) är positiva tal, \(\dfrac{a}{b} = c\) och \(b\) fördubblas, så fördubblas kvoten.`,
-    explanation: String.raw`Kvoten halveras: \(\frac{a}{2b} = \frac{c}{2}\). Delar man med ett dubbelt så stort tal blir varje del hälften så stor. Till exempel är \(\frac{24}{3} = 8\) och \(\frac{24}{6} = 4\).`,
+    explanation: String.raw`Till exempel är \(\frac{24}{3} = 8\) och \(\frac{24}{6} = 4\). Delar man med ett dubbelt så stort tal blir varje del hälften så stor, så kvoten halveras. Med bokstäver: \(\frac{a}{2b} = \frac{c}{2}\).`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {
@@ -390,7 +390,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om täljaren i en division av två positiva tal blir större och nämnaren är oförändrad, så blir kvoten större.`,
-    explanation: String.raw`En större mängd delas i lika många delar, så varje del blir större. Till exempel är \(\frac{6}{2} = 3\) och \(\frac{8}{2} = 4\). Med en negativ nämnare hade det blivit tvärtom.`,
+    explanation: String.raw`Till exempel är \(\frac{6}{2} = 3\) och \(\frac{8}{2} = 4\). En större mängd delas i lika många delar, så varje del blir större. Med en negativ nämnare hade det blivit tvärtom.`,
     source: "tvillingar_andringar_i_rakningar",
   },
 
@@ -414,7 +414,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(30 - 12 = 18\). Om man ökar \(30\) med \(5\), måste man öka \(12\) med \(5\) för att differensen ska vara oförändrad.`,
-    explanation: String.raw`\(35 - 17 = 18\). Båda talen flyttas \(5\) steg åt samma håll, så avståndet mellan dem är detsamma.`,
+    explanation: String.raw`\(35 - 17 = 18\). Man har \(5\) mer från början och drar också bort \(5\) mer, så differensen är densamma.`,
     source: "tvillingar_andringar_i_rakningar",
   },
   {

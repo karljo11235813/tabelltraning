@@ -152,7 +152,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(\dfrac{4}{9}\) är skrivet i enklaste form.`,
-    explanation: String.raw`\(4 = 2 \cdot 2\) och \(9 = 3 \cdot 3\) har ingen gemensam faktor (utom \(1\)), så bråket kan inte förkortas — trots att ingen av dem är ett primtal. Jämför med \(\frac{6}{9}\), där båda kan delas med \(3\).`,
+    explanation: String.raw`\(4 = 2 \cdot 2\) och \(9 = 3 \cdot 3\) har ingen gemensam heltalsfaktor större än \(1\), så bråket kan inte förkortas — trots att ingen av dem är ett primtal. Jämför med \(\frac{6}{9}\), där båda kan delas med \(3\).`,
     source: "tvillingar_jonzone_sant_falskt_begrepp",
   },
   {
@@ -185,7 +185,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Minsta gemensamma nämnare för \(\dfrac{1}{3}\) och \(\dfrac{1}{8}\) är \(24\).`,
-    explanation: String.raw`\(3\) och \(8\) har ingen gemensam faktor, så den minsta gemensamma nämnaren är \(3 \cdot 8 = 24\): \(\frac{1}{3} = \frac{8}{24}\) och \(\frac{1}{8} = \frac{3}{24}\). För \(\frac{1}{4}\) och \(\frac{1}{6}\) räcker däremot \(12\).`,
+    explanation: String.raw`\(3\) och \(8\) har ingen gemensam heltalsfaktor större än \(1\), så den minsta gemensamma nämnaren är \(3 \cdot 8 = 24\): \(\frac{1}{3} = \frac{8}{24}\) och \(\frac{1}{8} = \frac{3}{24}\). För \(\frac{1}{4}\) och \(\frac{1}{6}\) räcker däremot \(12\).`,
     source: "tvillingar_jonzone_sant_falskt_begrepp",
   },
   {
@@ -196,7 +196,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(\dfrac{1}{3} + \dfrac{1}{4} = \dfrac{7}{12}\)`,
-    explanation: String.raw`Skriv om bråken med minsta gemensamma nämnare, \(12\): \(\frac{4}{12} + \frac{3}{12} = \frac{7}{12}\). Att addera täljare och nämnare var för sig (\(\frac{2}{7}\)) är fel.`,
+    explanation: String.raw`Tredjedelar och fjärdedelar är olika stora delar, så vi skriver båda som tolftedelar: \(\frac{1}{3} = \frac{4}{12}\) och \(\frac{1}{4} = \frac{3}{12}\). Då blir summan \(\frac{4}{12} + \frac{3}{12} = \frac{7}{12}\). Att addera täljare och nämnare var för sig ger \(\frac{2}{7}\), som är fel.`,
     source: "tvillingar_jonzone_sant_falskt_begrepp",
   },
   {

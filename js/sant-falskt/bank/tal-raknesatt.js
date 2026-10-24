@@ -7,7 +7,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Att multiplicera med \(10\) är samma sak som att lägga till en nolla i slutet av talet.`,
-    explanation: String.raw`För heltal stämmer det: \(7 \cdot 10 = 70\). Men \(3{,}5 \cdot 10 = 35\), inte \(3{,}50\). Det är siffrornas värde som ändras, inte antalet nollor.`,
+    explanation: String.raw`Det beror på om talet är ett heltal. Att multiplicera med \(10\) gör varje siffra \(10\) gånger mer värd. För heltal ser det ut som en extra nolla: \(7 \cdot 10 = 70\). Men \(3{,}5 \cdot 10 = 35\), inte \(3{,}50\). Det är siffrornas värde som ändras, inte antalet nollor.`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -17,7 +17,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(3{,}5 \cdot 10 = 3{,}50\)`,
-    explanation: String.raw`\(3{,}5 \cdot 10 = 35\). Talet \(3{,}50\) är lika stort som \(3{,}5\).`,
+    explanation: String.raw`Att multiplicera med \(10\) gör varje siffra \(10\) gånger mer värd: \(3\) ental blir \(3\) tiotal och \(5\) tiondelar blir \(5\) ental. Alltså är \(3{,}5 \cdot 10 = 35\). En nolla sist ändrar inte värdet: \(3{,}50\) är lika stort som \(3{,}5\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -27,7 +27,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(0{,}04 \cdot 10 = 0{,}040\)`,
-    explanation: String.raw`\(0{,}04 \cdot 10 = 0{,}4\). Att lägga till en nolla sist i ett decimaltal ändrar inte värdet.`,
+    explanation: String.raw`Fyra hundradelar blir \(10\) gånger mer värda, alltså fyra tiondelar: \(0{,}04 \cdot 10 = 0{,}4\). En nolla sist ändrar inte värdet: \(0{,}040\) är fortfarande fyra hundradelar.`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -37,7 +37,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(\dfrac{8}{100} = 0{,}8\)`,
-    explanation: String.raw`\(\frac{8}{100} = 0{,}08\). Varje siffra flyttas två steg åt höger.`,
+    explanation: String.raw`\(\frac{8}{100}\) är åtta hundradelar, och hundradelarna står på andra platsen efter decimaltecknet: \(\frac{8}{100} = 0{,}08\). \(0{,}8\) är åtta tiondelar, alltså \(\frac{8}{10}\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -47,7 +47,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`När man multiplicerar ett tal med \(100\) blir varje siffra värd \(100\) gånger mer.`,
-    explanation: String.raw`Varje siffra flyttas två positioner åt vänster, till exempel blir \(0{,}62 \cdot 100 = 62\).`,
+    explanation: String.raw`Varje siffra flyttas två platser åt vänster. I \(0{,}62 \cdot 100 = 62\) blir \(6\) tiondelar \(6\) tiotal och \(2\) hundradelar \(2\) ental.`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -57,7 +57,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Ett tal som divideras med \(1\,000\) blir mindre än \(1\).`,
-    explanation: String.raw`\(\frac{700}{1\,000} = 0{,}7\), men \(\frac{5\,600}{1\,000} = 5{,}6\). Det beror på om talet är mindre än \(1\,000\).`,
+    explanation: String.raw`Det beror på om talet är mindre än \(1\,000\). \(\frac{700}{1\,000} = 0{,}7\) är mindre än \(1\), men \(\frac{5\,600}{1\,000} = 5{,}6\) är det inte. Gränsen går vid \(\frac{1\,000}{1\,000} = 1\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -67,7 +67,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Multiplikation gör alltid ett tal större.`,
-    explanation: String.raw`\(45 \cdot 0{,}1 = 4{,}5\). Multiplikation med ett tal mellan \(0\) och \(1\) gör talet mindre.`,
+    explanation: String.raw`Motexempel: \(45 \cdot 0{,}1 = 4{,}5\). Att multiplicera med \(0{,}1\) är att ta en tiondel, och en tiondel av ett positivt tal är mindre än talet. Multiplikation med ett tal mellan \(0\) och \(1\) gör ett positivt tal mindre.`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -77,7 +77,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Division gör alltid ett tal mindre.`,
-    explanation: String.raw`\(\frac{7}{0{,}1} = 70\). Division med ett tal mellan \(0\) och \(1\) gör talet större.`,
+    explanation: String.raw`Motexempel: \(\frac{7}{0{,}1} = 70\). Frågan är hur många tiondelar som ryms i \(7\), och det är \(70\) stycken. Division med ett tal mellan \(0\) och \(1\) gör ett positivt tal större.`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -127,7 +127,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Produkten \(a \cdot 0{,}1\) är mindre än \(1\).`,
-    explanation: String.raw`Om \(a = 6\) blir produkten \(0{,}6\), men om \(a = 40\) blir den \(4\). Produkten är mindre än \(1\) när \(a\) är mindre än \(10\).`,
+    explanation: String.raw`Det beror på \(a\). Produkten är en tiondel av \(a\). Om \(a = 6\) blir produkten \(0{,}6\), som är mindre än \(1\), men om \(a = 40\) blir den \(4\). Produkten är mindre än \(1\) när \(a\) är mindre än \(10\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -137,7 +137,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Kvoten \(\dfrac{a}{0{,}01}\) är större än \(100\).`,
-    explanation: String.raw`Om \(a = 3\) blir kvoten \(300\), men om \(a = 0{,}5\) blir den \(50\). Kvoten är större än \(100\) när \(a\) är större än \(1\).`,
+    explanation: String.raw`Det beror på \(a\). Kvoten säger hur många hundradelar som ryms i \(a\). Om \(a = 3\) blir kvoten \(300\), som är större än \(100\), men om \(a = 0{,}5\) blir den \(50\). Kvoten är större än \(100\) när \(a\) är större än \(1\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -147,7 +147,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`Om \(a \cdot 100 = 5\), så är \(a = 500\).`,
-    explanation: String.raw`\(a = \frac{5}{100} = 0{,}05\). Kontroll: \(0{,}05 \cdot 100 = 5\).`,
+    explanation: String.raw`\(a\) gånger \(100\) är \(5\), så \(a\) är \(100\) gånger mindre än \(5\): \(a = \frac{5}{100} = 0{,}05\). Kontroll: \(0{,}05 \cdot 100 = 5\). Med \(a = 500\) blir produkten \(50\,000\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -177,7 +177,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(\dfrac{6}{0{,}01}\) är större än \(\dfrac{6}{0{,}1}\).`,
-    explanation: String.raw`\(\frac{6}{0{,}01} = 600\) och \(\frac{6}{0{,}1} = 60\). Ju mindre tal man delar med, desto större blir kvoten.`,
+    explanation: String.raw`\(\frac{6}{0{,}01} = 600\) och \(\frac{6}{0{,}1} = 60\). Hundradelar är mindre än tiondelar, så det ryms fler av dem i \(6\). Ju mindre positivt tal man delar ett positivt tal med, desto större blir kvoten.`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -247,7 +247,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(4 \cdot 0{,}7\) är större än \(4\).`,
-    explanation: String.raw`\(4 \cdot 0{,}7 = 2{,}8\). Att ta \(0{,}7\) av något ger mindre än det man började med.`,
+    explanation: String.raw`\(4 \cdot 0{,}7 = 2{,}8\). Att multiplicera med \(0{,}7\) är att ta mindre än en hel gång, så av ett positivt tal blir det mindre än talet.`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -256,8 +256,8 @@ export default [
     topic: "multiplikation & division",
     answer: "beror",
     star: false,
-    text: String.raw`En produkt har alltid lika många decimaler som faktorerna har tillsammans.`,
-    explanation: String.raw`\(0{,}3 \cdot 0{,}2 = 0{,}06\) har två decimaler, men \(0{,}5 \cdot 0{,}4 = 0{,}20 = 0{,}2\) skrivs med en decimal.`,
+    text: String.raw`En produkt har lika många decimaler som faktorerna har tillsammans.`,
+    explanation: String.raw`Det beror på faktorerna. Tiondelar gånger tiondelar blir hundradelar, så \(0{,}3 \cdot 0{,}2 = 0{,}06\) får två decimaler, lika många som faktorerna tillsammans. Men \(0{,}5 \cdot 0{,}4 = 0{,}20 = 0{,}2\): nollan sist kan strykas, och då återstår en decimal. Det händer när de sista siffrorna ger en produkt som slutar på \(0\), som \(5 \cdot 4 = 20\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -307,7 +307,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Om man dividerar ett tal med ett decimaltal blir kvoten större än talet.`,
-    explanation: String.raw`\(\frac{6}{0{,}5} = 12\) är större än \(6\), men \(\frac{6}{1{,}5} = 4\) är mindre. Det beror på om nämnaren är mindre eller större än \(1\).`,
+    explanation: String.raw`Det beror på decimaltalet. \(\frac{6}{0{,}5} = 12\) är större än \(6\), eftersom \(0{,}5\) ryms tolv gånger i \(6\). Men \(\frac{6}{1{,}5} = 4\) är mindre än \(6\). Ett positivt tal blir större när man delar med ett tal mellan \(0\) och \(1\), och mindre när man delar med ett tal större än \(1\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -317,7 +317,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(5{,}6 - 0{,}08 = 4{,}8\)`,
-    explanation: String.raw`\(5{,}6 - 0{,}08 = 5{,}52\). Ställ tiondelar under tiondelar och hundradelar under hundradelar: \(5{,}60 - 0{,}08\).`,
+    explanation: String.raw`\(0{,}08\) är åtta <em>hundradelar</em>, inte åtta tiondelar. Skriv \(5{,}6\) som \(5{,}60\) så att hundradelar står under hundradelar: \(5{,}60 - 0{,}08 = 5{,}52\). Svaret \(4{,}8\) får man om man drar bort \(0{,}8\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -357,7 +357,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Produkten av två tal är större än summan av talen.`,
-    explanation: String.raw`\(3 \cdot 4 = 12\) är större än \(3 + 4 = 7\), men \(0{,}5 \cdot 0{,}2 = 0{,}1\) är mindre än \(0{,}5 + 0{,}2 = 0{,}7\).`,
+    explanation: String.raw`Det beror på talen. \(3 \cdot 4 = 12\) är större än \(3 + 4 = 7\), men \(0{,}5 \cdot 0{,}2 = 0{,}1\) är mindre än \(0{,}5 + 0{,}2 = 0{,}7\).`,
     source: "jonzone_raknesatt_begrepp_valja_operation",
   },
 ];

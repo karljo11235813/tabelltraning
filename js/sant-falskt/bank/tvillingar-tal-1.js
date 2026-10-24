@@ -9,7 +9,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(-10{,}5\) är ett negativt heltal.`,
-    explanation: String.raw`\(-10{,}5\) är negativt, men det ligger mitt emellan \(-11\) och \(-10\) och har en decimal — alltså inget heltal. Det är däremot ett rationellt tal: \(-\frac{21}{2}\).`,
+    explanation: String.raw`\(-10{,}5\) är negativt, men det ligger mitt emellan heltalen \(-11\) och \(-10\), så det är inget heltal. Det är däremot ett rationellt tal: \(-\frac{21}{2}\).`,
     source: "tvillingar_jonzone_sant_falskt_tal",
   },
   {
@@ -119,7 +119,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(0{,}4\) är ett naturligt tal.`,
-    explanation: String.raw`Naturliga tal är \(0, 1, 2, 3, \ldots\) — utan decimaler. \(0{,}4\) ligger mellan \(0\) och \(1\) och är rationellt (\(\frac{2}{5}\)), men inte naturligt.`,
+    explanation: String.raw`\(0{,}4\) ligger mellan de naturliga talen \(0\) och \(1\), så det är inget naturligt tal. Det är däremot rationellt: \(\frac{2}{5}\).`,
     source: "tvillingar_jonzone_sant_falskt_tal",
   },
   {
@@ -130,7 +130,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(\pi - 3{,}14\) är ett irrationellt tal.`,
-    explanation: String.raw`\(\pi - 3{,}14 = 0{,}00159265\ldots\) Ett irrationellt tal minus ett rationellt tal är alltid irrationellt. Talet är litet, men decimalerna fortsätter utan mönster precis som i \(\pi\).`,
+    explanation: String.raw`\(\pi - 3{,}14 = 0{,}00159265\ldots\) Ett irrationellt tal minus ett rationellt tal är alltid irrationellt. Talet är litet, men decimalerna blir aldrig periodiska, precis som i \(\pi\).`,
     source: "tvillingar_jonzone_sant_falskt_tal",
   },
   {
@@ -152,7 +152,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Ett irrationellt tal har aldrig ett periodiskt mönster i sin decimalutveckling.`,
-    explanation: String.raw`Ett tal med periodisk (eller avslutad) decimalutveckling kan alltid skrivas som ett bråk, och då är det rationellt. Irrationella tal som \(\sqrt{2} = 1{,}41421\ldots\) upprepar därför aldrig samma block.`,
+    explanation: String.raw`Ett tal med periodisk (eller avslutad) decimalutveckling kan alltid skrivas som ett bråk, och då är det rationellt. I ett irrationellt tal som \(\sqrt{2} = 1{,}41421\ldots\) finns därför inget sifferblock som från en viss punkt upprepas om och om igen i all oändlighet. Enstaka block kan dyka upp flera gånger, men aldrig så.`,
     source: "tvillingar_jonzone_sant_falskt_tal",
   },
   {
@@ -163,7 +163,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(-4\) är inte ett heltal.`,
-    explanation: String.raw`Heltalen är \(\ldots, -2, -1, 0, 1, 2, \ldots\) — negativa tal utan decimaler räknas. \(-4\) är ett heltal, men inte ett naturligt tal.`,
+    explanation: String.raw`Heltalen är \(\ldots, -2, -1, 0, 1, 2, \ldots\) och fortsätter åt båda hållen, så även negativa tal som \(-4\) är heltal. \(-4\) är däremot inget naturligt tal.`,
     source: "tvillingar_jonzone_sant_falskt_tal",
   },
   {
@@ -174,7 +174,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(\frac{1}{7}\) har periodisk decimalutveckling.`,
-    explanation: String.raw`\(\frac{1}{7} = 0{,}142857142857\ldots\) — blocket \(142857\) upprepas. Ett bråk av heltal är rationellt, och dess decimaler tar antingen slut eller upprepas. Det är \(\sqrt{7}\) som saknar mönster.`,
+    explanation: String.raw`\(\frac{1}{7} = 0{,}142857142857\ldots\) — blocket \(142857\) upprepas. Ett bråk av heltal är rationellt, och dess decimaler tar antingen slut eller blir periodiska. Det är \(\sqrt{7}\) som aldrig blir periodiskt.`,
     source: "tvillingar_jonzone_sant_falskt_tal",
   },
   {
@@ -249,7 +249,7 @@ export default [
     chapter: 1,
     topic: "talmängder",
     answer: "sant",
-    star: false,
+    star: true,
     text: String.raw`Det finns oändligt många rationella tal och oändligt många irrationella tal.`,
     explanation: String.raw`Rationella: \(1, \frac{1}{2}, \frac{1}{3}, \frac{1}{4}, \ldots\) tar aldrig slut. Irrationella: \(\pi + 1, \pi + 2, \pi + 3, \ldots\) är alla irrationella och tar inte heller slut. (Att de irrationella i en djupare mening är <em>fler</em> är en annan fråga.)`,
     source: "tvillingar_jonzone_sant_falskt_tal",

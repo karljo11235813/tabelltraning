@@ -107,7 +107,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Om man förlänger \(\dfrac{2}{3}\) med \(4\) får man \(\dfrac{8}{12}\).`,
-    explanation: String.raw`Förlänga = multiplicera täljare <em>och</em> nämnare med samma tal: \(\frac{2 \cdot 4}{3 \cdot 4} = \frac{8}{12}\).`,
+    explanation: String.raw`Att förlänga med \(4\) är att dela varje tredjedel i \(4\) lika delar. Då blir delarna tolftedelar, och \(2\) tredjedelar blir \(2 \cdot 4 = 8\) tolftedelar. Man multiplicerar alltså täljare <em>och</em> nämnare med \(4\): \(\frac{2 \cdot 4}{3 \cdot 4} = \frac{8}{12}\).`,
     source: "jonzone_sant_falskt_begrepp",
   },
   {
@@ -127,7 +127,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(\dfrac{12}{18}\) förkortat till enklaste form är \(\dfrac{2}{3}\).`,
-    explanation: String.raw`Dela täljare och nämnare med \(6\): \(\frac{12 / 6}{18 / 6} = \frac{2}{3}\). \(2\) och \(3\) har ingen gemensam faktor, så det går inte att förkorta mer.`,
+    explanation: String.raw`Dela täljare och nämnare med \(6\): \(\frac{12 / 6}{18 / 6} = \frac{2}{3}\). \(2\) och \(3\) har ingen gemensam heltalsfaktor större än \(1\), så det går inte att förkorta mer.`,
     source: "jonzone_sant_falskt_begrepp",
   },
   {
@@ -177,7 +177,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(\dfrac{1}{3} + \dfrac{1}{4} = \dfrac{2}{7}\)`,
-    explanation: String.raw`Man får inte addera nämnarna. Skriv om bråken med minsta gemensamma nämnare, \(12\): \(\frac{4}{12} + \frac{3}{12} = \frac{7}{12}\).`,
+    explanation: String.raw`Tredjedelar och fjärdedelar är olika stora delar. Därför skriver vi båda bråken som tolftedelar: \(\frac{1}{3} = \frac{4}{12}\) och \(\frac{1}{4} = \frac{3}{12}\). Då får vi \(\frac{4}{12} + \frac{3}{12} = \frac{7}{12}\). Nämnaren är fortfarande \(12\) eftersom delarna fortfarande är tolftedelar. Svaret \(\frac{2}{7}\) kan inte stämma: det är mindre än \(\frac{1}{3}\), fast vi har lagt till något.`,
     source: "jonzone_sant_falskt_begrepp",
   },
   {
@@ -237,7 +237,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(45 \cdot 10^3\) är skrivet i grundpotensform.`,
-    explanation: String.raw`Mantissan måste vara minst \(1\) och mindre än \(10\). Rätt skrivsätt: \(45 \cdot 10^3 = 4{,}5 \cdot 10^4\).`,
+    explanation: String.raw`För ett positivt tal måste mantissan vara minst \(1\) och mindre än \(10\), och \(45\) är för stort. \(45 = 4{,}5 \cdot 10\), så \(45 \cdot 10^3 = 4{,}5 \cdot 10^4\). (Ett negativt tal skrivs på samma sätt med ett minustecken framför, t.ex. \(-4{,}5 \cdot 10^4\).)`,
     source: "jonzone_sant_falskt_begrepp",
   },
   {
@@ -257,7 +257,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Produkten \(8 \cdot b\) är större än \(8\).`,
-    explanation: String.raw`Sant om \(b > 1\), t.ex. \(8 \cdot 2 = 16\). Falskt om \(b = 1\) (\(8\)), \(b = 0{,}5\) (\(4\)) eller \(b\) är negativt (\(8 \cdot (-1) = -8\)). Multiplikation gör inte alltid större.`,
+    explanation: String.raw`Det beror på \(b\). Sant om \(b > 1\), t.ex. \(8 \cdot 2 = 16\). Falskt om \(b = 1\) (\(8\)), \(b = 0{,}5\) (\(4\)) eller \(b\) är negativt (\(8 \cdot (-1) = -8\)). Multiplikation gör inte alltid större.`,
     source: "jonzone_sant_falskt_begrepp",
   },
   {
@@ -267,7 +267,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Kvadratroten ur ett positivt tal är mindre än talet.`,
-    explanation: String.raw`Sant för t.ex. \(\sqrt{16} = 4\). Men \(\sqrt{1} = 1\) (lika stort) och \(\sqrt{0{,}25} = 0{,}5\) (större). För tal mellan \(0\) och \(1\) blir roten större än talet.`,
+    explanation: String.raw`Det beror på talet. Sant för t.ex. \(\sqrt{16} = 4\). Men \(\sqrt{1} = 1\) (lika stort) och \(\sqrt{0{,}25} = 0{,}5\) (större). För tal mellan \(0\) och \(1\) blir roten större än talet, eftersom ett sådant tal gånger sig självt blir mindre: \(0{,}5 \cdot 0{,}5 = 0{,}25\).`,
     source: "jonzone_sant_falskt_begrepp",
   },
 ];

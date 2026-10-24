@@ -7,7 +7,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`\(-10\) är ett negativt heltal.`,
-    explanation: String.raw`\(-10\) är ett tal utan decimaler som är mindre än \(0\) — precis som \(-1\), \(-2\) och \(-3\) ligger det till vänster om \(0\) på tallinjen.`,
+    explanation: String.raw`Heltalen är \(\ldots, -3, -2, -1, 0, 1, 2, \ldots\) och fortsätter åt båda hållen, så \(-10\) är ett heltal. Det är mindre än \(0\) och ligger till vänster om \(0\) på tallinjen, alltså är det negativt.`,
     source: "jonzone_sant_falskt_tal",
   },
   {
@@ -17,7 +17,7 @@ export default [
     answer: "sant",
     star: false,
     text: String.raw`Talet \(\pi\) har inte en periodisk decimalutveckling.`,
-    explanation: String.raw`\(\pi = 3{,}14159265\ldots\) fortsätter i all oändlighet utan att bilda ett upprepat mönster (jämför med t.ex. \(\frac{1}{3} = 0{,}333\ldots\), som verkligen är periodiskt).`,
+    explanation: String.raw`\(\pi = 3{,}14159265\ldots\) är irrationellt. Decimalerna fortsätter i all oändlighet, men det finns inget sifferblock som från en viss decimal upprepas om och om igen. Jämför med \(\frac{1}{3} = 0{,}333\ldots\), som verkligen är periodiskt.`,
     source: "jonzone_sant_falskt_tal",
   },
   {
@@ -177,7 +177,7 @@ export default [
     answer: "beror",
     star: false,
     text: String.raw`Om \(a\) och \(b\) är rationella tal, är \(a/b\) också ett rationellt tal.`,
-    explanation: String.raw`Sant om \(b \neq 0\) (t.ex. \(\frac{2}{5}\) är rationellt). Men om \(b = 0\) är \(a/b\) odefinierat — då är det inte alls ett tal, och påståendet stämmer inte.`,
+    explanation: String.raw`Det beror på \(b\). Sant om \(b \neq 0\) (t.ex. \(\frac{2}{5}\) är rationellt). Men om \(b = 0\) är \(a/b\) odefinierat — då är det inte alls ett tal, och påståendet stämmer inte.`,
     source: "jonzone_sant_falskt_tal",
   },
   {
@@ -225,9 +225,9 @@ export default [
     chapter: 1,
     topic: "talmängder",
     answer: "falskt",
-    star: false,
+    star: true,
     text: String.raw`Det finns lika många rationella tal som irrationella tal.`,
-    explanation: String.raw`Båda mängderna är oändliga, men de irrationella talen är fler i en djupare mening. T.ex. mellan \(0\) och \(1\) finns oändligt många rationella tal (\(0{,}1\) — \(0{,}11\) — \(0{,}111\ldots\)) som går att räkna upp i en lista, medan de irrationella talen i samma intervall (t.ex. \(\sqrt{2}/2 \approx 0{,}7071\ldots\) eller \(\pi/4 \approx 0{,}7854\ldots\)) inte går att räkna upp på samma sätt. Detta ligger utanför grundskolans kursplan men är ett klassiskt och förbluffande resultat inom matematiken.`,
+    explanation: String.raw`Båda mängderna är oändliga, men de irrationella talen är fler i en djupare mening. De rationella talen går att ställa upp i en oändlig lista där varje rationellt tal förr eller senare kommer med. För de irrationella talen går det inte: hur man än gör listan fattas det tal. Det ligger utanför grundskolans kursplan, men det är ett klassiskt och förbluffande resultat inom matematiken.`,
     source: "jonzone_sant_falskt_tal",
   },
 ];

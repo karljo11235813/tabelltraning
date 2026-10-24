@@ -196,7 +196,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(6 \cdot 0{,}01\) är större än \(6 \cdot 0{,}1\).`,
-    explanation: String.raw`\(6 \cdot 0{,}01 = 0{,}06\) och \(6 \cdot 0{,}1 = 0{,}6\). Vid multiplikation ger den mindre faktorn den mindre produkten. Vid division är det tvärtom: \(\frac{6}{0{,}01} = 600\) är större än \(\frac{6}{0{,}1} = 60\).`,
+    explanation: String.raw`\(6 \cdot 0{,}01 = 0{,}06\) och \(6 \cdot 0{,}1 = 0{,}6\). En hundradel av \(6\) är mindre än en tiondel av \(6\). Vid division är det tvärtom: \(\frac{6}{0{,}01} = 600\) är större än \(\frac{6}{0{,}1} = 60\).`,
     source: "tvillingar_jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -262,7 +262,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`\(\dfrac{9}{0{,}01}\) är \(10\) gånger mindre än \(\dfrac{9}{0{,}1}\).`,
-    explanation: String.raw`\(\frac{9}{0{,}01} = 900\) och \(\frac{9}{0{,}1} = 90\), så den första är \(10\) gånger <em>större</em>. Ju mindre tal man delar med, desto större blir kvoten.`,
+    explanation: String.raw`\(\frac{9}{0{,}01} = 900\) och \(\frac{9}{0{,}1} = 90\), så den första är \(10\) gånger <em>större</em>. Det ryms tio gånger fler hundradelar än tiondelar i \(9\).`,
     source: "tvillingar_jonzone_raknesatt_begrepp_valja_operation",
   },
   {
@@ -284,7 +284,7 @@ export default [
     answer: "falskt",
     star: false,
     text: String.raw`En summa har alltid lika många decimaler som termerna har tillsammans.`,
-    explanation: String.raw`Vid addition räknar man inte ihop decimalerna: \(0{,}3 + 0{,}2 = 0{,}5\) har en decimal, inte två. Summan har högst lika många decimaler som termen med flest decimaler. Regeln om att räkna ihop decimaler gäller (oftast) vid multiplikation.`,
+    explanation: String.raw`Motexempel: \(0{,}3 + 0{,}2 = 0{,}5\) har en decimal, inte två. Tiondelar plus tiondelar blir tiondelar, så decimalerna räknas inte ihop. Summan har högst lika många decimaler som termen med flest decimaler. Det är vid multiplikation som decimalerna ofta räknas ihop.`,
     source: "tvillingar_jonzone_raknesatt_begrepp_valja_operation",
   },
   {
