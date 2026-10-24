@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bråk, decimal &amp; procent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/representationer.css">
+</head>
+<body>
+
+<header>
+  <a class="header-title" href="index.html">Tabellträning</a>
+  <span class="rp-header-sub">Bråk, decimal &amp; procent</span>
+</header>
+
+<main class="rp-main">
+
+  <!-- START -->
+  <section id="rpStart" class="card">
+    <a class="back-link" href="index.html">← Tillbaka</a>
+    <h1 class="rp-title">Bråk, decimal &amp; procent</h1>
+    <p class="rp-intro">Samma tal kan skrivas på många sätt. Översätt mellan bråk, decimaltal, procent, ord och bilder.</p>
+    <h2>Välj läge</h2>
+    <div class="landing-choices" id="rpModes"></div>
+  </section>
+
+  <!-- FRÅGA -->
+  <section id="rpRun" hidden>
+    <div class="top-row">
+      <div class="timer" id="rpTimer"></div>
+      <button type="button" class="rp-quit" id="rpRestart">Starta om</button>
+      <button type="button" class="rp-quit" id="rpQuit">Avsluta</button>
+    </div>
+    <div class="timer-bar-track" id="rpTimerTrack"><div class="timer-bar-fill" id="rpTimerBar"></div></div>
+
+    <div class="rp-scoreboard">
+      <div class="rp-tile"><div class="rp-tile-val" id="rpLiveScore">0</div><div class="rp-tile-lbl">Poäng</div></div>
+      <div class="rp-tile rp-tile-correct"><div class="rp-tile-val" id="rpLiveCorrect">0</div><div class="rp-tile-lbl">Rätt</div></div>
+      <div class="rp-tile rp-tile-wrong"><div class="rp-tile-val" id="rpLiveWrong">0</div><div class="rp-tile-lbl">Fel</div></div>
+    </div>
+
+    <div class="rp-card" id="rpCard">
+      <div class="rp-source" id="rpSource" aria-live="polite"></div>
+      <div class="rp-note" id="rpEllipsisNote" hidden>… betyder att siffrorna fortsätter på samma sätt.</div>
+      <p class="rp-prompt" id="rpPrompt"></p>
+      <form class="rp-answer" id="rpAnswer" autocomplete="off" novalidate></form>
+      <div class="rp-flash-answer" id="rpFlashAnswer" hidden></div>
+      <div class="rp-feedback" id="rpFeedback" hidden>
+        <div class="rp-verdict" id="rpVerdict"></div>
+        <div class="rp-hint" id="rpHint"></div>
+        <div class="rp-translation" id="rpTranslation"></div>
+        <button type="button" class="start-btn" id="rpNext">Nästa →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTAT -->
+  <section id="rpResult" hidden>
+    <div class="result-card">
+      <h2 id="rpResultTitle"></h2>
+      <div class="result-stats">
+        <div class="result-stat"><div class="val" id="rpStatScore">0</div><div class="lbl">Poäng</div></div>
+        <div class="result-stat"><div class="val rp-val-correct" id="rpStatCorrect">0</div><div class="lbl">Rätt</div></div>
+        <div class="result-stat"><div class="val rp-val-wrong" id="rpStatWrong">0</div><div class="lbl">Fel</div></div>
+      </div>
+      <div class="rp-record" id="rpRecord" hidden>Nytt rekord!</div>
+      <div class="rp-breakdown-label">Rätt per svarsform</div>
+      <div class="rp-breakdown" id="rpBreakdown"></div>
+      <div class="rp-result-buttons">
+        <button type="button" class="again-btn" id="rpAgain">Kör igen</button>
+        <button type="button" class="rp-secondary-btn" id="rpChangeMode">Byt läge</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module" src="js/representationer/app.js"></script>
+</body>
+</html>

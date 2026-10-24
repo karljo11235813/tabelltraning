@@ -370,6 +370,8 @@ function applyLanguage() {
   document.getElementById('landingWordProblemsDesc').textContent = s.landingWordProblemsDesc;
   document.getElementById('landingTrueFalseTitle').textContent = s.landingTrueFalseTitle;
   document.getElementById('landingTrueFalseDesc').textContent = s.landingTrueFalseDesc;
+  document.getElementById('landingRepresentationsTitle').textContent = s.landingRepresentationsTitle;
+  document.getElementById('landingRepresentationsDesc').textContent = s.landingRepresentationsDesc;
 
   backFromTest.textContent = s.back;
   backFromPractice.textContent = s.back;
