@@ -16,6 +16,11 @@ export function scoreTiles(state) {
   return { score: formatScore(state.score), correct: String(state.correct), wrong: String(state.wrong) };
 }
 
+// Rubriken på poängrutan: lägets enhet med stor bokstav ("Poäng", "I rad").
+export function scoreLabel(mode) {
+  return mode.scoreUnit.charAt(0).toUpperCase() + mode.scoreUnit.slice(1);
+}
+
 const ORDINALS = ["", "första", "andra", "tredje", "fjärde", "femte", "sjätte", "sjunde", "åttonde", "nionde", "tionde"];
 
 export function attemptLabel(n) {
@@ -43,12 +48,13 @@ export function timeAgo(at, now) {
   return "nyss";
 }
 
-// Texterna för en sparad omgång (rekord eller senaste). Det som inte sparats blir null.
-export function runParts(run, now) {
+// Texterna för en sparad omgång (rekord eller senaste) i ett visst läge.
+// Det som inte sparats, eller som läget inte visar, blir null.
+export function runParts(run, now, mode) {
   return {
-    score: `${formatScore(run.score)} poäng`,
-    correct: run.correct === null ? null : `${run.correct} rätt`,
-    wrong: run.wrong === null ? null : `${run.wrong} fel`,
+    score: `${formatScore(run.score)} ${mode.scoreUnit}`,
+    correct: !mode.showCounts || run.correct === null ? null : `${run.correct} rätt`,
+    wrong: !mode.showCounts || run.wrong === null ? null : `${run.wrong} fel`,
     when: run.at === null ? null : timeAgo(run.at, now),
   };
 }

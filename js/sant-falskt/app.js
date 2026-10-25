@@ -6,8 +6,10 @@ import { MODES } from "./modes.js";
 import { createSession } from "./session.js";
 import { renderInto } from "./render.js";
 import { summarize } from "./results.js";
-import { formatClock, formatScore, attemptLabel, scoreTiles, runParts } from "./format.js";
+import { formatClock, formatScore, attemptLabel, scoreTiles, scoreLabel, runParts } from "./format.js";
 import { createStore, recordKey, latestKey, readRecord, readLatest, updateRecord, saveLatest } from "./storage.js";
+import { assessLevels, levelRequirement, levelHint } from "./levels.js";
+import { describeScope } from "./scope.js";
 
 const FLASH_MS = 600;
 const LONG_TEXT_CHARS = 140;
@@ -87,7 +89,7 @@ function renderStart(focusChapter = null) {
         const runs = document.createElement("span");
         runs.className = "sf-runs";
         const now = Date.now();
-        for (const [label, savedRun] of saved) runs.appendChild(runRow(label, savedRun, now));
+        for (const [label, savedRun] of saved) runs.appendChild(runRow(label, savedRun, now, mode));
         card.appendChild(runs);
       }
     }
@@ -97,9 +99,9 @@ function renderStart(focusChapter = null) {
   $("sfStartHint").textContent = empty ? "Välj minst ett kapitel med påståenden." : "";
 }
 
-// En rad på lägeskortet: "REKORD 12 poäng · 15 rätt · 3 fel · för 2 dagar sedan".
-function runRow(label, savedRun, now) {
-  const parts = runParts(savedRun, now);
+// En rad på lägeskortet: "REKORD 12 poäng · 15 rätt · 3 fel · för 2 dagar sedan" eller "REKORD 23 i rad · …".
+function runRow(label, savedRun, now, mode) {
+  const parts = runParts(savedRun, now, mode);
   const span = (className, text) => {
     const el = document.createElement("span");
     el.className = className;
@@ -147,6 +149,9 @@ function startRun(mode, chapters) {
   $("sfRestart").hidden = !isTimed(mode);
   $("sfTimerTrack").hidden = !isTimed(mode);
   $("sfTimer").classList.toggle("sf-progress", !isTimed(mode));
+  $("sfTimer").textContent = "";
+  $("sfScoreboard").classList.toggle("sf-score-only", !mode.showCounts);
+  $("sfLiveScoreLabel").textContent = scoreLabel(mode);
   if (isTimed(mode)) {
     // Kvarvarande tid räknas från en fast sluttid, så en strypt timer i en bakgrundsflik inte förlänger provet.
     run.endAt = performance.now() + mode.timeLimitSec * 1000;
@@ -175,7 +180,7 @@ function updateTimer() {
 function updateTop() {
   const state = run.session.state();
   if (isTimed(run.mode)) updateTimer();
-  else $("sfTimer").textContent = `${state.roundPos} / ${state.roundSize}`;
+  else if (run.mode.showProgress) $("sfTimer").textContent = `${state.roundPos} / ${state.roundSize}`;
   // Poäng, rätt och fel syns hela tiden så att läraren kan se dem på avstånd.
   const tiles = scoreTiles(state);
   $("sfLiveScore").textContent = tiles.score;
@@ -205,6 +210,21 @@ function showNext() {
   }
   $("sfExplain").hidden = true;
   updateTop();
+  updateSkip();
+}
+
+// Hoppa över: bara i lägen som tillåter det, och bara innan eleven har svarat.
+function updateSkip() {
+  const button = $("sfSkip");
+  const left = run.session.state().skipsLeft;
+  button.hidden = !run.mode.skips;
+  button.textContent = `Hoppa över · ${left} kvar`;
+  button.disabled = run.locked || left === 0;
+}
+
+function skip() {
+  if (!run || run.finished || run.locked) return;
+  if (run.session.skip()) showNext();
 }
 
 function choose(answer) {
@@ -218,6 +238,7 @@ function choose(answer) {
     else if (button.dataset.answer === result.correctAnswer) button.classList.add("sf-correct");
   }
   updateTop();
+  updateSkip();
 
   if (run.mode.feedback === "flash") {
     const thisRun = run;
@@ -232,6 +253,8 @@ function choose(answer) {
   verdict.textContent = result.correct ? "Rätt!" : `Inte riktigt – rätt svar är ${ANSWER_LABELS[result.correctAnswer]}.`;
   verdict.className = `sf-explain-verdict ${result.correct ? "is-right" : "is-wrong"}`;
   renderInto($("sfExplainText"), run.current.explanation);
+  // Tar omgången slut nu (första felet i Rätt i rad) läser eleven förklaringen innan resultatet.
+  $("sfNext").textContent = run.mode.isOver(run.session.state()) ? "Se resultat" : "Nästa →";
   $("sfExplain").hidden = false;
   $("sfNext").focus();
 }
@@ -262,17 +285,26 @@ function finishRun() {
   $("sfAgain").focus();
 }
 
+function resultTitle(mode, state) {
+  if (isTimed(mode)) return "Tiden är ute!";
+  return mode.overTitle && mode.isOver(state) ? mode.overTitle : "Bra jobbat!";
+}
+
 function renderResult(state, pending, isNew) {
-  $("sfResultTitle").textContent = isTimed(run.mode) ? "Tiden är ute!" : "Bra jobbat!";
+  renderScope(run.mode, run.chapters);
+  $("sfResultTitle").textContent = resultTitle(run.mode, state);
+  $("sfResultStats").classList.toggle("sf-score-only", !run.mode.showCounts);
+  $("sfStatScoreLabel").textContent = scoreLabel(run.mode);
   $("sfStatScore").textContent = formatScore(state.score);
   $("sfStatCorrect").textContent = String(state.correct);
   $("sfStatWrong").textContent = String(state.wrong);
   $("sfRecord").hidden = !isNew;
+  renderLevels(run.mode, state.score);
 
-  const { wrong, correct, unanswered } = summarize(state.history, byId, pending);
+  const { wrong, correct, unanswered, skipped } = summarize(state.history, byId, pending, state.skipped);
   const list = $("sfResultList");
   list.textContent = "";
-  if (wrong.length + correct.length + unanswered.length === 0) {
+  if (wrong.length + correct.length + unanswered.length + skipped.length === 0) {
     const empty = document.createElement("p");
     empty.className = "sf-empty";
     empty.textContent = "Du svarade inte på några påståenden den här gången.";
@@ -283,6 +315,9 @@ function renderResult(state, pending, isNew) {
   for (const item of wrong) {
     list.appendChild(resultRow(item, "wrong", `Du: ${label(item.choice)} · Rätt: ${label(item.statement.answer)}`));
   }
+  for (const item of skipped) {
+    list.appendChild(resultRow(item, "skipped", `Hoppade över · Rätt: ${label(item.statement.answer)}`));
+  }
   for (const item of correct) {
     const line = [label(item.statement.answer), attemptLabel(item.correctOnAttempt)].filter(Boolean).join(" · ");
     list.appendChild(resultRow(item, "correct", line));
@@ -292,6 +327,50 @@ function renderResult(state, pending, isNew) {
   }
 }
 
+// Läget och kapitlen överst på resultatet. Alla kapitel med påståenden ger guldram och band.
+function renderScope(mode, chapters) {
+  const scope = describeScope({ mode, chosen: chapters, chapters: CHAPTERS, counts: COUNTS });
+  $("sfResultCard").classList.toggle("is-test", scope.isFull);
+  $("sfScopeBand").hidden = scope.band === null;
+  $("sfScopeBand").textContent = scope.band ?? "";
+  $("sfScopeBadge").textContent = scope.badge;
+  $("sfScopeCount").textContent = scope.countText;
+  const cells = $("sfScopeChapters");
+  cells.textContent = "";
+  for (const chapter of scope.chapters) {
+    const cell = document.createElement("div");
+    cell.className = `scope-cell${chapter.included ? " on" : ""}${chapter.available ? "" : " sf-scope-empty"}`;
+    cell.textContent = `${chapter.name} (${chapter.count})`;
+    cell.setAttribute("aria-label", `${chapter.name}: ${chapter.included ? "med" : "inte med"}`);
+    cells.appendChild(cell);
+  }
+}
+
+// Nivårutorna som på 1-minutstestet i tabellträningen, för lägen som har nivåer.
+function renderLevels(mode, score) {
+  $("sfLevels").hidden = !mode.levels;
+  if (!mode.levels) return;
+  const { reached, highest } = assessLevels(mode.levels, score);
+  const row = $("sfLevelsRow");
+  row.textContent = "";
+  mode.levels.forEach((level, i) => {
+    const box = document.createElement("div");
+    box.className = `level-box${reached[i] ? " reached" : ""}${i === highest ? " yours" : ""}`;
+    const add = (className, text) => {
+      const el = document.createElement("span");
+      el.className = className;
+      el.textContent = text;
+      box.appendChild(el);
+    };
+    add("level-check", reached[i] ? "✓" : "");
+    add("level-name", level.name);
+    add("level-req", levelRequirement(level));
+    if (i === highest) add("level-yours", "DIN NIVÅ");
+    row.appendChild(box);
+  });
+  $("sfLevelsHint").textContent = levelHint(mode.levels, score);
+}
+
 function resultRow(item, kind, answerLine) {
   const row = document.createElement("details");
   row.className = `sf-row sf-row-${kind}`;
@@ -299,7 +378,7 @@ function resultRow(item, kind, answerLine) {
   const summary = document.createElement("summary");
   const icon = document.createElement("span");
   icon.className = "sf-row-icon";
-  icon.textContent = { wrong: "✗", correct: "✓", unanswered: "–" }[kind];
+  icon.textContent = { wrong: "✗", correct: "✓", unanswered: "–", skipped: "»" }[kind];
   const text = document.createElement("span");
   text.className = "sf-row-text";
   renderInto(text, item.statement.text);
@@ -318,6 +397,7 @@ function resultRow(item, kind, answerLine) {
 
 for (const button of answerButtons()) button.addEventListener("click", () => choose(button.dataset.answer));
 $("sfNext").addEventListener("click", goNext);
+$("sfSkip").addEventListener("click", skip);
 $("sfQuit").addEventListener("click", finishRun);
 // Startar en ny sprint direkt. Den avbrutna räknas inte: inget rekord, ingen resultatskärm.
 $("sfRestart").addEventListener("click", () => startRun(run.mode, run.chapters));

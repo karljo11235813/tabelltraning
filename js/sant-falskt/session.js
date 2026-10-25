@@ -24,6 +24,8 @@ export function createSession({ statements, mode, rng = Math.random, now = () =>
   let correct = 0;
   let wrong = 0;
   let streak = 0;
+  let skipsLeft = mode.skips || 0;
+  const skipped = [];
 
   function refill() {
     deck = shuffle(statements, rng);
@@ -63,6 +65,8 @@ export function createSession({ statements, mode, rng = Math.random, now = () =>
       history: history.slice(),
       roundPos,
       roundSize,
+      skipsLeft,
+      skipped: skipped.slice(),
     };
     s.score = mode.score(s);
     return s;
@@ -94,6 +98,15 @@ export function createSession({ statements, mode, rng = Math.random, now = () =>
         if (mode.retryWrong) retries.push({ statement: current, dueIn: 3 + Math.floor(rng() * 3) });
       }
       return { correct: isCorrect, correctAnswer: current.answer };
+    },
+    // Går förbi det visade påståendet utan att svara: inget rätt, inget fel, sviten fortsätter.
+    // Bara så många gånger per omgång som läget tillåter (mode.skips).
+    skip() {
+      if (!current || answered || skipsLeft === 0) return false;
+      answered = true;
+      skipsLeft -= 1;
+      skipped.push(current.id);
+      return true;
     },
     pending() {
       return current && !answered ? current : null;

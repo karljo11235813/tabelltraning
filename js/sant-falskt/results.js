@@ -1,7 +1,8 @@
 // Grupperar en omgångs historik per påstående för resultatskärmen.
 // Det sista försöket avgör om påståendet räknas som rätt eller fel, och
 // försöksnumret räknas från det senaste felet (rätt, rätt = första försöket).
-export function summarize(history, byId, pending = null) {
+// Överhoppade påståenden räknas bara om de inte besvarades senare i omgången.
+export function summarize(history, byId, pending = null, skippedIds = []) {
   const groups = new Map();
   for (const entry of history) {
     if (!groups.has(entry.id)) groups.set(entry.id, []);
@@ -20,5 +21,6 @@ export function summarize(history, byId, pending = null) {
   }
 
   const unanswered = pending && !groups.has(pending.id) ? [{ statement: pending }] : [];
-  return { wrong, correct, unanswered };
+  const skipped = skippedIds.filter((id) => !groups.has(id) && byId.has(id)).map((id) => ({ statement: byId.get(id) }));
+  return { wrong, correct, unanswered, skipped };
 }

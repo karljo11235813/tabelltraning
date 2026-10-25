@@ -45,8 +45,8 @@
     </div>
     <div class="timer-bar-track" id="sfTimerTrack"><div class="timer-bar-fill" id="sfTimerBar"></div></div>
 
-    <div class="sf-scoreboard">
-      <div class="sf-tile"><div class="sf-tile-val" id="sfLiveScore">0</div><div class="sf-tile-lbl">Poäng</div></div>
+    <div class="sf-scoreboard" id="sfScoreboard">
+      <div class="sf-tile"><div class="sf-tile-val" id="sfLiveScore">0</div><div class="sf-tile-lbl" id="sfLiveScoreLabel">Poäng</div></div>
       <div class="sf-tile sf-tile-correct"><div class="sf-tile-val" id="sfLiveCorrect">0</div><div class="sf-tile-lbl">Rätt</div></div>
       <div class="sf-tile sf-tile-wrong"><div class="sf-tile-val" id="sfLiveWrong">0</div><div class="sf-tile-lbl">Fel</div></div>
     </div>
@@ -59,6 +59,7 @@
         <button type="button" class="sf-answer" data-answer="beror"><span>BEROR PÅ</span><span class="sf-key">B · 2</span></button>
         <button type="button" class="sf-answer" data-answer="falskt"><span>FALSKT</span><span class="sf-key">F · 3</span></button>
       </div>
+      <button type="button" class="sf-skip" id="sfSkip" hidden></button>
       <div class="sf-explain" id="sfExplain" hidden>
         <div class="sf-explain-verdict" id="sfVerdict"></div>
         <div class="sf-explain-text" id="sfExplainText"></div>
@@ -69,14 +70,27 @@
 
   <!-- RESULTAT -->
   <section id="sfResult" hidden>
-    <div class="result-card">
+    <div class="result-card" id="sfResultCard">
+      <div class="scope-band" id="sfScopeBand" hidden></div>
+      <div class="result-scope">
+        <div class="scope-head">
+          <span class="scope-badge" id="sfScopeBadge"></span>
+          <span class="scope-format" id="sfScopeCount"></span>
+        </div>
+        <div class="sf-scope-chapters" id="sfScopeChapters"></div>
+      </div>
       <h2 id="sfResultTitle"></h2>
-      <div class="result-stats">
-        <div class="result-stat"><div class="val" id="sfStatScore">0</div><div class="lbl">Poäng</div></div>
-        <div class="result-stat"><div class="val sf-val-correct" id="sfStatCorrect">0</div><div class="lbl">Rätt</div></div>
-        <div class="result-stat"><div class="val sf-val-wrong" id="sfStatWrong">0</div><div class="lbl">Fel</div></div>
+      <div class="result-stats" id="sfResultStats">
+        <div class="result-stat"><div class="val" id="sfStatScore">0</div><div class="lbl" id="sfStatScoreLabel">Poäng</div></div>
+        <div class="result-stat sf-stat-count"><div class="val sf-val-correct" id="sfStatCorrect">0</div><div class="lbl">Rätt</div></div>
+        <div class="result-stat sf-stat-count"><div class="val sf-val-wrong" id="sfStatWrong">0</div><div class="lbl">Fel</div></div>
       </div>
       <div class="sf-record" id="sfRecord" hidden>Nytt rekord!</div>
+      <div class="levels sf-levels" id="sfLevels" hidden>
+        <div class="levels-heading">Nivå</div>
+        <div class="levels-row" id="sfLevelsRow"></div>
+        <div class="levels-hint" id="sfLevelsHint"></div>
+      </div>
       <div class="sf-result-list" id="sfResultList"></div>
       <div class="sf-result-buttons">
         <button type="button" class="again-btn" id="sfAgain">Kör igen</button>

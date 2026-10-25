@@ -92,6 +92,11 @@ a.header-title, a.back-link { text-decoration: none; }
 }
 .sf-tile-correct .sf-tile-val { color: var(--success); }
 .sf-tile-wrong .sf-tile-val { color: var(--danger); }
+/* Lägen utan Rätt och Fel (Rätt i rad) visar bara poängrutan. */
+.sf-scoreboard.sf-score-only { grid-template-columns: 1fr; }
+.sf-score-only .sf-tile-correct,
+.sf-score-only .sf-tile-wrong,
+.sf-score-only .sf-stat-count { display: none; }
 .sf-tile-lbl {
   margin-top: 4px;
   font-size: 0.8rem;
@@ -172,6 +177,21 @@ a.header-title, a.back-link { text-decoration: none; }
   box-shadow: 0 0 0 3px var(--success-soft);
 }
 
+/* Hoppa över (Rätt i rad): diskret, så att det inte lockar mer än svarsknapparna. */
+.sf-skip {
+  margin-top: 14px;
+  background: none;
+  border: 1.5px dashed var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sf-skip:hover:not(:disabled) { border-style: solid; color: var(--text); }
+.sf-skip:disabled { cursor: default; opacity: 0.45; }
+
 .sf-explain { margin-top: 24px; padding-top: 18px; border-top: 2px solid var(--border); text-align: left; }
 .sf-explain-verdict { font-family: "Baloo 2", sans-serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; }
 .sf-explain-verdict.is-right { color: var(--success); }
@@ -185,6 +205,14 @@ a.header-title, a.back-link { text-decoration: none; }
 }
 
 /* ---------- RESULTAT ---------- */
+/* Vilka kapitel omgången använde. Guldramen (is-test) och bandet kommer från styles.css. */
+.sf-scope-chapters { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; }
+.sf-scope-chapters .scope-cell { padding: 8px 6px; line-height: 1.2; }
+.sf-scope-chapters .scope-cell.sf-scope-empty { border-style: dashed; opacity: 0.35; }
+.sf-levels .levels-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 520px) {
+  .sf-levels .levels-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .result-stat .val.sf-val-correct { color: var(--success); }
 .result-stat .val.sf-val-wrong { color: var(--danger); }
 .sf-record {
@@ -209,7 +237,8 @@ a.header-title, a.back-link { text-decoration: none; }
 .sf-row-icon { grid-row: span 2; font-weight: 800; font-size: 1.1rem; }
 .sf-row-wrong .sf-row-icon { color: var(--danger); }
 .sf-row-correct .sf-row-icon { color: var(--success); }
-.sf-row-unanswered .sf-row-icon { color: var(--text-muted); }
+.sf-row-unanswered .sf-row-icon,
+.sf-row-skipped .sf-row-icon { color: var(--text-muted); }
 .sf-row-text { font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
 .sf-row-answer { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
 .sf-row-explain { padding: 0 14px 14px calc(14px + 1.6em + 8px); line-height: 1.5; }
