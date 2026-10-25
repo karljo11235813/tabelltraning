@@ -1029,11 +1029,33 @@ startBtn.addEventListener('click', () => {
   startRound();
 });
 
+// Enter on the test setup screen starts the test, so the mouse isn't needed. Enter still
+// presses the back link, the header buttons and a format button that isn't chosen yet.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.repeat || testSetupScreen.style.display === 'none') return;
+  const el = e.target;
+  if (el === backFromTest || el.closest('header')) return;
+  if (el.matches('#testModeChoice button:not(.active)')) return;
+  e.preventDefault();
+  testStartBtn.click();
+});
+
 // Starts the same round over from scratch (same tables, operation and format).
-// The interrupted round gets no result screen.
+// The interrupted round gets no result screen. Bygg upp has its own phased flow and no restart.
+function canRestart() {
+  return running && mode !== 'build';
+}
+
 restartBtn.addEventListener('click', () => {
-  if (!running || mode === 'build') return;
-  startRound();
+  if (canRestart()) startRound();
+});
+
+// R does the same as the restart button. Cmd/Ctrl+R still reloads the page.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'r' && e.key !== 'R') return;
+  if (e.metaKey || e.ctrlKey || e.altKey || !canRestart()) return;
+  e.preventDefault(); // keep the r out of the answer box
+  if (!e.repeat) startRound();
 });
 
 againBtn.addEventListener('click', () => {
