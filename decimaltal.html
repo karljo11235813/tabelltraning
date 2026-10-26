@@ -188,14 +188,14 @@
     font-variant-numeric: tabular-nums;
     line-height: 1.3;
   }
-  /* Uppgiften och raden med rätt svar delas aldrig mellan rader. Är de för breda för
-     rutan (telefon) krymper fitToWidth dem i stället. Raden ovanför är en mening och
-     får radbrytas, men aldrig mitt i ett uttryck. */
+  /* Uppgiften och varje steg i stegen under ett fel svar delas aldrig mellan rader. Är
+     de för breda för rutan (telefon) krymper fitToWidth dem i stället. Meningar får
+     radbrytas, men aldrig mitt i ett uttryck. */
   .problem-text,
   .problem-label .katex,
-  .feedback { white-space: nowrap; }
+  .fb-step { white-space: nowrap; }
   /* Höga uttryck (\dfrac) ska ta sin fulla höjd, annars krockar de med raden ovanför
-     eller under när meningen radbryts eller svaret har två rader. */
+     eller under när meningen radbryts eller stegen står under varandra. */
   .problem-label .katex,
   .feedback .katex { display: inline-block; margin: 0.12em 0; }
   #answerInput {
@@ -250,7 +250,24 @@
     font-weight: 700;
   }
   .feedback.correct { color: var(--success); }
-  .feedback.wrong { color: var(--danger); }
+  .feedback.wrong .fb-head { color: var(--danger); }
+  /* Under ett fel svar: rätt svar, meningen som uträkning och en stege av enklare tal
+     med en kort förklaring mellan stegen. */
+  .fb-text {
+    margin-top: 10px;
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    font-weight: 600;
+  }
+  .fb-note {
+    margin-top: 10px;
+    font-size: clamp(0.9rem, 1.8vw, 1.2rem);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .fb-step {
+    font-size: clamp(1.1rem, 2.6vw, 1.8rem);
+    font-weight: 400;
+  }
 
   .btn-row {
     display: flex;
@@ -402,9 +419,179 @@
     return Math.round(givenNum * scale) === expected.m;
   }
 
-  // Each generator returns { label, tex, answerType, answer }. `tex` is LaTeX without
-  // delimiters; `label` is text that may hold \( … \) math. String.raw keeps the
-  // backslashes in the LaTeX. Every division is written as a display fraction.
+  // ---- Feedback ladders ----
+  // A wrong answer shows a ladder of simpler problems leading up to the problem, the
+  // way a teacher would at the desk: "strunta i nollorna och jämför sedan". It starts
+  // with the commas and end zeros removed and puts back one number per step, with a
+  // note on what changed and what that does to the answer. The last step is the
+  // problem itself. A step is { note, tex }; `note` is HTML that may hold \( … \) math.
+
+  const TIMES = ['', 'tio', 'hundra', 'tusen', 'tio tusen', 'hundra tusen', 'en miljon'];
+  const PARTS = ['', 'en tiondel', 'en hundradel', 'en tusendel', 'en tiotusendel', 'en hundratusendel', 'en miljondel'];
+  const UNITS = { '-3': 'tusendelar', '-2': 'hundradelar', '-1': 'tiondelar', 1: 'tiotal', 2: 'hundratal',
+    3: 'tusental', 4: 'tiotusental', 5: 'hundratusental' };
+
+  function inline(x) { return `\\(${num(x)}\\)`; }
+
+  // x as its digits without end zeros and a power of ten: 0,036 is 36 · 10^-3, 700 is 7 · 10^2.
+  function split(x) {
+    const t = trim(x);
+    let c = t.m, k = -t.d;
+    while (c !== 0 && c % 10 === 0) { c /= 10; k++; }
+    return [c, k];
+  }
+
+  function placesBetween(to, from) {
+    return Math.round(Math.log10(value(to) / value(from)));
+  }
+
+  // "tio gånger så stor", "en hundradel så stor"
+  function sizeWords(k, adjective) {
+    return k > 0 ? `${TIMES[k]} gånger så ${adjective}` : `${PARTS[-k]} så ${adjective}`;
+  }
+
+  // "0,6 är en tiondel av 6", "700 är hundra gånger så stort som 7"
+  function compareWords(to, from, k, adjective) {
+    return k > 0
+      ? `${inline(to)} är ${TIMES[k]} gånger så ${adjective} som ${inline(from)}`
+      : `${inline(to)} är ${PARTS[-k]} av ${inline(from)}`;
+  }
+
+  // Like num, but with exactly d decimals, so that the places line up: 0,40 + 0,04.
+  function numFixed(x, d) {
+    const t = trim(x);
+    const m = t.m * Math.pow(10, d - t.d);
+    const scale = Math.pow(10, d);
+    const intPart = String(Math.floor(m / scale)).replace(/\B(?=(\d{3})+(?!\d))/g, '\\,');
+    return d === 0 ? intPart : `${intPart}{,}${String(m % scale).padStart(d, '0')}`;
+  }
+
+  function sumOf(terms) {
+    return trim(terms.reduce((acc, [x, sign]) => sign > 0 ? dAdd(acc, x) : dSub(acc, x), D(0, 0)));
+  }
+
+  function sumTex(terms, show) {
+    return terms.map(([x, sign], i) => (i === 0 ? '' : sign > 0 ? ' + ' : ' - ') + show(x)).join('');
+  }
+
+  // 6 · 4 = 24, then 0,6 · 4 = 2,4, then 0,6 · 0,4 = 0,24. A factor that is a power of
+  // ten (10, 0,01) starts as 1 and the other factor stays as it is: 34 · 1 = 34.
+  function productLadder(a, b) {
+    a = trim(a); b = trim(b);
+    const [ca] = split(a), [cb] = split(b);
+    const a0 = ca === 1 ? D(1, 0) : cb === 1 ? a : D(ca, 0);
+    const b0 = cb === 1 ? D(1, 0) : ca === 1 ? b : D(cb, 0);
+    const line = (x, y) => String.raw`${num(x)} \cdot ${num(y)} = ${num(trim(dMul(x, y)))}`;
+    const steps = [{ tex: line(a0, b0) }];
+    let previous = 0;
+    const change = (from, to, x, y) => {
+      const k = placesBetween(to, from);
+      if (k === 0) return;
+      const again = k === previous ? ' igen' : '';
+      previous = k;
+      steps.push({ note: `${compareWords(to, from, k, 'stort')}, så produkten blir ${sizeWords(k, 'stor')}${again}.`, tex: line(x, y) });
+    };
+    change(a0, a, a, b0);
+    change(b0, b, a, b);
+    return steps;
+  }
+
+  function fracLine(t, n, q) {
+    return String.raw`\dfrac{${num(t)}}{${num(n)}} = ${num(q)}`;
+  }
+
+  // From t0/n0 = q0 to t/n, the numerator first. The denominator works the other way
+  // round: a tenth as big a denominator gives a quotient ten times as big.
+  function quotientSteps(t0, n0, q0, t, n) {
+    const kt = placesBetween(t, t0), kn = placesBetween(n, n0);
+    if (kt !== 0 && kt === kn) {
+      return [{ note: `Täljaren och nämnaren är båda ${sizeWords(kt, 'stora')}, så kvoten är densamma.`, tex: fracLine(t, n, q0) }];
+    }
+    const steps = [];
+    let q = q0;
+    if (kt !== 0) {
+      q = trim(dMulPow10(q, kt));
+      steps.push({ note: `Täljaren ${compareWords(t, t0, kt, 'stor')}, så kvoten blir ${sizeWords(kt, 'stor')}.`, tex: fracLine(t, n0, q) });
+    }
+    if (kn !== 0) {
+      q = trim(dMulPow10(q, -kn));
+      steps.push({ note: `Nämnaren ${compareWords(n, n0, kn, 'stor')}, så kvoten blir ${sizeWords(-kn, 'stor')}.`, tex: fracLine(t, n, q) });
+    }
+    return steps;
+  }
+
+  // Starts from the times-table fact behind the quotient, 72/9 = 8 for 0,072/0,9, or
+  // from t/1 when the denominator is a power of ten.
+  function quotientLadder(t, n, answer) {
+    t = trim(t); n = trim(n); answer = trim(answer);
+    const [cn] = split(n), [cq] = split(answer);
+    const [t0, n0, q0] = cn === 1 ? [t, D(1, 0), t] : [D(cn * cq, 0), D(cn, 0), D(cq, 0)];
+    return [{ tex: fracLine(t0, n0, q0) }, ...quotientSteps(t0, n0, q0, t, n)];
+  }
+
+  // Counts everything in the smallest place, 40 + 4 = 44 hundradelar, then writes the
+  // numbers with equally many decimals: 0,40 + 0,04 = 0,44. Counting is skipped when the
+  // counts get too big to help (500 - 0,08 would be 50 000 - 8 hundradelar).
+  function sumLadder(terms) {
+    terms = terms.map(([x, sign]) => [trim(x), sign]);
+    const result = sumOf(terms);
+    const u = Math.min(...terms.map(([x]) => split(x)[1]));
+    const decimals = Math.max(...terms.map(([x]) => x.d));
+    const last = `${sumTex(terms, x => numFixed(x, decimals))} = ${num(result)}`;
+    const counts = terms.map(([x, sign]) => [trim(dMulPow10(x, -u)), sign]);
+    const resultCount = trim(dMulPow10(result, -u));
+    if (u !== 0 && [...counts.map(([c]) => c), resultCount].every(c => c.d === 0 && c.m < 1e4)) {
+      return [
+        { note: `Räkna i ${UNITS[u]}.`, tex: `${sumTex(counts, num)} = ${num(resultCount)}` },
+        { note: `${inline(resultCount)} ${UNITS[u]} är ${inline(result)}.`, tex: last },
+      ];
+    }
+    if (terms.some(([x]) => x.d < decimals)) return [{ note: 'Skriv talen med lika många decimaler.', tex: last }];
+    return [{ tex: last }];
+  }
+
+  // 50 · 1 = 50, and 0,8 is less than 1, so 50 · 0,8 is less than 50.
+  function comparisonLadder(n, factor, multiply) {
+    const N = D(n, 0), less = value(factor) < 1;
+    const larger = multiply ? !less : less;
+    let shown;
+    if (multiply) {
+      shown = '= ' + num(trim(dMul(N, factor)));
+    } else {
+      // n / (m / 10^d) = n · 10^d / m, exact when it has at most three decimals.
+      const top = n * Math.pow(10, factor.d) * 1000;
+      shown = top % factor.m === 0
+        ? '= ' + num(trim(D(top / factor.m, 3)))
+        : String.raw`\approx ` + num(trim(D(Math.round(top / factor.m / 100), 1)));
+    }
+    const write = (f) => multiply ? String.raw`${n} \cdot ${num(f)}` : String.raw`\dfrac{${n}}{${num(f)}}`;
+    return [
+      { tex: `${write(D(1, 0))} = ${n}` },
+      {
+        note: `${inline(factor)} är ${less ? 'mindre' : 'större'} än \\(1\\), så ${multiply ? 'produkten' : 'kvoten'} blir ${larger ? 'större' : 'mindre'} än \\(${n}\\).`,
+        tex: `${write(factor)} ${shown}`,
+      },
+    ];
+  }
+
+  // A problem made from its calculation, with the ladder that goes with it.
+  function sumProblem(terms) {
+    return { tex: sumTex(terms, num) + ' =', answerType: 'decimal', answer: sumOf(terms), ladder: sumLadder(terms) };
+  }
+
+  function productProblem(a, b) {
+    return { tex: String.raw`${num(a)} \cdot ${num(b)} =`, answerType: 'decimal', answer: dMul(a, b), ladder: productLadder(a, b) };
+  }
+
+  function quotientProblem(t, n, answer) {
+    return { tex: String.raw`\dfrac{${num(t)}}{${num(n)}} =`, answerType: 'decimal', answer, ladder: quotientLadder(t, n, answer) };
+  }
+
+  // Each generator returns { label, tex, answerType, answer, ladder, intro }. `tex` is
+  // LaTeX without delimiters; `label` and `intro` are text that may hold \( … \) math.
+  // String.raw keeps the backslashes in the LaTeX. Every division is written as a
+  // display fraction. `intro` (word problems) turns the sentence into a calculation
+  // above the ladder.
   // answerType 'decimal' -> answer is a {m,d} object, checked via checkDecimalAnswer.
   // answerType 'choice' -> answer is the data-answer of the right choice button.
 
@@ -413,25 +600,24 @@
     switch (variant) {
       case 1: { // 0,8 + 0,6  (two 1-decimal numbers)
         const a = D(randInt(1, 9), 1), b = D(randInt(1, 9), 1);
-        return { tex: `${num(a)} + ${num(b)} =`, answerType: 'decimal', answer: dAdd(a, b) };
+        return sumProblem([[a, 1], [b, 1]]);
       }
       case 2: { // 1 − 0,3  (whole number minus a <1 decimal)
         const b = D(randInt(1, 9), 1);
-        const a = D(1, 0);
-        return { tex: `1 - ${num(b)} =`, answerType: 'decimal', answer: dSub(a, b) };
+        return sumProblem([[D(1, 0), 1], [b, -1]]);
       }
       case 3: { // 0,4 + 0,04  (1-decimal + 2-decimal)
         const a = D(randInt(1, 9), 1), b = D(randInt(1, 9), 2);
-        return { tex: `${num(a)} + ${num(b)} =`, answerType: 'decimal', answer: dAdd(a, b) };
+        return sumProblem([[a, 1], [b, 1]]);
       }
       case 4: { // 1,2 − 0,25  (2-decimal subtraction, a > b)
         const b = D(randInt(10, 40), 2);
         const a = D(b.m + randInt(1, 20) * 5, 2);
-        return { tex: `${num(a)} - ${num(b)} =`, answerType: 'decimal', answer: dSub(a, b) };
+        return sumProblem([[a, 1], [b, -1]]);
       }
       default: { // 0,85 + 0,9  (2-decimal + 1-decimal)
         const a = D(randInt(10, 95), 2), b = D(randInt(1, 9), 1);
-        return { tex: `${num(a)} + ${num(b)} =`, answerType: 'decimal', answer: dAdd(a, b) };
+        return sumProblem([[a, 1], [b, 1]]);
       }
     }
   }
@@ -441,24 +627,24 @@
     switch (variant) {
       case 1: { // 10 · 3,24
         const x = D(randInt(105, 995), 2);
-        return { tex: String.raw`10 \cdot ${num(x)} =`, answerType: 'decimal', answer: dMulPow10(x, 1) };
+        return productProblem(D(10, 0), x);
       }
       case 2: { // 100 · 3,2 or 100 · 3,24
         const x = D(randInt(11, 99), pick([1, 2]));
-        return { tex: String.raw`100 \cdot ${num(x)} =`, answerType: 'decimal', answer: dMulPow10(x, 2) };
+        return productProblem(D(100, 0), x);
       }
       case 3: { // 1 000 · 0,35 or 1 000 · 0,065
         const d = pick([2, 3]);
         const x = D(randInt(Math.pow(10, d - 2), Math.pow(10, d) - 1), d);
-        return { tex: String.raw`1\,000 \cdot ${num(x)} =`, answerType: 'decimal', answer: dMulPow10(x, 3) };
+        return productProblem(D(1000, 0), x);
       }
       case 4: { // 84,3 / 10  (1-decimal x -> 2-decimal result, matches worksheet)
         const x = D(randInt(15, 995), 1);
-        return { tex: String.raw`\dfrac{${num(x)}}{10} =`, answerType: 'decimal', answer: dMulPow10(x, -1) };
+        return quotientProblem(x, D(10, 0), dMulPow10(x, -1));
       }
       default: { // 372 / 100 or 4,5 / 100  (0- or 1-decimal x -> at most 3-decimal result)
         const x = D(randInt(15, 995), pick([0, 1]));
-        return { tex: String.raw`\dfrac{${num(x)}}{100} =`, answerType: 'decimal', answer: dMulPow10(x, -2) };
+        return quotientProblem(x, D(100, 0), dMulPow10(x, -2));
       }
     }
   }
@@ -470,27 +656,27 @@
     switch (variant) {
       case 1: { // 34 · 0,1 or 3,4 · 0,1
         const x = D(randInt(15, 995), pick([0, 1]));
-        return { tex: String.raw`${num(x)} \cdot 0{,}1 =`, answerType: 'decimal', answer: dMulPow10(x, -1) };
+        return productProblem(x, D(1, 1));
       }
       case 2: { // 250 · 0,01 or 4,5 · 0,01
         const x = D(randInt(15, 995), pick([0, 1]));
-        return { tex: String.raw`${num(x)} \cdot 0{,}01 =`, answerType: 'decimal', answer: dMulPow10(x, -2) };
+        return productProblem(x, D(1, 2));
       }
       case 3: { // 3 400 · 0,001 or 65 · 0,001
         const x = D(randInt(15, 9995), 0);
-        return { tex: String.raw`${num(x)} \cdot 0{,}001 =`, answerType: 'decimal', answer: dMulPow10(x, -3) };
+        return productProblem(x, D(1, 3));
       }
       case 4: { // 7 / 0,1 or 3,47 / 0,1
         const x = D(randInt(15, 995), pick([0, 1, 2]));
-        return { tex: String.raw`\dfrac{${num(x)}}{0{,}1} =`, answerType: 'decimal', answer: dMulPow10(x, 1) };
+        return quotientProblem(x, D(1, 1), dMulPow10(x, 1));
       }
       case 5: { // 0,345 / 0,01 or 2,5 / 0,01
         const x = D(randInt(15, 995), pick([1, 2, 3]));
-        return { tex: String.raw`\dfrac{${num(x)}}{0{,}01} =`, answerType: 'decimal', answer: dMulPow10(x, 2) };
+        return quotientProblem(x, D(1, 2), dMulPow10(x, 2));
       }
       default: { // 0,045 / 0,001 or 2,15 / 0,001
         const x = D(randInt(15, 995), pick([2, 3]));
-        return { tex: String.raw`\dfrac{${num(x)}}{0{,}001} =`, answerType: 'decimal', answer: dMulPow10(x, 3) };
+        return quotientProblem(x, D(1, 3), dMulPow10(x, 3));
       }
     }
   }
@@ -499,24 +685,19 @@
     const variant = randInt(1, 5);
     switch (variant) {
       case 1: { // 0,6 · 0,4
-        const a = D(randInt(1, 9), 1), b = D(randInt(1, 9), 1);
-        return { tex: String.raw`${num(a)} \cdot ${num(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+        return productProblem(D(randInt(1, 9), 1), D(randInt(1, 9), 1));
       }
       case 2: { // 5 · 0,7
-        const a = D(randInt(2, 9), 0), b = D(randInt(1, 9), 1);
-        return { tex: String.raw`${num(a)} \cdot ${num(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+        return productProblem(D(randInt(2, 9), 0), D(randInt(1, 9), 1));
       }
       case 3: { // 6 · 0,08
-        const a = D(randInt(2, 9), 0), b = D(randInt(1, 9), 2);
-        return { tex: String.raw`${num(a)} \cdot ${num(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+        return productProblem(D(randInt(2, 9), 0), D(randInt(1, 9), 2));
       }
       case 4: { // 30 · 0,7  (multiple of ten times a 1-decimal)
-        const a = D(randInt(2, 9) * 10, 0), b = D(randInt(1, 9), 1);
-        return { tex: String.raw`${num(a)} \cdot ${num(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+        return productProblem(D(randInt(2, 9) * 10, 0), D(randInt(1, 9), 1));
       }
       default: { // 0,04 · 3 000
-        const a = D(randInt(1, 9), 2), b = D(randInt(2, 9) * 1000, 0);
-        return { tex: String.raw`${num(a)} \cdot ${num(b)} =`, answerType: 'decimal', answer: dMul(a, b) };
+        return productProblem(D(randInt(1, 9), 2), D(randInt(2, 9) * 1000, 0));
       }
     }
   }
@@ -527,14 +708,12 @@
       // Integer / round-integer, e.g. 360/60 = 6, 9000/3000 = 3, 5600/800 = 7
       const divisor = D(pick([20, 30, 40, 50, 60, 70, 80, 90, 200, 300, 400, 500, 600, 700, 800, 900, 2000, 3000, 4000, 5000]), 0);
       const quotient = randInt(2, 9);
-      const dividend = D(divisor.m * quotient, 0);
-      return { tex: String.raw`\dfrac{${num(dividend)}}{${num(divisor)}} =`, answerType: 'decimal', answer: D(quotient, 0) };
+      return quotientProblem(D(divisor.m * quotient, 0), divisor, D(quotient, 0));
     }
     // divisor is a decimal < 1, e.g. 1/0,1 = 10, 3/0,6 = 5, 5/0,01 = 500, 36/0,9 = 40
     const divisor = D(randInt(1, 9), pick([1, 2]));
     const quotient = randInt(2, 40);
-    const dividend = dMul(D(quotient, 0), divisor);
-    return { tex: String.raw`\dfrac{${num(dividend)}}{${num(divisor)}} =`, answerType: 'decimal', answer: D(quotient, 0) };
+    return quotientProblem(dMul(D(quotient, 0), divisor), divisor, D(quotient, 0));
   }
 
   function genComparison() {
@@ -559,6 +738,7 @@
       tex: tex,
       answerType: 'choice',
       answer: larger ? 'större' : 'mindre',
+      ladder: comparisonLadder(n, trim(factor), useMultiply),
     };
   }
 
@@ -589,11 +769,18 @@
       q = pick([-2, -1, 0, 1]);
     } while (Math.abs(p - q) > 1);
 
+    const numerator = trim(dMulPow10(product, p));
+    const denominator = trim(dMulPow10(D(divisor, 0), q));
     return {
       label: String.raw`Du vet att \(${a} \cdot ${b} = ${num(product)}\). Hur mycket är då:`,
-      tex: String.raw`\dfrac{${num(dMulPow10(product, p))}}{${num(dMulPow10(D(divisor, 0), q))}} =`,
+      tex: String.raw`\dfrac{${num(numerator)}}{${num(denominator)}} =`,
       answerType: 'decimal',
       answer: dMulPow10(D(quotient, 0), p - q),
+      ladder: [
+        { tex: String.raw`${a} \cdot ${b} = ${num(product)}` },
+        { note: 'Division är multiplikation baklänges.', tex: fracLine(product, D(divisor, 0), D(quotient, 0)) },
+        ...quotientSteps(product, D(divisor, 0), D(quotient, 0), numerator, denominator),
+      ],
     };
   }
 
@@ -611,8 +798,8 @@
       q = pick([-1, 0, 1]);
     } while (p === 0 && q === 0);
 
-    const scaledNumerator = dMulPow10(numerator0, p);
-    const scaledDenominator = dMulPow10(denom0, q);
+    const scaledNumerator = trim(dMulPow10(numerator0, p));
+    const scaledDenominator = trim(dMulPow10(denom0, q));
     const answer = dMulPow10(quot0, p - q);
 
     return {
@@ -620,6 +807,10 @@
       tex: String.raw`\dfrac{${num(scaledNumerator)}}{${num(scaledDenominator)}} =`,
       answerType: 'decimal',
       answer: answer,
+      ladder: [
+        { tex: fracLine(numerator0, denom0, quot0) },
+        ...quotientSteps(numerator0, denom0, quot0, scaledNumerator, scaledDenominator),
+      ],
     };
   }
 
@@ -634,10 +825,10 @@
   const TENS = ['', '', 'tjugo', 'trettio', 'fyrtio', 'femtio', 'sextio', 'sjuttio', 'åttio', 'nittio'];
   const PLACE_WORDS = [null, ['tiondel', 'tiondelar'], ['hundradel', 'hundradelar'], ['tusendel', 'tusendelar']];
   const OPERATIONS = [
-    { word: 'summan', run: dAdd, tex: (a, b) => `${num(a)} + ${num(b)}` },
-    { word: 'differensen', run: dSub, tex: (a, b) => `${num(a)} - ${num(b)}` },
-    { word: 'produkten', run: dMul, tex: (a, b) => String.raw`${num(a)} \cdot ${num(b)}` },
-    { word: 'kvoten', tex: (a, b) => String.raw`\dfrac{${num(a)}}{${num(b)}}` },
+    { word: 'summan', run: dAdd, tex: (a, b) => `${num(a)} + ${num(b)}`, ladder: (a, b) => sumLadder([[a, 1], [b, 1]]) },
+    { word: 'differensen', run: dSub, tex: (a, b) => `${num(a)} - ${num(b)}`, ladder: (a, b) => sumLadder([[a, 1], [b, -1]]) },
+    { word: 'produkten', run: dMul, tex: (a, b) => String.raw`${num(a)} \cdot ${num(b)}`, ladder: (a, b) => productLadder(a, b) },
+    { word: 'kvoten', tex: (a, b) => String.raw`\dfrac{${num(a)}}{${num(b)}}`, ladder: (a, b, q) => quotientLadder(a, b, q) },
   ];
 
   function wordsBelow1000(n) {
@@ -739,8 +930,9 @@
       tex: '',
       answerType: 'decimal',
       answer: answer,
-      // Shown when the answer is wrong: the words translated into a calculation.
-      explain: [`${op.tex(a, b)} = ${num(answer)}`],
+      // Shown when the answer is wrong: the words turned into a calculation.
+      intro: `${op.word[0].toUpperCase()}${op.word.slice(1)} av ${inline(a)} och ${inline(b)} är \\(${op.tex(a, b)}\\).`,
+      ladder: op.ladder(a, b, answer),
     };
   }
 
@@ -784,8 +976,14 @@
     return [placed(k1, e), placed(k2, e)];
   }
 
-  function abstractProblem(label, answer, relation, solution) {
-    return { label, tex: '', answerType: 'decimal', answer: trim(answer), explain: [relation, solution] };
+  // `relation` is the sentence as an equation with a box for the missing number and
+  // `setup` how to get the box; the ladder then works out `setup`.
+  function abstractProblem(label, answer, relation, setup, ladder) {
+    return {
+      label, tex: '', answerType: 'decimal', answer: trim(answer),
+      intro: String.raw`\(${relation}\), så \(\square = ${setup}\).`,
+      ladder,
+    };
   }
 
   function genAbstract() {
@@ -796,56 +994,63 @@
         return abstractProblem(
           `Produkten av två tal är ${n(p)}. Den ena faktorn är ${n(a)}. Vilken är den andra faktorn?`, b,
           String.raw`${num(a)} \cdot \square = ${num(p)}`,
-          String.raw`\square = \dfrac{${num(p)}}{${num(a)}} = ${num(b)}`);
+          String.raw`\dfrac{${num(p)}}{${num(a)}}`,
+          quotientLadder(p, a, b));
       }
       case 2: { // Summan av två tal är 5 000. Det ena talet är 3 750.
         const [s, a] = roundAndPart();
-        const b = dSub(s, a);
+        const terms = [[s, 1], [a, -1]];
         return abstractProblem(
-          `Summan av två tal är ${n(s)}. Det ena talet är ${n(a)}. Vilket är det andra talet?`, b,
+          `Summan av två tal är ${n(s)}. Det ena talet är ${n(a)}. Vilket är det andra talet?`, sumOf(terms),
           String.raw`${num(a)} + \square = ${num(s)}`,
-          String.raw`\square = ${num(s)} - ${num(a)} = ${num(b)}`);
+          sumTex(terms, num),
+          sumLadder(terms));
       }
       case 3: { // Summan av tre tal är 10 000. Två av talen är 4 200 och 3 300.
         const c = randInt(1, 9), e = randInt(-1, 4);
         const s = placed(c, e);
         let a, b;
         do { [a, b] = twoDigitPair(e - 2); } while (value(dAdd(a, b)) >= value(s));
-        const third = dSub(dSub(s, a), b);
+        const terms = [[s, 1], [a, -1], [b, -1]];
         return abstractProblem(
-          `Summan av tre tal är ${n(s)}. Två av talen är ${n(a)} och ${n(b)}. Vilket är det tredje talet?`, third,
+          `Summan av tre tal är ${n(s)}. Två av talen är ${n(a)} och ${n(b)}. Vilket är det tredje talet?`, sumOf(terms),
           String.raw`${num(a)} + ${num(b)} + \square = ${num(s)}`,
-          String.raw`\square = ${num(s)} - ${num(a)} - ${num(b)} = ${num(third)}`);
+          sumTex(terms, num),
+          sumLadder(terms));
       }
       case 4: { // Differensen mellan två tal är 620. Det större talet är 900.
         const [larger, d] = roundAndPart();
-        const smaller = dSub(larger, d);
+        const terms = [[larger, 1], [d, -1]];
         return abstractProblem(
-          `Differensen mellan två tal är ${n(d)}. Det större talet är ${n(larger)}. Vilket är det mindre talet?`, smaller,
+          `Differensen mellan två tal är ${n(d)}. Det större talet är ${n(larger)}. Vilket är det mindre talet?`, sumOf(terms),
           String.raw`${num(larger)} - \square = ${num(d)}`,
-          String.raw`\square = ${num(larger)} - ${num(d)} = ${num(smaller)}`);
+          sumTex(terms, num),
+          sumLadder(terms));
       }
       case 5: { // Differensen mellan två tal är 620. Det mindre talet är 280.
         const [smaller, d] = twoDigitPair(randInt(-3, 2));
-        const larger = dAdd(smaller, d);
+        const terms = [[smaller, 1], [d, 1]];
         return abstractProblem(
-          `Differensen mellan två tal är ${n(d)}. Det mindre talet är ${n(smaller)}. Vilket är det större talet?`, larger,
+          `Differensen mellan två tal är ${n(d)}. Det mindre talet är ${n(smaller)}. Vilket är det större talet?`, sumOf(terms),
           String.raw`\square - ${num(smaller)} = ${num(d)}`,
-          String.raw`\square = ${num(smaller)} + ${num(d)} = ${num(larger)}`);
+          sumTex(terms, num),
+          sumLadder(terms));
       }
       case 6: { // Kvoten av två tal är 25. Täljaren är 3 000. Vilken är nämnaren?
         const [denominator, quotient, numerator] = friendlyFactors();
         return abstractProblem(
           `Kvoten av två tal är ${n(quotient)}. Täljaren är ${n(numerator)}. Vilken är nämnaren?`, denominator,
           String.raw`\dfrac{${num(numerator)}}{\square} = ${num(quotient)}`,
-          String.raw`\square = \dfrac{${num(numerator)}}{${num(quotient)}} = ${num(denominator)}`);
+          String.raw`\dfrac{${num(numerator)}}{${num(quotient)}}`,
+          quotientLadder(numerator, quotient, denominator));
       }
       default: { // Kvoten av två tal är 0,08. Nämnaren är 50. Vilken är täljaren?
         const [denominator, quotient, numerator] = friendlyFactors();
         return abstractProblem(
           `Kvoten av två tal är ${n(quotient)}. Nämnaren är ${n(denominator)}. Vilken är täljaren?`, numerator,
           String.raw`\dfrac{\square}{${num(denominator)}} = ${num(quotient)}`,
-          String.raw`\square = ${num(quotient)} \cdot ${num(denominator)} = ${num(numerator)}`);
+          String.raw`${num(quotient)} \cdot ${num(denominator)}`,
+          productLadder(quotient, denominator));
       }
     }
   }
@@ -916,6 +1121,19 @@
     return current.answerType === 'choice' ? current.answer : '\\(' + num(current.answer) + '\\)';
   }
 
+  // Under a wrong answer: the right answer, the sentence as a calculation (word
+  // problems), and the ladder, each in its own block. A note between two steps gets
+  // an arrow; a note before the first step introduces it.
+  function feedbackHtml(problem) {
+    const parts = [`<div class="fb-head">Fel. Rätt svar är ${displayAnswer(problem)}.</div>`];
+    if (problem.intro) parts.push(`<div class="fb-text">${problem.intro}</div>`);
+    problem.ladder.forEach((step, i) => {
+      if (step.note) parts.push(`<div class="fb-note">${i > 0 ? '↓ ' : ''}${step.note}</div>`);
+      parts.push(`<div class="fb-step">\\(${step.tex}\\)</div>`);
+    });
+    return parts.join('');
+  }
+
   function newProblem() {
     current = pickGenerator();
     renderMath(problemLabel, current.label || '');
@@ -927,7 +1145,6 @@
     answerInput.value = '';
     feedback.textContent = '';
     feedback.className = 'feedback';
-    feedback.style.fontSize = '';
     problemBox.classList.remove('flash-correct', 'flash-wrong');
     awaitingNext = false;
 
@@ -984,13 +1201,10 @@
       feedback.className = 'feedback correct';
     } else {
       problemBox.classList.add('flash-wrong');
-      // `explain` is LaTeX lines that show how to get the answer; each gets its own line.
-      renderMath(feedback, current.explain
-        ? 'Fel. ' + current.explain.map(line => '\\(' + line + '\\)').join('<br>')
-        : 'Fel. Rätt svar är ' + displayAnswer(current) + '.');
+      renderMath(feedback, feedbackHtml(current));
       feedback.className = 'feedback wrong';
+      feedback.querySelectorAll('.fb-step').forEach(fitToWidth);
     }
-    fitToWidth(feedback);
     awaitingNext = true;
     actionBtn.textContent = 'Nästa';
     actionBtn.style.visibility = '';
@@ -1022,7 +1236,7 @@
   // arrive after the first problem is drawn.
   function fitLines() {
     fitToWidth(problemText);
-    fitToWidth(feedback);
+    feedback.querySelectorAll('.fb-step').forEach(fitToWidth);
   }
   window.addEventListener('resize', fitLines);
   document.fonts.addEventListener('loadingdone', fitLines);
