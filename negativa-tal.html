@@ -187,11 +187,19 @@
     margin-bottom: 18px;
     font-variant-numeric: tabular-nums;
     line-height: 1.3;
-    overflow-wrap: anywhere;
   }
   .problem-text .katex-display,
   .problem-label .katex-display { overflow-x: auto; overflow-y: hidden; }
+  /* Uppgiften och raden ovanför den delas aldrig mellan rader. Är en rad för bred för
+     rutan (telefon) krymper fitToWidth den i stället. */
+  .problem-text,
+  .problem-label { white-space: nowrap; }
+  /* type="number" ger telefonen ett tangentbord med minustecken; stegpilarna behövs inte. */
+  #answerInput::-webkit-outer-spin-button,
+  #answerInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   #answerInput {
+    appearance: textfield;
+    -moz-appearance: textfield;
     width: clamp(150px, 24vw, 260px);
     font-family: "Baloo 2", sans-serif;
     font-size: clamp(1.7rem, 4.2vw, 2.8rem);
@@ -296,7 +304,7 @@
     <div class="problem-box" id="problemBox">
       <div class="problem-label" id="problemLabel"></div>
       <div class="problem-text" id="problemText">–</div>
-      <input type="text" inputmode="numeric" id="answerInput" autocomplete="off" aria-label="Svar">
+      <input type="number" id="answerInput" autocomplete="off" aria-label="Svar">
       <div class="feedback" id="feedback"></div>
     </div>
 
@@ -493,6 +501,23 @@
     }
   }
 
+  // The CSS keeps the question and the line above it on one line each, so a line
+  // that is wider than its box (long ones on a phone) gets a smaller font instead.
+  // KaTeX sizes in em, so the width scales with the font size.
+  function fitToWidth(element) {
+    element.style.fontSize = '';
+    const room = element.clientWidth;
+    const needed = element.scrollWidth;
+    if (needed <= room) return;
+    const size = parseFloat(getComputedStyle(element).fontSize);
+    element.style.fontSize = Math.floor(size * room / needed) + 'px';
+  }
+
+  function fitProblem() {
+    fitToWidth(problemLabel);
+    fitToWidth(problemText);
+  }
+
   function pickGenerator() {
     const key = currentCategory === 'mixed'
       ? CATEGORY_KEYS[randInt(0, CATEGORY_KEYS.length - 1)]
@@ -505,6 +530,7 @@
     renderMath(problemLabel, current.label || '');
     problemLabel.style.display = current.label ? 'block' : 'none';
     renderMath(problemText, '\\(' + current.tex + '\\)');
+    fitProblem();
     answerInput.value = '';
     feedback.textContent = '';
     feedback.className = 'feedback';
@@ -559,6 +585,11 @@
       checkAnswer();
     }
   });
+
+  // The room changes when the phone turns, and the width when KaTeX's fonts
+  // arrive after the first problem is drawn.
+  window.addEventListener('resize', fitProblem);
+  document.fonts.addEventListener('loadingdone', fitProblem);
 
   // KaTeX loads with defer, so it is ready only once the page has parsed.
   document.addEventListener('DOMContentLoaded', newProblem);
