@@ -270,18 +270,7 @@
     outline: 3px solid var(--accent-strong);
     outline-offset: 2px;
   }
-  .btn-row button.secondary {
-    background: var(--surface);
-    color: var(--accent);
-    border: 2px solid var(--accent);
-  }
 
-  .hint {
-    font-size: clamp(0.95rem, 2vw, 1.35rem);
-    color: var(--text-muted);
-    margin-top: 14px;
-    text-align: center;
-  }
   /* Sidans bild bredvid rubriken, samma bild som på startsidans kort. */
   .page-title-row {
     display: flex;
@@ -337,11 +326,9 @@
     </div>
 
     <div class="btn-row">
-      <button type="button" id="checkBtn">Kontrollera</button>
-      <button type="button" class="secondary" id="nextBtn">Nästa</button>
+      <button type="button" id="actionBtn">Kontrollera</button>
     </div>
 
-    <div class="hint" id="hint">Skriv ditt svar med decimalkomma, t.ex. \(3{,}5\), och tryck Enter, eller klicka Kontrollera. Vid ”Större eller mindre?”: välj Större eller Mindre.</div>
   </div>
 </main>
 
@@ -568,7 +555,43 @@
     };
   }
 
+  // Skala om: a known fact, then a division whose numerator and denominator are
+  // shifted by powers of ten. Half start from a quotient, half from a product.
   function genScale() {
+    return Math.random() < 0.5 ? scaleFromQuotient() : scaleFromProduct();
+  }
+
+  // Du vet att 35 · 12 = 420. Hur mycket är då 42 / 1,2 or 4,2 / 0,35? The division
+  // runs the product backwards by either factor, so the answer is the other factor,
+  // moved at most one decimal place.
+  function scaleFromProduct() {
+    const factor = () => {
+      let n;
+      do { n = randInt(11, 49); } while (n % 10 === 0);
+      return n;
+    };
+    const a = factor();
+    let b;
+    do { b = factor(); } while (b === a);
+    const product = D(a * b, 0);
+    const [divisor, quotient] = Math.random() < 0.5 ? [a, b] : [b, a];
+
+    let p, q;
+    do {
+      p = pick([-2, -1, 0, 1]);
+      q = pick([-2, -1, 0, 1]);
+    } while (Math.abs(p - q) > 1);
+
+    return {
+      label: String.raw`Du vet att \(${a} \cdot ${b} = ${num(product)}\). Hur mycket är då:`,
+      tex: String.raw`\dfrac{${num(dMulPow10(product, p))}}{${num(dMulPow10(D(divisor, 0), q))}} =`,
+      answerType: 'decimal',
+      answer: dMulPow10(D(quotient, 0), p - q),
+    };
+  }
+
+  // Du vet att 360 / 60 = 6. Hur mycket är då 36 / 6?
+  function scaleFromQuotient() {
     const denominator0 = pick([2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 25, 30, 40, 50]);
     const quotient0 = randInt(2, 50);
     const numerator0 = D(denominator0 * quotient0, 0);
@@ -620,9 +643,7 @@
   const choiceAnswers = document.getElementById('choiceAnswers');
   const choiceButtons = choiceAnswers.querySelectorAll('button');
   const feedback = document.getElementById('feedback');
-  const checkBtn = document.getElementById('checkBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const hint = document.getElementById('hint');
+  const actionBtn = document.getElementById('actionBtn');
 
   // Puts HTML into an element and renders its \( … \) math with KaTeX.
   // Without KaTeX (e.g. offline) the raw LaTeX shows, but the page works.
@@ -671,23 +692,26 @@
     problemBox.classList.remove('flash-correct', 'flash-wrong');
     awaitingNext = false;
 
-    // Större eller mindre? is answered with the two buttons instead of the box.
+    // Större eller mindre? is answered with the two buttons instead of the box, so the
+    // button below stays hidden until a choice is made.
     const isChoice = current.answerType === 'choice';
     answerInput.hidden = isChoice;
-    checkBtn.hidden = isChoice;
     choiceAnswers.hidden = !isChoice;
     choiceButtons.forEach(b => {
       b.disabled = false;
       b.classList.remove('chosen-right', 'chosen-wrong');
     });
+    actionBtn.textContent = 'Kontrollera';
+    actionBtn.style.visibility = isChoice ? 'hidden' : '';
     if (isChoice) {
-      // Nothing keeps the focus, so an extra Enter on Nästa can't skip this question.
+      // Nothing keeps the focus, so an extra Enter can't skip this question.
       if (document.activeElement) document.activeElement.blur();
     } else {
       answerInput.focus();
     }
   }
 
+  // The button and Enter both check the answer and, once it is checked, go on.
   function checkAnswer() {
     if (awaitingNext) {
       newProblem();
@@ -704,7 +728,7 @@
     choiceButtons.forEach(b => { b.disabled = true; });
     button.classList.add(isCorrect ? 'chosen-right' : 'chosen-wrong');
     showResult(isCorrect);
-    nextBtn.focus(); // so Enter goes on to the next question
+    actionBtn.focus(); // so Enter goes on to the next question
   }
 
   function showResult(isCorrect) {
@@ -725,6 +749,8 @@
       feedback.className = 'feedback wrong';
     }
     awaitingNext = true;
+    actionBtn.textContent = 'Nästa';
+    actionBtn.style.visibility = '';
   }
 
   choiceAnswers.addEventListener('click', (e) => {
@@ -740,8 +766,7 @@
     newProblem();
   });
 
-  checkBtn.addEventListener('click', checkAnswer);
-  nextBtn.addEventListener('click', newProblem);
+  actionBtn.addEventListener('click', checkAnswer);
 
   answerInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.repeat) {
@@ -756,10 +781,7 @@
   document.fonts.addEventListener('loadingdone', () => fitToWidth(problemText));
 
   // KaTeX loads with defer, so it is ready only once the page has parsed.
-  document.addEventListener('DOMContentLoaded', () => {
-    renderMath(hint, hint.innerHTML);
-    newProblem();
-  });
+  document.addEventListener('DOMContentLoaded', newProblem);
 })();
 </script>
 
