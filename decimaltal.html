@@ -194,6 +194,10 @@
   .problem-text,
   .problem-label .katex,
   .feedback { white-space: nowrap; }
+  /* Höga uttryck (\dfrac) ska ta sin fulla höjd, annars krockar de med raden ovanför
+     eller under när meningen radbryts eller svaret har två rader. */
+  .problem-label .katex,
+  .feedback .katex { display: inline-block; margin: 0.12em 0; }
   #answerInput {
     width: clamp(150px, 24vw, 260px);
     font-family: "Baloo 2", sans-serif;
@@ -312,6 +316,7 @@
       <button type="button" data-cat="comparison">Större eller mindre?</button>
       <button type="button" data-cat="scale">Skala om</button>
       <button type="button" data-cat="words">Summa, differens, produkt, kvot</button>
+      <button type="button" data-cat="abstract">Abstrakta problem</button>
     </div>
 
     <div class="score-line" id="scoreLine">Rätt: <b id="scoreCorrect">0</b> av <b id="scoreTotal">0</b></div>
@@ -661,12 +666,16 @@
     return x.m === 1 ? 'en ' + one : wholeWords(x.m).replace(/ett$/, 'en') + ' ' + many;
   }
 
-  // c · 10^e, with no zeros at the end of the decimals.
-  function placed(c, e) {
-    if (e >= 0) return D(c * Math.pow(10, e), 0);
-    let m = c, d = -e;
+  // The same decimal with no zeros at the end of the decimals.
+  function trim(x) {
+    let { m, d } = x;
     while (d > 0 && m % 10 === 0) { m /= 10; d--; }
     return D(m, d);
+  }
+
+  // c · 10^e, with no zeros at the end of the decimals.
+  function placed(c, e) {
+    return e >= 0 ? D(c * Math.pow(10, e), 0) : trim(D(c, -e));
   }
 
   // Whole numbers below a million, or decimals below 1 with at most three decimals.
@@ -731,8 +740,114 @@
       answerType: 'decimal',
       answer: answer,
       // Shown when the answer is wrong: the words translated into a calculation.
-      explain: `${op.tex(a, b)} = ${num(answer)}`,
+      explain: [`${op.tex(a, b)} = ${num(answer)}`],
     };
+  }
+
+  // ---- Abstrakta problem: a result and one part are given, the other part is asked for ----
+  // The point is to set up the calculation from how the words relate, so a wrong answer
+  // shows the relation with a box for the missing number, and then how to solve it.
+
+  // Every number is shown in digits, with at most three decimals.
+  function isShowable(x) {
+    return x.d <= 3 && value(x) >= 0.001 && value(x) < 1e7;
+  }
+
+  // Two factors whose product is easy by hand, each moved to some place value: a
+  // times-table fact (0,9 · 0,4 = 0,36) or a friendly pair (25 · 120 = 3 000).
+  const FRIENDLY_PAIRS = [[25, 4], [25, 8], [25, 12], [50, 6], [20, 5], [75, 4], [125, 8]];
+  function friendlyFactors() {
+    let a, b, product;
+    do {
+      const [c1, c2] = Math.random() < 0.7 ? [randInt(2, 9), randInt(2, 9)] : pick(FRIENDLY_PAIRS);
+      a = placed(c1, randInt(-3, 4));
+      b = placed(c2, randInt(-3, 4));
+      product = trim(dMul(a, b));
+    } while (!isShowable(a) || !isShowable(b) || !isShowable(product)
+      || (a.d === 0 && b.d === 0 && a.m < 10 && b.m < 10));
+    return Math.random() < 0.5 ? [a, b, product] : [b, a, product];
+  }
+
+  // A round number such as 5 000 or 0,5, and a part of it with two or three digits
+  // that is easy to complete by hand, such as 3 750.
+  function roundAndPart() {
+    const c = randInt(1, 9), e = randInt(-1, 4);
+    let k;
+    do { k = randInt(11, c * 100 - 11); } while (k % 10 === 0);
+    return [placed(c, e), placed(k, e - 2)];
+  }
+
+  // Two-digit numbers at the same place, such as 280 and 620.
+  function twoDigitPair(e) {
+    let k1, k2;
+    do { k1 = randInt(11, 99); k2 = randInt(11, 99); } while (k1 % 10 === 0 || k2 % 10 === 0);
+    return [placed(k1, e), placed(k2, e)];
+  }
+
+  function abstractProblem(label, answer, relation, solution) {
+    return { label, tex: '', answerType: 'decimal', answer: trim(answer), explain: [relation, solution] };
+  }
+
+  function genAbstract() {
+    const n = (x) => `\\(${num(x)}\\)`;
+    switch (randInt(1, 7)) {
+      case 1: { // Produkten av två tal är 1 200. Den ena faktorn är 40.
+        const [a, b, p] = friendlyFactors();
+        return abstractProblem(
+          `Produkten av två tal är ${n(p)}. Den ena faktorn är ${n(a)}. Vilken är den andra faktorn?`, b,
+          String.raw`${num(a)} \cdot \square = ${num(p)}`,
+          String.raw`\square = \dfrac{${num(p)}}{${num(a)}} = ${num(b)}`);
+      }
+      case 2: { // Summan av två tal är 5 000. Det ena talet är 3 750.
+        const [s, a] = roundAndPart();
+        const b = dSub(s, a);
+        return abstractProblem(
+          `Summan av två tal är ${n(s)}. Det ena talet är ${n(a)}. Vilket är det andra talet?`, b,
+          String.raw`${num(a)} + \square = ${num(s)}`,
+          String.raw`\square = ${num(s)} - ${num(a)} = ${num(b)}`);
+      }
+      case 3: { // Summan av tre tal är 10 000. Två av talen är 4 200 och 3 300.
+        const c = randInt(1, 9), e = randInt(-1, 4);
+        const s = placed(c, e);
+        let a, b;
+        do { [a, b] = twoDigitPair(e - 2); } while (value(dAdd(a, b)) >= value(s));
+        const third = dSub(dSub(s, a), b);
+        return abstractProblem(
+          `Summan av tre tal är ${n(s)}. Två av talen är ${n(a)} och ${n(b)}. Vilket är det tredje talet?`, third,
+          String.raw`${num(a)} + ${num(b)} + \square = ${num(s)}`,
+          String.raw`\square = ${num(s)} - ${num(a)} - ${num(b)} = ${num(third)}`);
+      }
+      case 4: { // Differensen mellan två tal är 620. Det större talet är 900.
+        const [larger, d] = roundAndPart();
+        const smaller = dSub(larger, d);
+        return abstractProblem(
+          `Differensen mellan två tal är ${n(d)}. Det större talet är ${n(larger)}. Vilket är det mindre talet?`, smaller,
+          String.raw`${num(larger)} - \square = ${num(d)}`,
+          String.raw`\square = ${num(larger)} - ${num(d)} = ${num(smaller)}`);
+      }
+      case 5: { // Differensen mellan två tal är 620. Det mindre talet är 280.
+        const [smaller, d] = twoDigitPair(randInt(-3, 2));
+        const larger = dAdd(smaller, d);
+        return abstractProblem(
+          `Differensen mellan två tal är ${n(d)}. Det mindre talet är ${n(smaller)}. Vilket är det större talet?`, larger,
+          String.raw`\square - ${num(smaller)} = ${num(d)}`,
+          String.raw`\square = ${num(smaller)} + ${num(d)} = ${num(larger)}`);
+      }
+      case 6: { // Kvoten av två tal är 25. Täljaren är 3 000. Vilken är nämnaren?
+        const [denominator, quotient, numerator] = friendlyFactors();
+        return abstractProblem(
+          `Kvoten av två tal är ${n(quotient)}. Täljaren är ${n(numerator)}. Vilken är nämnaren?`, denominator,
+          String.raw`\dfrac{${num(numerator)}}{\square} = ${num(quotient)}`,
+          String.raw`\square = \dfrac{${num(numerator)}}{${num(quotient)}} = ${num(denominator)}`);
+      }
+      default: { // Kvoten av två tal är 0,08. Nämnaren är 50. Vilken är täljaren?
+        const [denominator, quotient, numerator] = friendlyFactors();
+        return abstractProblem(
+          `Kvoten av två tal är ${n(quotient)}. Nämnaren är ${n(denominator)}. Vilken är täljaren?`, numerator,
+          String.raw`\dfrac{\square}{${num(denominator)}} = ${num(quotient)}`,
+          String.raw`\square = ${num(quotient)} \cdot ${num(denominator)} = ${num(numerator)}`);
+      }
+    }
   }
 
   const GENERATORS = {
@@ -744,6 +859,7 @@
     comparison: genComparison,
     scale: genScale,
     words: genWords,
+    abstract: genAbstract,
   };
   const CATEGORY_KEYS = Object.keys(GENERATORS);
 
@@ -868,8 +984,9 @@
       feedback.className = 'feedback correct';
     } else {
       problemBox.classList.add('flash-wrong');
+      // `explain` is LaTeX lines that show how to get the answer; each gets its own line.
       renderMath(feedback, current.explain
-        ? 'Fel. \\(' + current.explain + '\\)'
+        ? 'Fel. ' + current.explain.map(line => '\\(' + line + '\\)').join('<br>')
         : 'Fel. Rätt svar är ' + displayAnswer(current) + '.');
       feedback.className = 'feedback wrong';
     }
