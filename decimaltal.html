@@ -188,11 +188,12 @@
     font-variant-numeric: tabular-nums;
     line-height: 1.3;
   }
-  /* Uppgiften delas aldrig mellan rader. Är den för bred för rutan (telefon) krymper
-     fitToWidth den i stället. Raden ovanför är en mening och får radbrytas, men
-     aldrig mitt i ett uttryck. */
+  /* Uppgiften och raden med rätt svar delas aldrig mellan rader. Är de för breda för
+     rutan (telefon) krymper fitToWidth dem i stället. Raden ovanför är en mening och
+     får radbrytas, men aldrig mitt i ett uttryck. */
   .problem-text,
-  .problem-label .katex { white-space: nowrap; }
+  .problem-label .katex,
+  .feedback { white-space: nowrap; }
   #answerInput {
     width: clamp(150px, 24vw, 260px);
     font-family: "Baloo 2", sans-serif;
@@ -310,6 +311,7 @@
       <button type="button" data-cat="fraction">Bråkform</button>
       <button type="button" data-cat="comparison">Större eller mindre?</button>
       <button type="button" data-cat="scale">Skala om</button>
+      <button type="button" data-cat="words">Summa, differens, produkt, kvot</button>
     </div>
 
     <div class="score-line" id="scoreLine">Rätt: <b id="scoreCorrect">0</b> av <b id="scoreTotal">0</b></div>
@@ -616,6 +618,123 @@
     };
   }
 
+  // ---- Summa, differens, produkt, kvot with the numbers in words ----
+  // Every operand is a small digit part at a place value: a whole number such as
+  // 480 000 or a pure decimal such as 0,036. Mixed numbers like 5,6 never are
+  // operands, since "fem och sex tiondelar och …" would make the "och" between the
+  // two numbers ambiguous. Answers can be mixed numbers.
+
+  const ONES = ['noll', 'ett', 'två', 'tre', 'fyra', 'fem', 'sex', 'sju', 'åtta', 'nio', 'tio',
+    'elva', 'tolv', 'tretton', 'fjorton', 'femton', 'sexton', 'sjutton', 'arton', 'nitton'];
+  const TENS = ['', '', 'tjugo', 'trettio', 'fyrtio', 'femtio', 'sextio', 'sjuttio', 'åttio', 'nittio'];
+  const PLACE_WORDS = [null, ['tiondel', 'tiondelar'], ['hundradel', 'hundradelar'], ['tusendel', 'tusendelar']];
+  const OPERATIONS = [
+    { word: 'summan', run: dAdd, tex: (a, b) => `${num(a)} + ${num(b)}` },
+    { word: 'differensen', run: dSub, tex: (a, b) => `${num(a)} - ${num(b)}` },
+    { word: 'produkten', run: dMul, tex: (a, b) => String.raw`${num(a)} \cdot ${num(b)}` },
+    { word: 'kvoten', tex: (a, b) => String.raw`\dfrac{${num(a)}}{${num(b)}}` },
+  ];
+
+  function wordsBelow1000(n) {
+    const hundreds = Math.floor(n / 100), rest = n % 100;
+    const parts = [];
+    if (hundreds) parts.push(ONES[hundreds] + ' hundra');
+    if (rest >= 20) parts.push(TENS[Math.floor(rest / 10)] + (rest % 10 ? ONES[rest % 10] : ''));
+    else if (rest) parts.push(ONES[rest]);
+    return parts.join(' ');
+  }
+
+  // Each place word on its own, so the words show the places: "fyra hundra åttio tusen".
+  function wholeWords(n) {
+    const thousands = Math.floor(n / 1000), rest = n % 1000;
+    const parts = [];
+    if (thousands) parts.push(wordsBelow1000(thousands) + ' tusen');
+    if (rest) parts.push(wordsBelow1000(rest));
+    return parts.join(' ');
+  }
+
+  // A whole number, or a decimal below 1 named by its last place: 0,036 is
+  // "trettiosex tusendelar". Tiondel is an en-word, so 0,21 is "tjugoen hundradelar".
+  function numberWords(x) {
+    if (x.d === 0) return wholeWords(x.m);
+    const [one, many] = PLACE_WORDS[x.d];
+    return x.m === 1 ? 'en ' + one : wholeWords(x.m).replace(/ett$/, 'en') + ' ' + many;
+  }
+
+  // c · 10^e, with no zeros at the end of the decimals.
+  function placed(c, e) {
+    if (e >= 0) return D(c * Math.pow(10, e), 0);
+    let m = c, d = -e;
+    while (d > 0 && m % 10 === 0) { m /= 10; d--; }
+    return D(m, d);
+  }
+
+  // Whole numbers below a million, or decimals below 1 with at most three decimals.
+  function isOperand(c, e) {
+    return e >= -3 && (e >= 0 ? c * Math.pow(10, e) < 1e6 : c < Math.pow(10, -e));
+  }
+
+  function value(x) { return x.m / Math.pow(10, x.d); }
+
+  // 7, 45, 700, 0,45, 0,036, 12 000 …: one digit at any place, or two digits.
+  function randomOperand() {
+    let c, e;
+    do {
+      c = Math.random() < 0.5 ? randInt(1, 9) : randInt(11, 99);
+      e = randInt(-3, 5);
+    } while (c % 10 === 0 || !isOperand(c, e));
+    return placed(c, e);
+  }
+
+  // Both numbers below 100 and whole is plain mental arithmetic, not place value.
+  function isTrivial(a, b) {
+    return a.d === 0 && b.d === 0 && a.m < 100 && b.m < 100;
+  }
+
+  function genWords() {
+    const op = pick(OPERATIONS);
+    let a, b, answer;
+    if (op.word === 'summan' || op.word === 'differensen') {
+      // Numbers of different sizes; the first is the larger in a difference.
+      do {
+        a = randomOperand();
+        b = randomOperand();
+      } while (value(a) === value(b) || isTrivial(a, b));
+      if (op.word === 'differensen' && value(a) < value(b)) [a, b] = [b, a];
+      answer = op.run(a, b);
+    } else if (op.word === 'produkten') {
+      // A times-table fact moved to other places: 700 · 0,03 = 21.
+      let c1, c2, e1, e2;
+      do {
+        c1 = randInt(2, 9); c2 = randInt(2, 9);
+        e1 = randInt(-3, 5); e2 = randInt(-3, 5);
+      } while (!isOperand(c1, e1) || !isOperand(c2, e2) || e1 + e2 < -3 || e1 + e2 > 5 || (e1 === 0 && e2 === 0));
+      a = placed(c1, e1);
+      b = placed(c2, e2);
+      answer = dMul(a, b);
+    } else {
+      // Built backwards from a times-table fact so it comes out exactly:
+      // 48 / 8 = 6 gives 480 000 / 800 = 600.
+      let divisor, quotient, eDivisor, eQuotient;
+      do {
+        divisor = randInt(2, 9); quotient = randInt(2, 9);
+        eDivisor = randInt(-3, 5); eQuotient = randInt(-3, 5);
+      } while (!isOperand(divisor, eDivisor) || !isOperand(divisor * quotient, eDivisor + eQuotient)
+        || (eDivisor === 0 && eQuotient === 0));
+      a = placed(divisor * quotient, eDivisor + eQuotient);
+      b = placed(divisor, eDivisor);
+      answer = placed(quotient, eQuotient);
+    }
+    return {
+      label: `Beräkna ${op.word} av ${numberWords(a)} och ${numberWords(b)}.`,
+      tex: '',
+      answerType: 'decimal',
+      answer: answer,
+      // Shown when the answer is wrong: the words translated into a calculation.
+      explain: `${op.tex(a, b)} = ${num(answer)}`,
+    };
+  }
+
   const GENERATORS = {
     addsub: genAddSub,
     powers10: genPowers10,
@@ -624,6 +743,7 @@
     fraction: genFraction,
     comparison: genComparison,
     scale: genScale,
+    words: genWords,
   };
   const CATEGORY_KEYS = Object.keys(GENERATORS);
 
@@ -684,11 +804,14 @@
     current = pickGenerator();
     renderMath(problemLabel, current.label || '');
     problemLabel.style.display = current.label ? 'block' : 'none';
-    renderMath(problemText, '\\(' + current.tex + '\\)');
+    // A word problem is all in the sentence above, with no expression line.
+    renderMath(problemText, current.tex ? '\\(' + current.tex + '\\)' : '');
+    problemText.style.display = current.tex ? '' : 'none';
     fitToWidth(problemText);
     answerInput.value = '';
     feedback.textContent = '';
     feedback.className = 'feedback';
+    feedback.style.fontSize = '';
     problemBox.classList.remove('flash-correct', 'flash-wrong');
     awaitingNext = false;
 
@@ -745,9 +868,12 @@
       feedback.className = 'feedback correct';
     } else {
       problemBox.classList.add('flash-wrong');
-      renderMath(feedback, 'Fel. Rätt svar är ' + displayAnswer(current) + '.');
+      renderMath(feedback, current.explain
+        ? 'Fel. \\(' + current.explain + '\\)'
+        : 'Fel. Rätt svar är ' + displayAnswer(current) + '.');
       feedback.className = 'feedback wrong';
     }
+    fitToWidth(feedback);
     awaitingNext = true;
     actionBtn.textContent = 'Nästa';
     actionBtn.style.visibility = '';
@@ -777,8 +903,12 @@
 
   // The room changes when the phone turns, and the width when KaTeX's fonts
   // arrive after the first problem is drawn.
-  window.addEventListener('resize', () => fitToWidth(problemText));
-  document.fonts.addEventListener('loadingdone', () => fitToWidth(problemText));
+  function fitLines() {
+    fitToWidth(problemText);
+    fitToWidth(feedback);
+  }
+  window.addEventListener('resize', fitLines);
+  document.fonts.addEventListener('loadingdone', fitLines);
 
   // KaTeX loads with defer, so it is ready only once the page has parsed.
   document.addEventListener('DOMContentLoaded', newProblem);
