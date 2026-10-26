@@ -9,6 +9,7 @@ import { LEVELS, assessLevels, levelHint, levelRequirement } from './levels.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
+const COUNTDOWN_FROM = 3; // seconds of 3-2-1 before a test or practice round starts
 const MAX_TABLE = 12;
 const ACCEPTABLE_THRESHOLD = 2; // seconds/question — where the result background turns fully green
 const BG_WORST_AT = 8; // seconds/question — fully orange beyond this
@@ -170,6 +171,7 @@ backFromStats.addEventListener('click', goHome);
 function goHome() {
   clearInterval(timerId);
   running = false;
+  testScreen.classList.remove('counting');
   document.body.style.backgroundColor = '';
   Audio.stopMusic();
   showScreen(landingScreen);
@@ -727,15 +729,13 @@ function startRound() {
   correctCount = 0;
   wrongCount = 0;
   queue = [];
-  running = true;
+  running = false; // answers count from the end of the countdown
   hasResult = false;
-  roundStartTime = performance.now();
-  tickAccum = 0; // a restart mid-second must not shorten the first second
   document.body.style.backgroundColor = '';
   problemGenerator = makeProblem;
   restartBtn.style.display = '';
   resetViz();
-  Audio.startMusic();
+  Audio.startMusic(); // before the countdown: browsers only let a click start the sound
 
   showScreen(testScreen);
 
@@ -750,11 +750,43 @@ function startRound() {
     timerBar.style.width = '0%';
   }
   renderLiveLabel();
-
-  renderCurrent();
-  answerInput.focus();
+  answerInput.focus(); // also before the countdown, so a tablet opens its keyboard
 
   clearInterval(timerId);
+  countdown(beginRound);
+}
+
+// 3, 2, 1 where the question will be, one per second, so there is time to get set.
+// It runs on timerId, so going home or starting over cancels it like the round clock.
+function countdown(onDone) {
+  let n = COUNTDOWN_FROM;
+  testScreen.classList.add('counting');
+  showCountdownNumber(n);
+  timerId = setInterval(() => {
+    n--;
+    if (n > 0) {
+      showCountdownNumber(n);
+      return;
+    }
+    clearInterval(timerId);
+    testScreen.classList.remove('counting');
+    onDone();
+  }, 1000);
+}
+
+function showCountdownNumber(n) {
+  problemText.textContent = n;
+  problemText.classList.remove('countdown-pop');
+  void problemText.offsetWidth; // restart animation
+  problemText.classList.add('countdown-pop');
+}
+
+function beginRound() {
+  running = true;
+  roundStartTime = performance.now();
+  tickAccum = 0; // a restart mid-second must not shorten the first second
+  answerInput.value = ''; // anything typed during the countdown
+  renderCurrent();
   timerId = setInterval(mode === 'time' ? tickTime : tickCount, 100);
 }
 

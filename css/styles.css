@@ -544,6 +544,16 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* 3-2-1 before a round (countdown in app.js). The number pops in where the question
+     will be, and the next question stays hidden so nobody gets a head start. */
+  #testScreen.counting .next-bar { visibility: hidden; }
+  #testScreen.counting .problem-text { color: var(--accent); }
+  #testScreen.counting .problem-text.countdown-pop { animation: countdown-pop 0.4s ease-out; }
+  @keyframes countdown-pop {
+    from { transform: scale(1.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
   /* ---------- RESULT SCREEN ---------- */
   #resultScreen { display: none; }
   .result-card {
@@ -990,4 +1000,5 @@
 
   @media (prefers-reduced-motion: reduce) {
     .timer-bar-fill, .problem-box, .choice-row button, .start-btn, .again-btn, .landing-card { transition: none; }
+    #testScreen.counting .problem-text.countdown-pop { animation: none; }
   }
