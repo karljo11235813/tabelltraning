@@ -1,0 +1,186 @@
+/* Enheter och skala — sidans egna stilar. Färger och typsnitt kommer från styles.css,
+   kartan, frågekortet och återkopplingen från brak.css (bt-klasserna). */
+
+.en-row-block { width: 100%; justify-content: center; }
+.bt-rows-step .en-row-block, .bt-rows-filled .en-row-block { justify-content: flex-start; }
+
+/* ---------- RUTOR ---------- */
+.en-input-wide { width: 5.2em; }
+.en-unit, .en-qty { white-space: nowrap; }
+.en-choice { flex-wrap: wrap; justify-content: center; }
+.en-choice-btn { font-family: "Nunito Sans", sans-serif; font-size: 0.62em; font-weight: 800; padding: 6px 12px; min-height: 2.2em; }
+.en-ratio { display: inline-flex; align-items: center; gap: 6px; }
+.en-ratio .bt-input { width: 4.6em; }
+.en-ratio-colon { font-weight: 800; }
+
+.en-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 100%; }
+.en-tile {
+  min-width: 5.5em;
+  padding: 8px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.1rem, 3.6vw, 1.45rem);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+button.en-tile:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.en-tile[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.en-tiles.is-filled .en-tile { cursor: default; }
+.en-tiles.is-filled .en-tile.is-marked { border-color: var(--success); background: var(--success-soft); }
+
+/* ---------- PREFIXRUTNÄTET ---------- */
+.en-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--en-cols), minmax(0, 1fr));
+  row-gap: 2px;
+  width: min(100%, calc(var(--en-cols) * 1.45rem));
+  min-width: 0;
+  margin: 4px auto;
+  overflow: hidden;
+  font-family: "Nunito Sans", sans-serif;
+}
+.en-cells-1 { width: min(100%, calc(var(--en-cols) * 1.9rem)); }
+.en-grid-row { display: contents; }
+.en-square {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.1em;
+  padding: 4px 0 6px;
+  border: 2px solid var(--border);
+  margin-left: -2px;
+  background: var(--surface);
+  font-size: clamp(0.85rem, 2.6vw, 1.15rem);
+  line-height: 1.1;
+}
+.en-square:first-child { margin-left: 0; }
+.en-square.is-empty { background: var(--bg); }
+.en-square.is-base { background: var(--accent-soft); }
+.en-square.is-blank { background: var(--bg); border-style: dashed; }
+.en-square.is-from { outline: 3px solid var(--accent); outline-offset: -3px; }
+.en-square.is-to { outline: 3px dashed var(--success); outline-offset: -3px; }
+.en-letter { font-weight: 800; font-size: 1.15em; }
+.en-letter.is-word { font-size: 0.7em; }
+/* Tätt rutnät (16 rutor på en telefon): bara bokstäverna, mindre, och "enhet" ännu mindre. */
+.en-grid.is-tight .en-name { display: none; }
+.en-grid.is-tight .en-square { min-height: 2.4em; }
+.en-grid.is-tight .en-letter { font-size: 0.9em; }
+.en-grid.is-tight .en-letter.is-word { font-size: 0.5em; letter-spacing: -0.02em; }
+.en-name { font-size: 0.62em; color: var(--text-muted); }
+.en-slots { display: flex; gap: 2px; margin-top: 3px; }
+.en-slot { width: 0.55em; height: 0.55em; border: 1.5px solid var(--border); border-radius: 2px; }
+.en-pen { position: absolute; top: -2px; right: 2px; font-size: 0.8em; color: var(--accent); }
+
+.en-hop {
+  position: relative;
+  height: 1.1em;
+  margin: 1.35em 3px 0;
+  border: 2px solid var(--accent);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  align-self: end;
+}
+.en-hop-label {
+  position: absolute;
+  left: 50%;
+  top: -1.35em;
+  transform: translateX(-50%);
+  padding: 0 3px;
+  background: var(--surface);
+  color: var(--accent-strong);
+  font-size: clamp(0.7rem, 2.1vw, 0.9rem);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.en-hop::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  border: 5px solid transparent;
+  border-top-color: var(--accent);
+}
+.en-hop.is-right::after { right: -6px; }
+.en-hop.is-left::after { left: -6px; }
+.en-liter-hops .en-hop { margin: 0 3px 1.35em; border-top: none; border-bottom: 2px solid var(--accent); border-radius: 0 0 14px 14px; align-self: start; }
+.en-liter-hops .en-hop::after { bottom: auto; top: -2px; border-top-color: transparent; border-bottom-color: var(--accent); }
+.en-liter-hops .en-hop { margin-bottom: 2.3em; }
+.en-liter-hops .en-hop-label { top: auto; bottom: -1.3em; font-size: clamp(0.62rem, 1.9vw, 0.8rem); }
+.en-liter-hops .en-hop.is-odd .en-hop-label { bottom: -2.3em; }
+
+.en-liter-cell {
+  margin-top: 4px;
+  padding: 3px 0;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-size: clamp(0.75rem, 2.3vw, 1rem);
+  font-weight: 700;
+  background: var(--surface);
+}
+.en-liter-cell.is-switch { background: var(--accent-soft); border-color: var(--accent); }
+.en-liter-cell.is-from { outline: 3px solid var(--accent); outline-offset: -2px; }
+.en-liter-cell.is-to { outline: 3px dashed var(--success); outline-offset: -2px; }
+
+/* ---------- TABELLER ---------- */
+.en-scale, .en-sheet {
+  border-collapse: collapse;
+  margin: 4px auto;
+  font-family: "Nunito Sans", sans-serif;
+  font-size: clamp(0.95rem, 3vw, 1.2rem);
+  max-width: 100%;
+}
+.en-scale th, .en-scale td, .en-sheet th, .en-sheet td { padding: 6px 10px; border: 2px solid var(--border); text-align: center; }
+.en-scale thead th { font-weight: 800; color: var(--text-muted); }
+.en-scale tbody th { font-weight: 700; color: var(--text-muted); text-align: left; }
+.en-scale td { font-weight: 800; white-space: nowrap; }
+.en-scale-arrows { border-left: none !important; border-right: none !important; }
+.en-scale-arrows .en-scale-arrow { display: block; color: var(--accent-strong); font-size: 0.8em; white-space: nowrap; }
+.en-sheet th { background: var(--accent-soft); font-weight: 800; }
+.en-sheet td { font-family: "Baloo 2", sans-serif; font-size: 1.1em; font-weight: 700; white-space: nowrap; }
+
+/* ---------- BILDER ---------- */
+.en-pic-holder { display: inline-flex; justify-content: center; max-width: 100%; }
+.en-pic { max-width: 100%; height: auto; }
+/* Rutorna och kuberna har fast storlek (width/height i SVG:n); bara krympning på smala skärmar. */
+.en-pic-object { width: clamp(180px, 55vw, 280px); }
+.en-pic-dm2 { width: clamp(170px, 50vw, 240px); }
+.en-paper { stroke: var(--border); stroke-width: 1; }
+.en-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 0.6; }
+.en-fill-strong { fill: var(--accent); stroke: var(--accent); }
+.en-edge { stroke: var(--accent-strong); stroke-width: 3; stroke-linecap: round; }
+.en-outline { fill: none; stroke: var(--text); stroke-width: 2.5; }
+.en-pic-label { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-size: 12px; font-weight: 700; }
+.en-pic-small { font-size: 9px; }
+.en-cube-front { fill: var(--accent-soft); stroke: var(--accent-strong); stroke-width: 1; }
+.en-cube-top { fill: var(--surface); stroke: var(--accent-strong); stroke-width: 1; }
+.en-cube-side { fill: var(--accent); fill-opacity: 0.45; stroke: var(--accent-strong); stroke-width: 1; }
+.en-water { fill: #8ec9ee; }
+.en-lane { stroke: #ffffff; stroke-width: 2; stroke-dasharray: 6 5; }
+.en-fish { fill: #f39c3d; }
+.en-glass { fill: #8ec9ee; fill-opacity: 0.35; stroke: var(--text); stroke-width: 2; }
+.en-floor { fill: var(--accent-soft); stroke: var(--text); stroke-width: 2; }
+.en-wall { fill: var(--surface); stroke: var(--text); stroke-width: 2; }
+.en-wall-side { fill: var(--bg); stroke: var(--text); stroke-width: 2; }
+.en-door { fill: var(--accent-soft); stroke: var(--text); stroke-width: 2; }
+
+/* Smala skärmar: tabellerna och skalrutorna får plats utan sidledsrullning. */
+@media (max-width: 480px) {
+  .en-scale th, .en-scale td, .en-sheet th, .en-sheet td { padding: 4px 5px; }
+  .en-scale, .en-sheet { font-size: 0.9rem; }
+  .en-scale { font-size: 0.8rem; }
+  /* Radrubrikerna (skalan, uppgiften) tar för mycket plats; ordningen syns ändå i kolumnerna. */
+  .en-scale tbody th, .en-scale thead th:first-child { display: none; }
+  .en-sheet .en-ratio { gap: 2px; }
+  .en-sheet .en-ratio .bt-input { width: 3.2em; }
+  .en-sheet td { font-size: 1em; }
+}
+@media (max-width: 360px) {
+  .en-scale { font-size: 0.72rem; }
+  .en-scale th, .en-scale td { padding: 3px 3px; }
+}
