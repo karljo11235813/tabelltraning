@@ -2,7 +2,8 @@
 // Elevbladet är s. 50–51, lärarsidorna s. 49 och facit står på s. 49 i 2_Rationella_tal.pdf.
 //
 // 17 skärmar, en per etikett (1a–d, 2a–d, 3a, 3b, 4, 5, 6, 7a–c, 8). Resultatblanketten (s. 52) har en kolumn per
-// etikett: 17 i allt. 1–3 har ett tal och en ruta efter, som bladet; 4–8 är textuppgifter med bara Svar. Varje
+// etikett: 17 i allt. 1–3 har ett tal och en ruta efter, som bladet, men med ≈ emellan (bladet har bara ett streck
+// efter talet; utan tecknet ser rutan ut att vara en del av talet). 4–8 är textuppgifter med bara Svar. Varje
 // nummers inledande text står på alla dess skärmar.
 //
 // Facit använder regeln "en 5:a höjer": 65 blir 70 (1c) och 250 blir 300 (2d).
@@ -31,70 +32,70 @@ export default {
       label: "1a",
       text: "Avrunda till närmaste tiotal:",
       points: "each",
-      rows: ["11 [a]"],
+      rows: ["11 ≈ [a]"],
       boxes: { a: { accept: ["10"] } },
     },
     {
       label: "1b",
       text: "Avrunda till närmaste tiotal:",
       points: "each",
-      rows: ["28 [a]"],
+      rows: ["28 ≈ [a]"],
       boxes: { a: { accept: ["30"] } },
     },
     {
       label: "1c",
       text: "Avrunda till närmaste tiotal:",
       points: "each",
-      rows: ["65 [a]"],
+      rows: ["65 ≈ [a]"],
       boxes: { a: { accept: ["70"] } },
     },
     {
       label: "1d",
       text: "Avrunda till närmaste tiotal:",
       points: "each",
-      rows: ["134 [a]"],
+      rows: ["134 ≈ [a]"],
       boxes: { a: { accept: ["130"] } },
     },
     {
       label: "2a",
       text: "Avrunda till närmaste hundratal:",
       points: "each",
-      rows: ["203 [a]"],
+      rows: ["203 ≈ [a]"],
       boxes: { a: { accept: ["200"] } },
     },
     {
       label: "2b",
       text: "Avrunda till närmaste hundratal:",
       points: "each",
-      rows: ["426 [a]"],
+      rows: ["426 ≈ [a]"],
       boxes: { a: { accept: ["400"] } },
     },
     {
       label: "2c",
       text: "Avrunda till närmaste hundratal:",
       points: "each",
-      rows: ["367 [a]"],
+      rows: ["367 ≈ [a]"],
       boxes: { a: { accept: ["400"] } },
     },
     {
       label: "2d",
       text: "Avrunda till närmaste hundratal:",
       points: "each",
-      rows: ["250 [a]"],
+      rows: ["250 ≈ [a]"],
       boxes: { a: { accept: ["300"] } },
     },
     {
       label: "3a",
       text: "Avrunda till två decimaler:",
       points: "each",
-      rows: ["3,141 [a]"],
+      rows: ["3,141 ≈ [a]"],
       boxes: { a: { accept: ["3,14"] } },
     },
     {
       label: "3b",
       text: "Avrunda till två decimaler:",
       points: "each",
-      rows: ["9,8052 [a]"],
+      rows: ["9,8052 ≈ [a]"],
       boxes: { a: { accept: ["9,81"] } },
     },
     {

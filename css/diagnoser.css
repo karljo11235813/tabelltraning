@@ -306,7 +306,24 @@
 .dg-back { width: 100%; max-width: 320px; }
 
 /* ---------- SIDAN: LISTAN, DIAGNOSEN, RESULTATET ---------- */
-.dg-sub-title { margin: 12px 0 6px; font-size: 0.95rem; color: var(--text-muted); }
+.dg-search {
+  display: block;
+  width: 100%;
+  margin: 6px 0 4px;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem; /* minst 16 px, annars zoomar iPhone in när rutan får fokus */
+}
+.dg-search::placeholder { color: var(--text-muted); }
+.dg-search:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.dg-search-empty { margin: 14px 0 0; }
+/* Områdena och "Mina resultat". Två klasser, eftersom .card h2 i styles.css annars gör dem 1.05rem. */
+.card .dg-area-title { font-size: 1.5rem; line-height: 1.2; }
+.dg-sub-title { margin: 14px 0 8px; font-size: 1.15rem; }
 .dg-saved-title { margin-bottom: 6px; }
 .dg-saved { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .dg-saved-empty { margin: 0 0 8px; }

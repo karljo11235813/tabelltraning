@@ -31,8 +31,10 @@
       <h1 class="bt-title">Diamantdiagnoser</h1>
     </div>
     <p class="bt-intro">Välj den diagnos som din lärare säger. Du får en uppgift i taget och ser inte om du svarat rätt förrän du är klar.</p>
+    <input type="search" id="dgSearch" class="dg-search" placeholder="Sök på kod eller ord, t.ex. RD6 eller bråk" aria-label="Sök diagnos" autocomplete="off" spellcheck="false">
+    <p class="bt-intro dg-search-empty" id="dgSearchEmpty" role="status" hidden>Ingen diagnos passar sökningen.</p>
     <div id="dgAreas"></div>
-    <h2 class="dg-saved-title">Mina resultat</h2>
+    <h2 class="dg-saved-title dg-area-title">Mina resultat</h2>
     <p class="bt-intro dg-saved-empty" id="dgSavedEmpty" hidden></p>
     <ul class="dg-saved" id="dgSaved"></ul>
   </section>

@@ -13,11 +13,15 @@
 // enligt reglerna ovan) och numbers och svaret söks i alla tillsammans. En enda kedja läses först som en kedja.
 // Ord som eleven skriver efter ett tal ("9 år", "34 kr", "9 (år)", "7 rest 1 st") och en punkt sist
 // i texten räknas bort innan något kontrolleras. Orden ändrar aldrig ett värde.
+// När svaret är ett heltal (talen i uppgiften är alltid heltal) hör inget decimaltecken till uppgiften, och en punkt
+// mellan två siffror får också läsas som gånger: "4.8 = 32" godkänns som 4 · 8 = 32. Räkningen godkänns om den
+// stämmer på något av sätten, så "2.5 · 4 = 10" är fortfarande 2,5 · 4.
 
-import { rat, equals, isNone } from "./value.js";
+import { rat, equals, isNone, isInteger } from "./value.js";
 import { normalize, parseExpr, parseNumber, parseAnswer } from "./parse.js";
 
 const DIVISION = /^(\d+)\/(\d+)$/;
+const DOT_BETWEEN_DIGITS = /(?<=\d)\.(?=\d)/g;
 const LITERAL = /\d+(?:,\d+)?/g;
 
 // Ett helt ord eller ett ord i parentes. x, r och rest är inga enheter: x är gånger och de andra
@@ -112,6 +116,12 @@ function chainSides(text, wholeQuotient) {
 }
 
 export function checkCalculation(text, { numbers, answer, wholeQuotient = false }) {
+  const texts = [text];
+  if (isInteger(answer)) texts.push(String(text ?? "").replace(DOT_BETWEEN_DIGITS, "·"));
+  return [...new Set(texts)].some((t) => checkText(t, numbers, answer, wholeQuotient));
+}
+
+function checkText(text, numbers, answer, wholeQuotient) {
   const whole = clean(text);
   const split = splitEqualities(whole);
   // Först som en enda kedja, sedan som separata likheter när texten går att dela.

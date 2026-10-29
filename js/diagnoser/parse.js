@@ -25,13 +25,19 @@ export function normalize(text) {
 
   s = s.replace(/[‐-—−]/g, "-"); // − – — och andra streck blir -
   s = s.replace(/[÷:]/g, "/");
-  s = s.replace(/[×*]/g, "·");
-  s = s.replace(/(?<=[\d)½])\s*x\s*(?=[\d(√,½-])/g, "·"); // x är gånger bara mellan två operander
-  s = s.replace(/(\d)\.(\d)/g, "$1,$2");
 
-  // Upphöjda siffror: "10⁻⁸" blir "10^-8", "5¹²" blir "5^12".
+  // Upphöjda siffror: "10⁻⁸" blir "10^-8", "5¹²" blir "5^12". Före gångertecknen, så att "2²x3" har en siffra före x.
   s = s.replace(/[⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUPERSCRIPT[c]).join(""));
   s = s.replace(/\^\(\s*(-?\d+)\s*\)/g, "^$1");
+
+  // Gånger: × *, punkter som liknar · (⋅ ∙ • ∗), och x bara mellan två operander.
+  s = s.replace(/[×*⋅∙•∗]/g, "·");
+  s = s.replace(/(?<=[\d)½])\s*x\s*(?=[\d(√,½-])/g, "·");
+  // En punkt är gånger där den inte kan vara ett decimaltecken: med mellanrum på båda sidor ("4 . 8"), intill en
+  // parentes ("(3+2).4") eller intill ett tal som redan har decimalkomma ("250.0,8.0,7"). Annars är en punkt mellan
+  // två siffror ett decimaltecken ("4.8" är 4,8). Räkningen i en textuppgift med heltal läser den också som gånger (calc.js).
+  s = s.replace(/(?<=[\d)])\s+\.\s+(?=[\d(√])|(?<=\))\s*\.\s*(?=[\d(√])|(?<=\d)\s*\.\s*(?=\()|(?<=\d,\d+)\.(?=\d)|(?<=\d)\.(?=\d+,\d)/g, "·");
+  s = s.replace(/(\d)\.(\d)/g, "$1,$2");
 
   // Tusentalsavgränsare: mellanslag före exakt tre siffror ("57 000").
   s = s.replace(/(?<=\d)\s+(?=\d{3}(?!\d))/g, "");

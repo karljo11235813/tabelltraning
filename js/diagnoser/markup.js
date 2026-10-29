@@ -253,6 +253,7 @@ function textLatex(s, atStart, atEnd) {
     } else {
       if (c === "−" || c === "-") out += "-";
       else if (c === "·") out += "\\cdot";
+      else if (c === "≈") out += "\\approx"; // avrundningsuppgifter: "11 ≈ [a]"
       else if (c === "," && isDigit(s[i - 1]) && isDigit(s[i + 1])) out += "{,}"; // decimalkomma utan mellanrum
       else if (c === "/" && (/\s/.test(s[i - 1] ?? "") || /\s/.test(s[i + 1] ?? ""))) out += "\\mathbin{/}"; // "14 / 2" som på bladet
       else out += Object.hasOwn(LATEX_ESCAPES, c) ? LATEX_ESCAPES[c] : c;
@@ -263,7 +264,7 @@ function textLatex(s, atStart, atEnd) {
 }
 
 // LaTeX för tecken från parseMarkup. Tecknen får inte innehålla rutor (en ruta kastar). Det som skrivs:
-//   text   siffror och räknesätt som de står ("−" blir "-", "·" blir \cdot, decimalkomma blir {,}), bokstäver
+//   text   siffror och räknesätt som de står ("−" blir "-", "·" blir \cdot, "≈" blir \approx, decimalkomma blir {,}), bokstäver
 //          som \text{…}, och tecken som betyder något i LaTeX med ett snedstreck framför
 //   sup    ^{…}      frac   \frac{topp}{botten}      root   \sqrt{innehåll}
 export function tokensToLatex(tokens) {
@@ -328,9 +329,9 @@ function splitEdges(tokens) {
   return { before, core, after };
 }
 
-// Räknesätt och likhetstecken. Står ett sådant först eller sist i en bit invid en ruta behandlar KaTeX det som
+// Räknesätt, likhetstecken och ≈. Står ett sådant först eller sist i en bit invid en ruta behandlar KaTeX det som
 // ett tecken i början eller slutet (en enda term, "−3"); {} gör att det får sitt vanliga mellanrum.
-const OPERATORS = "+-−·×÷/=";
+const OPERATORS = "+-−·×÷/=≈";
 const startsWithOperator = (core) => core[0]?.t === "text" && OPERATORS.includes(core[0].s[0]);
 const endsWithOperator = (core) => core.at(-1)?.t === "text" && OPERATORS.includes(core.at(-1).s.at(-1));
 

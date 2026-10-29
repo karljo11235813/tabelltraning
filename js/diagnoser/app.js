@@ -4,11 +4,11 @@
 //
 // Under en diagnos visas varken rätt eller fel. Ingenting sparas förrän resultatskärmen visas: den som
 // avbryter eller laddar om sidan förlorar omgången.
-import { AREAS, getDiagnosis } from "./data/index.js";
+import { AREAS, DIAGNOSES, getDiagnosis } from "./data/index.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
-import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap } from "./page.js";
+import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
 
 const SECTIONS = ["dgList", "dgRun", "dgResult"];
@@ -34,13 +34,17 @@ function showSection(id) {
 
 // ---------- LISTAN ----------
 
+// Bara diagnoserna som passar sökrutan. Ett delområde eller område utan någon av dem visas inte.
 function renderAreas() {
+  const shown = new Set(searchDiagnoses(DIAGNOSES, $("dgSearch").value));
   const host = $("dgAreas");
   host.textContent = "";
   for (const { area, subs } of AREAS) {
+    const visible = subs.map(({ sub, codes }) => ({ sub, codes: codes.filter((code) => shown.has(code)) })).filter(({ codes }) => codes.length > 0);
+    if (visible.length === 0) continue;
     const part = el("section", "bt-part");
-    part.append(el("h2", "bt-part-title", area));
-    for (const { sub, codes } of subs) {
+    part.append(el("h2", "bt-part-title dg-area-title", area));
+    for (const { sub, codes } of visible) {
       part.append(el("h3", "dg-sub-title", sub));
       const stairs = el("div", "bt-stairs");
       for (const code of codes) {
@@ -54,6 +58,7 @@ function renderAreas() {
     }
     host.append(part);
   }
+  $("dgSearchEmpty").hidden = shown.size > 0;
 }
 
 function renderSaved() {
@@ -240,6 +245,7 @@ $("dgResultHost").addEventListener("click", (e) => {
     e.stopPropagation();
   }
 }, true);
+$("dgSearch").addEventListener("input", renderAreas);
 $("dgStart").addEventListener("click", begin);
 $("dgNext").addEventListener("click", next);
 $("dgSkip").addEventListener("click", skip);

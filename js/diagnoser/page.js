@@ -7,6 +7,7 @@
 // ignoresEnter  ska ett Enter ignoreras? Ett nedhållet Enter, eller ett andra tryck strax efter att en skärm visades.
 // ignoresHeldEnter  ska ett nedhållet Enter på knapparna under skärmen ignoreras? Ja.
 // ignoresResultTap  ska ett klick på resultatskärmens knappar ignoreras? Ja strax efter att skärmen visades.
+// searchDiagnoses  koderna som passar listans sökruta, i listans ordning.
 
 import { scoreRun } from "./mark.js";
 
@@ -76,4 +77,27 @@ export const RESULT_GUARD_MS = 400;
 
 export function ignoresResultTap({ shownAt, now }) {
   return now - shownAt < RESULT_GUARD_MS;
+}
+
+// Gemena och utan accenter, så att "brak" hittar "Bråk" och "rd6" hittar "RD6".
+const fold = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+// Sökningen delas i ord. Ett ord som är en kod ("rd6") eller kodernas bokstäver ("rd", "au", minst två) väljer de
+// koderna, och flera sådana ord lägger ihop dem ("ag1 as3"). En hel kod väljer bara sig själv: "as1" ger inte AS10.
+// Alla andra ord ska finnas i diagnosens kod, titel, delområde eller område ("skriftlig division"). Tom sökning ger alla.
+export function searchDiagnoses(diagnoses, query) {
+  const codes = diagnoses.map((d) => fold(d.code));
+  const isCode = (word) => codes.includes(word);
+  const isPrefix = (word) => /^\p{L}{2,}$/u.test(word) && codes.some((code) => code.startsWith(word));
+  const words = fold(query).split(/[\s,;]+/).filter(Boolean);
+  const picks = words.filter((word) => isCode(word) || isPrefix(word));
+  const terms = words.filter((word) => !picks.includes(word));
+  return diagnoses
+    .filter((d) => {
+      const code = fold(d.code);
+      const text = fold(`${d.code} ${d.title} ${d.sub} ${d.area}`);
+      const picked = picks.length === 0 || picks.some((word) => (isCode(word) ? code === word : code.startsWith(word)));
+      return picked && terms.every((term) => text.includes(term));
+    })
+    .map((d) => d.code);
 }
