@@ -120,6 +120,41 @@
 .dg-detail-line .dg-fig-stage, .dg-detail-line .dg-chart-stage { display: inline-block; vertical-align: middle; }
 .dg-detail-line .dg-fig-stage { width: 9rem; }
 .dg-detail-line .dg-chart-stage { width: min(100%, 22rem); }
+/* En beteckning som är ett mått ("4 cm") står rak, inte kursiv som en variabel (isTextLabel). */
+.dg-fig-label.is-text { font-family: "Nunito Sans", sans-serif; font-style: normal; font-weight: 700; }
+
+/* Mätning: linjaler, kuber, visartavlor och klockor (figures.js, clock.js). Strecken har samma tjocklek i pixlar
+   oavsett hur stor figuren ritas. En figur med linjaler får vara bredare, så att millimeterstrecken går att läsa. */
+.dg-fig-stage.has-rulers { max-width: 30rem; }
+.dg-res-detail .dg-fig-stage.has-rulers { max-width: 22rem; }
+.dg-ruler-body { fill: var(--surface); stroke: var(--text); stroke-width: 1.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.dg-ruler-tick { stroke: var(--text); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.dg-ruler-tick.is-long { stroke-width: 1.6px; }
+.dg-ruler-num, .dg-ruler-unit { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-weight: 700; pointer-events: none; user-select: none; -webkit-user-select: none; }
+.dg-ruler-unit { fill: var(--text-muted); }
+/* Kuberna: framsidan som papperet, ovansidan lite mörkare och högersidan grå, som på bladet. */
+.dg-fig.is-cubes { margin: 0 auto; }
+.dg-cube { stroke: var(--text); stroke-width: 1.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.dg-cube-front { fill: var(--surface); }
+.dg-cube-top { fill: var(--surface); fill: color-mix(in srgb, var(--text) 8%, var(--surface)); }
+.dg-cube-side { fill: var(--border); fill: color-mix(in srgb, var(--text) 26%, var(--surface)); }
+.dg-dial-face { fill: var(--surface); stroke: var(--text); stroke-width: 2.5px; vector-effect: non-scaling-stroke; }
+.dg-dial-arc { fill: none; stroke: var(--text); stroke-width: 2px; vector-effect: non-scaling-stroke; }
+.dg-dial-tick { stroke: var(--text); stroke-width: 1px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.dg-dial-tick.is-major { stroke-width: 2.5px; }
+.dg-dial-label { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-weight: 700; paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; user-select: none; -webkit-user-select: none; }
+.dg-dial-hand line { stroke: var(--text); stroke-linecap: round; }
+.dg-dial-hand polygon, .dg-dial-pivot { fill: var(--text); }
+.dg-dial-hand.is-selected line { stroke: var(--accent-strong); }
+.dg-dial-hand.is-selected polygon { fill: var(--accent-strong); }
+/* Facits visare på resultatskärmen: streckade, bakom "Visa rätt svar" (.dg-ghost). */
+.dg-ghost-hand line { stroke: var(--accent-strong); stroke-dasharray: 5 4; stroke-linecap: butt; }
+.dg-ghost-hand polygon { fill: none; stroke: var(--accent-strong); stroke-width: 1.5px; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; }
+.dg-clock-stage { max-width: 15rem; }
+.dg-res-detail .dg-clock-stage, .dg-detail-line .dg-clock-stage { max-width: 11rem; width: 11rem; }
+.dg-clock.is-interactive { touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.dg-clock.is-interactive:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 4px; border-radius: 50%; }
+.dg-hand-btns { margin: 4px 0 10px; }
 
 /* ---------- TABELL OCH KOORDINATSYSTEM (graph.js) ---------- */
 .dg-table { margin: 10px auto 18px; border-collapse: collapse; font-family: "Baloo 2", sans-serif; font-size: clamp(1.3rem, 4.2vw, 1.7rem); font-weight: 700; }

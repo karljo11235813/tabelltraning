@@ -278,9 +278,11 @@ const LEDANDE_VARIABEL = /^\p{L}\s*=(?!=)\s*/u;
 const REST = /^(\d+)\s*(?:\(\s*(?:rest|r)\s*(\d+)\s*\)|(?:rest|r)\s*(\d+))$/i;
 const INTE_ENHET = new Set(["x", "r", "rest"]);
 // Det som får stå efter talet som enhet: bokstäver (också åäö), mellanslag, "/", "." och parenteser,
-// "kr/tim", "elever per klass", "(dagar)". En siffra hör inte dit: "5 kr 4" är inget svar.
-const ENHETSTECKEN = /[\p{L}\s/.()]*$/u;
-const BARA_ENHETSTECKEN = /^[\p{L}\s/.()]*$/u;
+// "kr/tim", "elever per klass", "(dagar)", och exponenten 2 eller 3 i en areaenhet eller volymenhet: ² och ³, eller 2 och 3
+// direkt efter m (mm, cm, dm, m, km), med eller utan ^ ("cm²", "cm2", "dm^3"). Annars hör en siffra inte dit: "5 kr 4",
+// "7 kr2" och "7e2" är inga svar.
+const ENHETSTECKEN = /(?:[\p{L}\s/.()²³]|(?<=[mM])\^?[23])*$/u;
+const BARA_ENHETSTECKEN = /^(?:[\p{L}\s/.()²³]|(?<=[mM])\^?[23])*$/u;
 // %, ‰ och ° är enheter utan bokstav. De gäller bara ensamma direkt efter talet: "25 %" men inte "25 % kr", "360°".
 const PROCENTTECKEN = /^(.*\S)\s*([%‰°])$/su;
 const MAX_SVAR = 200; // längre text är aldrig ett tal med enhet

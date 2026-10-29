@@ -1,7 +1,8 @@
 // Rättar rutor och skärmar i en diagnos och bygger resultatet som läraren läser.
 //
 // markBox     rätt, fel eller tomt för en ruta. Förutom tal finns algebra (algebra.js), rötter och olikheter
-//             (solutions.js) och ordsvar (contains); "" i accept betyder att rutan får lämnas tom.
+//             (solutions.js), ordsvar (contains), klockslag och tidsskillnader (time, duration; time.js) och svar med π
+//             (pi; pi.js); "" i accept betyder att rutan får lämnas tom.
 // copyOf      det eleven kan skriva av ur uppgiften: varje sida utan ruta i en rad med = ("135/25" för
 //             "{135|25} = [a]"), med ett blandat tal både som uttryck ("2+2/3") och som det skrivs ("2 2/3").
 //             markBox räknar det som avskrivet, inte som svar.
@@ -11,13 +12,14 @@
 //             svaret { <id>: "1" | "" }), pappersuppgifter (paper, svaret { done: "1" }) som inte rättas, skuggning
 //             (shade, svaret { pieces: "0,3" }, rätt när delarnas vikter ger målbråket), punkter i ett
 //             koordinatsystem (plot, svaret { points: "1,10;2,20" }) och en rät linje genom två punkter som eleven
-//             sätter ut (line, svaret { points: "1,1;6,3" }, rätt när båda ligger på linjen; graph.js).
+//             sätter ut (line, svaret { points: "1,1;6,3" }, rätt när båda ligger på linjen; graph.js) och visarna
+//             på en klocka (clock, svaret { minute: "40", hour: "5,6" }; clock.js).
 // scoreRun    rättar hela omgången och summerar kolumnerna på resultatblanketten. Pappersuppgifterna räknas inte
 //             i right/total; scored.paper är antalet som eleven markerade Klar på (läraren ska se dem).
 //
 // Allt räknas med exakta värden från value.js, aldrig flyttal.
 
-import { rat, mul, equals, compare, isInteger } from "./value.js";
+import { rat, mul, equals, compare, isInteger, Unsupported } from "./value.js";
 import { normalize, normalizeAlgebra, parseNumber, parseExpr, parseFractionWord, parseFractionParts, parseAnswer, stripDecoration } from "./parse.js";
 import { parseAlgebra, parseAlgebraReadings, variablesOf, isEquivalent, canonicalKey } from "./algebra.js";
 import { parseRoots, sameRoots, parseInequality, sameSet } from "./solutions.js";
@@ -25,6 +27,11 @@ import { markupToExpr } from "./markup.js";
 import { checkCalculation } from "./calc.js";
 import { isShadeRight } from "./figures.js";
 import { isPlotRight, isLineRight, pointsText } from "./graph.js";
+import { markClock } from "./clock.js";
+import { markTime, markDuration } from "./time.js";
+import { parsePi, parsePiReadings, piBounds, piParts, hasPi, splitUnit } from "./pi.js";
+import { canonicalUnit } from "./units.js";
+import { surd, add as surdAdd, sub as surdSub, compare as surdCompare } from "./surd.js";
 
 // Värdet av ett facit: ett tal, ett uttryck eller ett bråkord ("två femtedelar"), med ett ° sist som enhet ("360°").
 // null när det inte är något värde ("Saknar reell lösning").
@@ -113,7 +120,8 @@ export function markBox(box, raw, copy = null, over = null) {
   if (given.kind === "none") return accept.some((a) => parseAnswer(a).kind === "none") ? "right" : "wrong";
   if (given.kind === "all") return accept.some((a) => parseAnswer(a).kind === "all") ? "right" : "wrong";
 
-  // Ordsvar, algebra, rötter och olikheter läser svaret själva (före rest: "2r3" är 2r³ i en algebraruta).
+  // Ordsvar, algebra, rötter, olikheter, klockslag, tidsskillnader och π läser svaret själva (före rest: "2r3" är 2r³ i
+  // en algebraruta).
   if (box.contains) return markContains(box, raw);
   if (box.algebra) {
     const marked = markAlgebra(box, raw);
@@ -121,6 +129,9 @@ export function markBox(box, raw, copy = null, over = null) {
   }
   if (box.roots) return markRoots(box, raw);
   if (box.inequality) return markInequality(box, raw);
+  if (box.time) return markTime(box, raw);
+  if (box.duration) return markDuration(box, raw);
+  if (box.pi) return markPi(box, raw);
 
   if (given.kind === "rest") {
     const same = (a) => {
@@ -216,12 +227,13 @@ const PERCENT_UNITS = new Set(["%", "‰", "procent", "promille"]);
 const unitWords = (given) => (given.unit === null ? [] : [given.unit, given.unit.split(" ")[0]]);
 const isPercentUnit = (given) => unitWords(given).some((u) => PERCENT_UNITS.has(u));
 
-// Nyckeln i box.units som svarets enhet matchar (utan hänsyn till gemener och versaler; hela enheten före första
-// ordet), eller undefined.
+// Nyckeln i box.units som svarets enhet matchar (hela enheten före första ordet), eller undefined. Enheterna jämförs i
+// formen från canonicalUnit (units.js): utan hänsyn till gemener och versaler, "cm2", "cm^2", "cm²" och
+// "kvadratcentimeter" är samma enhet, och så är "kg" och "kilogram".
 function unitKey(box, given) {
   if (!box.units) return undefined;
-  const keys = new Map(Object.keys(box.units).map((unit) => [unit.toLowerCase(), unit]));
-  const found = unitWords(given).find((u) => keys.has(u));
+  const keys = new Map(Object.keys(box.units).map((unit) => [canonicalUnit(unit), unit]));
+  const found = unitWords(given).map(canonicalUnit).find((u) => keys.has(u));
   return found === undefined ? undefined : keys.get(found);
 }
 
@@ -272,6 +284,98 @@ function markExpression(box, raw) {
     return value !== null && equals(value, expected);
   };
   return sides.every(same) ? "right" : "wrong";
+}
+
+// π (MLä4, MAr4, MAr6, MAr7, MVo5, MVo6; pi.js): box.pi är det exakta värdet som ett uttryck i π ("25π", "64 − 16π",
+// "π/6"). Svaret är en del eller en kedja ("25π ≈ 78,5 cm²", "25π = 78,5") där varje del ska vara rätt:
+//   - ett uttryck med π som är lika med box.pi för alla värden på π ("25·π", "π · 5²", "16(4 − π)")
+//   - ett tal som ligger mellan värdet med π = 3 och med π = 3,1416 när det får en halv enhet i sin sista decimal åt båda
+//     hållen (75, 78, 79, 78,5 och 78,54 för 25π, men inte 80 eller 78,6), eller som är ett av facits egna närmevärden
+//     (talen i accept: MVo5 5:s 1512 för 480π)
+//   - en uträkning utan π ("25 · 3,14") vars värde ligger mellan de två (utan halv enhet)
+// En enhet efter en del räknas om med units (procent och promille måste stå där) och räknas annars bort. Står % eller
+// procent i units är ett tal utan enhet rätt också som procent: 52 för π/6 (≈ 52 %), liksom 0,52; ett heltal utan enhet
+// är då bara procent (1 är fel, inte 0,52 avrundat).
+function markPi(box, raw) {
+  const tree = parsePi(box.pi);
+  const bounds = tree === null ? null : piBounds(tree);
+  const parts = piParts(raw);
+  if (bounds === null || parts === null) return "wrong";
+  const known = facitApproximations(box);
+  const right = (part) => (hasPi(part) ? piExpressionRight(box, tree, part) : piNumberRight(box, bounds, known, part));
+  return parts.every(right) ? "right" : "wrong";
+}
+
+// Faktorn som en enhet räknas om med (1 utan enhet eller med en enhet som inte står i units), eller null: procent och
+// promille som inte står i units, och en felskriven faktor.
+function factorOf(box, given) {
+  if (isPercentUnit(given) && unitKey(box, given) === undefined) return null;
+  const key = unitKey(box, given);
+  return key === undefined ? rat(1n) : tryExact(box.units[key]);
+}
+
+// Facits egna närmevärden i rutans huvudenhet: talen i delarna av svaren i accept ("78,5" i "25π ≈ 78,5 cm²").
+function facitApproximations(box) {
+  return (box.accept ?? [])
+    .flatMap((a) => piParts(a) ?? [])
+    .filter((part) => !hasPi(part))
+    .map(parseAnswer)
+    .filter((given) => given.kind === "number")
+    .map((given) => {
+      const factor = factorOf(box, given);
+      return factor === null ? null : mul(given.value, factor);
+    })
+    .filter((v) => v !== null);
+}
+
+// Ett uttryck med π: lika med facit för alla π, efter omräkning med enheten ("25π cm²").
+function piExpressionRight(box, tree, part) {
+  const { body, unit } = splitUnit(part);
+  const factor = factorOf(box, { unit });
+  if (factor === null) return false;
+  // "4/3π · 4³" kan läsas på två sätt; svaret är rätt när någon av läsningarna är det (som i markAlgebra).
+  return parsePiReadings(body).some((typed) => isEquivalent({ op: "prod", items: [typed, { op: "num", v: surd(factor) }] }, tree));
+}
+
+// Ligger x ± h (exakta tal) och intervallet [low, high] (kvadratiska tal) över varandra? Falskt också när det inte går
+// att jämföra exakt (en rot i svaret och en annan rot i gränserna): rättningen kastar aldrig.
+function overlaps({ low, high }, x, h) {
+  try {
+    return surdCompare(surdAdd(surd(x), surd(h)), low) >= 0 && surdCompare(surdSub(surd(x), surd(h)), high) <= 0;
+  } catch (e) {
+    if (e instanceof Unsupported) return false;
+    throw e;
+  }
+}
+
+// En halv enhet i den sista decimalen som skrevs ("78,5" ger 0,05, "79" ger 0,5); 0 för ett bråk och annat som inte är
+// ett decimaltal.
+function halfUnit(text) {
+  const decimals = typedDecimals(text);
+  return decimals === null ? rat(0n) : rat(1n, 2n * 10n ** BigInt(decimals));
+}
+
+// Ett tal (med enhet) eller en uträkning utan π.
+function piNumberRight(box, bounds, known, part) {
+  const given = parseAnswer(part);
+  if (given.kind !== "number") {
+    const { body, unit } = splitUnit(part);
+    const value = parseExpr(body);
+    const factor = factorOf(box, { unit });
+    return value !== null && !value.none && factor !== null && overlaps(bounds, mul(value, factor), rat(0n));
+  }
+  const factor = factorOf(box, given);
+  if (factor === null) return false;
+  const value = mul(given.value, factor);
+  const half = halfUnit(given.text);
+  if (known.some((k) => equals(k, value))) return true;
+  // Ett tal utan enhet som procent, när rutan har procent i units (MVo6 3: "52" för π/6).
+  const key = given.unit === null ? unitKey(box, { unit: "%" }) ?? unitKey(box, { unit: "procent" }) : undefined;
+  const percent = key === undefined ? null : tryExact(box.units[key]);
+  // I en procentruta är ett heltal utan enhet ett antal procent: "1" är 1 %, inte π/6 ≈ 0,52 avrundat till ett heltal.
+  const wholePercent = percent !== null && typedDecimals(given.text) === 0;
+  if (!wholePercent && overlaps(bounds, value, mul(half, factor))) return true;
+  return percent !== null && overlaps(bounds, mul(given.value, percent), mul(half, percent));
 }
 
 // Heltalsvärdet av ett svar, eller null.
@@ -368,7 +472,7 @@ const isOneColumn = (screen) => screen.kind === undefined && screen.points === "
 // en kolumn; pick ger en kolumn per alternativ ("each") eller en för hela skärmen ("one"). En pappersuppgift ger ingen.
 function columnsOf(screen) {
   if (screen.kind === "paper") return 0;
-  if (screen.kind === "choose" || screen.kind === "shade" || screen.kind === "plot" || screen.kind === "line") return 1;
+  if (screen.kind === "choose" || screen.kind === "shade" || screen.kind === "plot" || screen.kind === "line" || screen.kind === "clock") return 1;
   if (screen.kind === "pick") return screen.points === "one" ? 1 : screen.items.length;
   if (screen.kind === "word" || isOneColumn(screen)) return 1;
   return Object.keys(boxesOf(screen)).length;
@@ -430,6 +534,8 @@ export function markScreen(diagnosis, screen, entry) {
   if (screen.kind === "shade") return { ...result, ...markShade(screen, entry.answers) };
   if (screen.kind === "plot") return { ...result, ...markPlot(screen, entry.answers) };
   if (screen.kind === "line") return { ...result, ...markLine(screen, entry.answers) };
+  // clock: visarna, svaret { minute, hour } (clock.js). Rätt minut och timvisaren mellan rätt timstreck.
+  if (screen.kind === "clock") return { ...result, ...markClock(screen, entry.answers) };
   // En pappersuppgift rättas inte: Klar betyder att eleven ska visa läraren, och räknas inte i poängen.
   if (screen.kind === "paper") return { ...result, mark: entry.answers?.done === "1" ? "paper" : "skipped" };
 

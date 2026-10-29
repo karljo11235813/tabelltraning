@@ -69,8 +69,33 @@ import tag1 from "./talmonster/tag1.js";
 import tag2 from "./talmonster/tag2.js";
 import tag3 from "./talmonster/tag3.js";
 import tag4 from "./talmonster/tag4.js";
+import mti1 from "./matning/mti1.js";
+import mti2 from "./matning/mti2.js";
+import mti3 from "./matning/mti3.js";
+import mti4 from "./matning/mti4.js";
+import mti5 from "./matning/mti5.js";
+import mma1 from "./matning/mma1.js";
+import mma2 from "./matning/mma2.js";
+import mla1 from "./matning/mla1.js";
+import mla2 from "./matning/mla2.js";
+import mla3 from "./matning/mla3.js";
+import mla4 from "./matning/mla4.js";
+import mar1 from "./matning/mar1.js";
+import mar2 from "./matning/mar2.js";
+import mar3 from "./matning/mar3.js";
+import mar4 from "./matning/mar4.js";
+import mar5 from "./matning/mar5.js";
+import mar6 from "./matning/mar6.js";
+import mar7 from "./matning/mar7.js";
+import mvo1 from "./matning/mvo1.js";
+import mvo2 from "./matning/mvo2.js";
+import mvo3 from "./matning/mvo3.js";
+import mvo4 from "./matning/mvo4.js";
+import mvo5 from "./matning/mvo5.js";
+import mvo6 from "./matning/mvo6.js";
+import mvo7 from "./matning/mvo7.js";
 
-export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5, rb1, rb2, rb3, rb4, rb5, rb6, rb7, rd1, rd2, rd3, rd4, rd5, rd6, rp1, rp2, rp3, rp4, rp5, rp6, rp7, tat1, tat2, tat3, tat4, tat5, tau1, tau2, tau3, tau4, tau5, tae1, tae2, tae3, tae4, tae5, tae6, tae7, tag1, tag2, tag3, tag4];
+export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5, rb1, rb2, rb3, rb4, rb5, rb6, rb7, rd1, rd2, rd3, rd4, rd5, rd6, rp1, rp2, rp3, rp4, rp5, rp6, rp7, tat1, tat2, tat3, tat4, tat5, tau1, tau2, tau3, tau4, tau5, tae1, tae2, tae3, tae4, tae5, tae6, tae7, tag1, tag2, tag3, tag4, mti1, mti2, mti3, mti4, mti5, mma1, mma2, mla1, mla2, mla3, mla4, mar1, mar2, mar3, mar4, mar5, mar6, mar7, mvo1, mvo2, mvo3, mvo4, mvo5, mvo6, mvo7];
 
 export function getDiagnosis(code) {
   return DIAGNOSES.find((d) => d.code === code);

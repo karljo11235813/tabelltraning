@@ -4,8 +4,9 @@
 // parseAlgebra   läser texten till ett uttrycksträd, eller null. Variablerna är enskilda bokstäver: ab är a · b.
 //                Gånger får skrivas ut (·, *, ×) eller utelämnas (2x, 3ab, x(x − 1), (x + 1)(x − 1), 2(x + 3)), men x är
 //                aldrig gånger. Ett utelämnat gångertecken binder hårdare än / ("(6 − x²)/2x" är (6 − x²)/(2x)). En siffra
-//                direkt efter en bokstav är en exponent (x2 är x², 2ab3 är 2ab³). ° räknas bort ((n − 2) · 180°), och så
-//                gör en bokstav och = först ("y = 2x − 4" är 2x − 4). Facit läses alltid så.
+//                direkt efter en bokstav är en exponent (x2 är x², 2ab3 är 2ab³), utom efter π, som är en faktor (π5² är
+//                π · 5², pi.js). ° räknas bort ((n − 2) · 180°), och så gör en bokstav och = först ("y = 2x − 4" är
+//                2x − 4). Facit läses alltid så.
 // parseAlgebraReadings  båda läsningarna av det eleven skrev: med ett utelämnat gångertecken som binder hårdare än /, och
 //                som vanligt gånger från vänster ("1/2bh" är både 1/(2bh) och (1/2)bh). Skrivsättet är tvetydigt, så
 //                mark.js godtar svaret när någon av läsningarna är rätt. Ett enhetsord sist ("180(n − 2) grader") räknas
@@ -105,8 +106,8 @@ function läs(s, löst = false) {
     if (isLetter(c)) {
       i++;
       const variable = { op: "var", name: c };
-      // x2 är x²: ingen skriver en faktor efter sin bokstav.
-      if (isDigit(s[i])) {
+      // x2 är x²: ingen skriver en faktor efter sin bokstav. Utom efter π, som är ett tal: π5² är π · 5² (se utelämnatGånger).
+      if (isDigit(s[i]) && c !== "π") {
         const e = BigInt(siffror());
         if (e > MAX_EXPONENT || s[i] === "^") fel();
         return { op: "pow", a: variable, e };
@@ -124,7 +125,7 @@ function läs(s, löst = false) {
     return { op: "pow", a: bas, e: exponent() };
   }
 
-  const utelämnatGånger = () => s[i] === "(" || s[i] === "√" || isLetter(s[i]);
+  const utelämnatGånger = () => s[i] === "(" || s[i] === "√" || isLetter(s[i]) || (s[i - 1] === "π" && isDigit(s[i]));
 
   function juxt() {
     const items = [potens()];

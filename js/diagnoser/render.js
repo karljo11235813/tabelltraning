@@ -6,7 +6,8 @@
 //                  (line.step), eller tätare om linjen har line.snap ("0,1" på en linje med streck var 0,2).
 // renderScreen     en skärm som eleven fyller i: rader med rutor (och en tabell eller ett koordinatsystem att läsa av,
 //                  graph.js, och en figur, figures.js), textuppgift, placera eller läsa av tallinjen, ett val (choose,
-//                  pick; choice.js), skuggning (shade), punkter (plot), en rät linje (line) eller en pappersuppgift (paper). Ger
+//                  pick; choice.js), skuggning (shade), punkter (plot), en rät linje (line), visarna på en klocka (clock;
+//                  clock.js) eller en pappersuppgift (paper). Ger
 //                  { el, read, focusFirst } och, för skärmar där det behövs, keepBlank (tomt är ett svar) och nextLabel
 //                  ("Klar" i stället för "Nästa").
 //
@@ -22,7 +23,8 @@
 // en bit, med spans som förut. Det eleven skriver (rutorna, svaren på resultatskärmen) är alltid vanlig text.
 //
 // Rutorna visar aldrig vilken form svaret ska ha: samma textruta överallt, och symbolraden är densamma
-// på varje skärm i en diagnos. Ingen rätt eller fel visas under tiden.
+// på varje skärm i en diagnos (symbolsOf: de fyra med symbols, och π i en diagnos med en π-ruta). Ingen rätt eller fel
+// visas under tiden.
 
 import { parseMarkup, layoutRow, splitVariables, KATEX_OPTIONS } from "./markup.js";
 import { formatTime } from "./session.js";
@@ -31,6 +33,7 @@ import { parseNumber } from "./parse.js";
 import { rat, add, sub, mul, div, compare, isInteger } from "./value.js";
 import { figureStage, buildShade, shadeDetail, shadeSkipped } from "./figures.js";
 import { drawTable, cellsOf, chartStage, chartBlock, buildPlot, plotDetail, plotSkipped, buildLine, drawnLineDetail, drawnLineSkipped } from "./graph.js";
+import { buildClock, clockDetail, clockSkipped } from "./clock.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -294,7 +297,7 @@ const taskText = (screen) => (screen.rows === undefined ? [el("p", "dg-word-text
 
 const PAPER_LINE = "Räkna på papper. Skriv bara svaret här.";
 const PAPER_SCREEN_LINE = "Rita på ett löst papper och visa din lärare.";
-const NO_INPUT_KINDS = ["choose", "pick", "paper", "shade", "plot", "line"]; // skärmar utan textrutor: ingen "Räkna på papper"-rad
+const NO_INPUT_KINDS = ["choose", "pick", "paper", "shade", "plot", "line", "clock"]; // skärmar utan textrutor: ingen "Räkna på papper"-rad
 
 // En rad med fler tecken än så i markeringen är lång (bara TAt4 4; den längsta raden i en annan diagnos har 38).
 const LONG_ROW = 40;
@@ -312,6 +315,14 @@ const SYMBOLS = [
   { text: "√", label: "Rot", insert: "√", raised: false },
   { text: "·10ⁿ", label: "Gånger tio upphöjt i", insert: "·10", raised: true },
 ];
+
+// π (Mätning): en diagnos där någon ruta har pi får π sist i symbolraden, på alla skärmar med textrutor, så att knappen
+// inte säger vilken uppgift som har π i svaret. Att skriva "pi" går lika bra (pi.js).
+const PI_SYMBOL = { text: "π", label: "Pi", insert: "π", raised: false };
+const hasPiBox = (diagnosis) => (diagnosis.screens ?? []).some((s) => Object.values(s.boxes ?? {}).some((box) => box.pi !== undefined));
+
+// Symbolradens knappar för en diagnos: de fyra (symbols) och π, eller ingen.
+export const symbolsOf = (diagnosis) => [...(diagnosis.symbols ? SYMBOLS : []), ...(hasPiBox(diagnosis) ? [PI_SYMBOL] : [])];
 
 // Sätter in text där markören står i rutan (eller ersätter det markerade), utan att ta bort fokus.
 function insertText(input, text) {
@@ -400,9 +411,9 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
     const { keepBlank, ...view } = buildChoice(screen, root, drawMarkup);
     ({ read, focusFirst } = view);
     extra = { keepBlank };
-  } else if (kind === "shade" || kind === "plot" || kind === "line") {
+  } else if (kind === "shade" || kind === "plot" || kind === "line" || kind === "clock") {
     // Tomt (inget skuggat, inga punkter) är ett svar och fel, som i ett val: bara Hoppa över ger –.
-    const { keepBlank, ...view } = ({ shade: buildShade, plot: buildPlot, line: buildLine })[kind](screen, root);
+    const { keepBlank, ...view } = ({ shade: buildShade, plot: buildPlot, line: buildLine, clock: buildClock })[kind](screen, root);
     ({ read, focusFirst } = view);
     extra = { keepBlank };
   } else if (kind === "paper") {
@@ -461,11 +472,12 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
 
   inputs.forEach((input, i) => input.setAttribute("enterkeyhint", i === inputs.length - 1 ? "done" : "next"));
 
-  if (diagnosis.symbols && inputs.length > 0) {
+  const symbols = symbolsOf(diagnosis);
+  if (symbols.length > 0 && inputs.length > 0) {
     const row = el("div", "dg-symbols");
     row.setAttribute("role", "group");
     row.setAttribute("aria-label", "Symboler");
-    for (const symbol of SYMBOLS) {
+    for (const symbol of symbols) {
       const node = el("button", "bt-symbol-btn dg-symbol-btn", symbol.text);
       node.type = "button";
       node.setAttribute("aria-label", symbol.label);
@@ -739,6 +751,7 @@ function detailFor(screen, row, variables) {
     else if (screen.kind === "shade") hidden.append(...shadeSkipped(screen));
     else if (screen.kind === "plot") hidden.append(...plotSkipped(screen));
     else if (screen.kind === "line") hidden.append(...drawnLineSkipped(screen));
+    else if (screen.kind === "clock") hidden.append(...clockSkipped(screen));
     else if (screen.kind === "place" || screen.kind === "read") {
       const values = screen.kind === "place" ? screen.letters : screen.marks;
       for (const [id, value] of Object.entries(values)) hidden.append(labelledLine(`${id} =`, el("span", "dg-t", prettyAnswer(value))));
@@ -751,6 +764,7 @@ function detailFor(screen, row, variables) {
   if (screen.kind === "shade") return shadeDetail(screen, row);
   if (screen.kind === "plot") return plotDetail(screen, row);
   if (screen.kind === "line") return drawnLineDetail(screen, row);
+  if (screen.kind === "clock") return clockDetail(screen, row);
   if (screen.kind === "place" || screen.kind === "read") return lineDetail(screen, row);
   return rowsDetail(screen, row, variables);
 }
