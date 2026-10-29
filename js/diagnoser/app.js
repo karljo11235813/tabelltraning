@@ -252,5 +252,8 @@ $("dgSkip").addEventListener("click", skip);
 $("dgCancel").addEventListener("click", askCancel);
 $("dgCancelNo").addEventListener("click", keepGoing);
 $("dgCancelYes").addEventListener("click", showList);
+// Tillbaka till listan med ett klick, både under diagnosen och på resultatskärmen. Som "Ja, avbryt": inget sparas.
+$("dgRunBack").addEventListener("click", showList);
+$("dgResultBack").addEventListener("click", showList);
 
 showList();
