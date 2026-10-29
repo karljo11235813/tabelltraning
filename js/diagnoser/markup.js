@@ -17,6 +17,10 @@
 // layoutRow      delar en rad vid sina rutor och ger LaTeX för varje bit mellan dem (null om en ruta ligger i en rot
 //                eller i ett bråk på annat sätt än som hela täljaren). Ett bråk med en ruta som täljare är en egen bit
 //                ({ box, denominator }) som render.js ritar med HTML. Bitarna ritas med KaTeX när det har laddats.
+// splitVariables delar en text i ord och variabler (för render.js när KaTeX saknas).
+//
+// variables (diagnosens fält, t.ex. "xy") är bokstäverna som är variabler: en följd av bara sådana bokstäver ("x",
+// "ab") ritas som matematik (kursiv), inte som \text{…}. Andra ord är text.
 //
 // Trasig markering (oparade { }, bråk utan |) kastar: det är ett fel i datafilen, och en rad som
 // ritas fel ser ut som en annan uppgift för eleven.
@@ -223,19 +227,39 @@ const LATEX_ESCAPES = {
 const isDigit = (c) => c !== undefined && c >= "0" && c <= "9";
 const isLetter = (c) => c !== undefined && /^\p{L}$/u.test(c);
 
+// En följd bokstäver där varje bokstav är en variabel ("ab" när variables är "abh").
+const isVariableRun = (run, variables) => variables !== "" && [...run].every((c) => variables.includes(c));
+
+// Texten i bitar { s, variable }: följder av variabelbokstäver för sig, allt annat (också andra ord) som text.
+export function splitVariables(s, variables = "") {
+  const parts = [];
+  for (const piece of String(s).split(/(\p{L}+)/u)) {
+    if (piece === "") continue;
+    const variable = isLetter(piece[0]) && isVariableRun(piece, variables);
+    const last = parts.at(-1);
+    if (last && !last.variable && !variable) last.s += piece;
+    else parts.push({ s: piece, variable });
+  }
+  return parts;
+}
+
 // Ett mellanrum av run tecken. Matematikläget ignorerar mellanslag, så de som betyder något skrivs ut:
 // ett längre mellanrum (tallinjens tal står med fyra mellanslag emellan), tusentalsavgränsaren mellan
-// siffror ("57 000") och mellanrummet kring ett ord ("3 rest 1").
-function spaceLatex(run, before, after) {
+// siffror ("57 000") och mellanrummet kring ett ord ("3 rest 1"). En variabel är inget ord.
+function spaceLatex(run, before, after, variables) {
+  const isWordLetter = (c) => isLetter(c) && !variables.includes(c);
   if (run >= 2) return `\\hspace{${run / 4}em}`;
   if (isDigit(before) && isDigit(after)) return "\\,";
-  if (isLetter(before) || isLetter(after)) return "\\ ";
+  if (isWordLetter(before) || isWordLetter(after)) return "\\ ";
   return " ";
 }
 
+// Tecken som skrivs som ett LaTeX-kommando.
+const COMMANDS = { "·": "\\cdot", "≈": "\\approx", "≤": "\\leq", "≥": "\\geq", "≠": "\\neq", "±": "\\pm" };
+
 // En text som LaTeX. atStart/atEnd är sant för första och sista tecknet i hela raden: mellanrummet där
 // ritas inte (render.js lägger det utanför formeln).
-function textLatex(s, atStart, atEnd) {
+function textLatex(s, atStart, atEnd, variables = "") {
   let out = "";
   let i = 0;
   while (i < s.length) {
@@ -243,17 +267,26 @@ function textLatex(s, atStart, atEnd) {
     if (/\s/.test(c)) {
       let j = i;
       while (j < s.length && /\s/.test(s[j])) j++;
-      if (!(i === 0 && atStart) && !(j === s.length && atEnd)) out += spaceLatex(j - i, s[i - 1], s[j]);
+      // Efter "Svar:" (kolonet står i \text) är mellanslaget ett ordmellanrum, som efter ett ord.
+      const efterOrdkolon = j - i === 1 && out.endsWith(":}");
+      if (!(i === 0 && atStart) && !(j === s.length && atEnd)) out += efterOrdkolon ? "\\ " : spaceLatex(j - i, s[i - 1], s[j], variables);
       i = j;
     } else if (isLetter(c)) {
       let j = i;
       while (j < s.length && isLetter(s[j])) j++;
-      out += `\\text{${s.slice(i, j)}}`;
+      const run = s.slice(i, j);
+      // En variabel direkt efter ett kommando (\cdot x) behöver ett mellanslag, annars blir det \cdotx.
+      if (isVariableRun(run, variables)) out += `${/\\[a-z]+$/i.test(out) ? " " : ""}${run}`;
+      else if (s[j] === ":") {
+        // Ett kolon efter ett ord ("Svar:") är skiljetecken och står i texten; i matematikläget får det mellanrum som
+        // ett relationstecken ("Svar :").
+        out += `\\text{${run}:}`;
+        j++;
+      } else out += `\\text{${run}}`;
       i = j;
     } else {
       if (c === "−" || c === "-") out += "-";
-      else if (c === "·") out += "\\cdot";
-      else if (c === "≈") out += "\\approx"; // avrundningsuppgifter: "11 ≈ [a]"
+      else if (Object.hasOwn(COMMANDS, c)) out += COMMANDS[c]; // "≈" i avrundningsuppgifter, ≤ ≥ ≠ ± i olikheter och rötter
       else if (c === "," && isDigit(s[i - 1]) && isDigit(s[i + 1])) out += "{,}"; // decimalkomma utan mellanrum
       else if (c === "/" && (/\s/.test(s[i - 1] ?? "") || /\s/.test(s[i + 1] ?? ""))) out += "\\mathbin{/}"; // "14 / 2" som på bladet
       else out += Object.hasOwn(LATEX_ESCAPES, c) ? LATEX_ESCAPES[c] : c;
@@ -264,22 +297,23 @@ function textLatex(s, atStart, atEnd) {
 }
 
 // LaTeX för tecken från parseMarkup. Tecknen får inte innehålla rutor (en ruta kastar). Det som skrivs:
-//   text   siffror och räknesätt som de står ("−" blir "-", "·" blir \cdot, "≈" blir \approx, decimalkomma blir {,}), bokstäver
-//          som \text{…}, och tecken som betyder något i LaTeX med ett snedstreck framför
+//   text   siffror och räknesätt som de står ("−" blir "-", "·" blir \cdot, "≈" blir \approx, ≤ ≥ ≠ ± blir \leq \geq \neq \pm,
+//          decimalkomma blir {,}), variabler som de står, andra bokstäver som \text{…}, och tecken som betyder något i
+//          LaTeX med ett snedstreck framför
 //   sup    ^{…}      frac   \frac{topp}{botten}      root   \sqrt{innehåll}
-export function tokensToLatex(tokens) {
+export function tokensToLatex(tokens, variables = "") {
   const last = tokens.length - 1;
   return tokens
     .map((token, i) => {
       switch (token.t) {
         case "text":
-          return textLatex(token.s, i === 0, i === last);
+          return textLatex(token.s, i === 0, i === last, variables);
         case "sup":
-          return `^{${textLatex(token.s, true, true)}}`;
+          return `^{${textLatex(token.s, true, true, variables)}}`;
         case "frac":
-          return `\\frac{${tokensToLatex(token.top)}}{${tokensToLatex(token.bottom)}}`;
+          return `\\frac{${tokensToLatex(token.top, variables)}}{${tokensToLatex(token.bottom, variables)}}`;
         case "root":
-          return `\\sqrt{${tokensToLatex(token.body)}}`;
+          return `\\sqrt{${tokensToLatex(token.body, variables)}}`;
         case "mixed":
           return `${token.whole}\\frac{${token.top}}{${token.bottom}}`;
         case "box":
@@ -303,10 +337,11 @@ const hasBox = (tokens) =>
 // Det delas ut som en egen bit, och render.js ritar det med HTML (en ruta över ett streck) mellan KaTeX-bitarna.
 const isBoxFrac = (t) => t.t === "frac" && t.top.length === 1 && t.top[0].t === "box" && !hasBox(t.bottom);
 
-// En bit utan siffror, räknesätt eller formler ("Svar: ", ett mellanrum mellan två rutor) är ingen matematik
-// och ritas som vanlig text.
-const MATH_TEXT = /[0-9+\-−·×÷=/<>]/;
-const hasMath = (tokens) => tokens.some((t) => t.t !== "text" || MATH_TEXT.test(t.s));
+// En bit utan siffror, räknesätt, variabler eller formler ("Svar: ", ett mellanrum mellan två rutor) är ingen
+// matematik och ritas som vanlig text.
+const MATH_TEXT = /[0-9+\-−·×÷=/<>≤≥≠±]/;
+const hasMath = (tokens, variables) =>
+  tokens.some((t) => t.t !== "text" || MATH_TEXT.test(t.s) || splitVariables(t.s, variables).some((p) => p.variable));
 
 // Mellanrummet först och sist i en bit. Det ritas utanför formeln, eftersom KaTeX inte ger något mellanrum vid
 // formelns kanter.
@@ -340,8 +375,8 @@ const endsWithOperator = (core) => core.at(-1)?.t === "text" && OPERATORS.includ
 // mellan två rutor. tokens är biten som parseMarkup gav den (ritas som förut när latex är null, eller KaTeX
 // inte kan rita den); latex är det KaTeX ska rita, med before och after som mellanrum före och efter.
 // null när en ruta ligger i en rot eller i ett bråk på annat sätt än som hela täljaren: då går raden inte att dela,
-// och den ritas som förut.
-export function layoutRow(tokens) {
+// och den ritas som förut. variables är diagnosens variabelbokstäver.
+export function layoutRow(tokens, variables = "") {
   if (tokens.some((t) => t.t !== "box" && !isBoxFrac(t) && hasBox([t]))) return null;
   const parts = [];
   let group = [];
@@ -350,7 +385,7 @@ export function layoutRow(tokens) {
     const tokensHere = group;
     group = [];
     const { before, core, after } = splitEdges(tokensHere);
-    if (!hasMath(core)) {
+    if (!hasMath(core, variables)) {
       parts.push({ tokens: tokensHere, latex: null, before: "", after: "" });
       return;
     }
@@ -359,7 +394,7 @@ export function layoutRow(tokens) {
     const trailing = nextIsBox && endsWithOperator(core);
     parts.push({
       tokens: tokensHere,
-      latex: `\\displaystyle ${leading ? "{}" : ""}${tokensToLatex(core)}${trailing ? "{}" : ""}`,
+      latex: `\\displaystyle ${leading ? "{}" : ""}${tokensToLatex(core, variables)}${trailing ? "{}" : ""}`,
       before: leading ? "" : before,
       after: trailing ? "" : after,
     });

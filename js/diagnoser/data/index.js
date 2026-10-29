@@ -48,8 +48,29 @@ import rp4 from "./rationella/rp4.js";
 import rp5 from "./rationella/rp5.js";
 import rp6 from "./rationella/rp6.js";
 import rp7 from "./rationella/rp7.js";
+import tat1 from "./talmonster/tat1.js";
+import tat2 from "./talmonster/tat2.js";
+import tat3 from "./talmonster/tat3.js";
+import tat4 from "./talmonster/tat4.js";
+import tat5 from "./talmonster/tat5.js";
+import tau1 from "./talmonster/tau1.js";
+import tau2 from "./talmonster/tau2.js";
+import tau3 from "./talmonster/tau3.js";
+import tau4 from "./talmonster/tau4.js";
+import tau5 from "./talmonster/tau5.js";
+import tae1 from "./talmonster/tae1.js";
+import tae2 from "./talmonster/tae2.js";
+import tae3 from "./talmonster/tae3.js";
+import tae4 from "./talmonster/tae4.js";
+import tae5 from "./talmonster/tae5.js";
+import tae6 from "./talmonster/tae6.js";
+import tae7 from "./talmonster/tae7.js";
+import tag1 from "./talmonster/tag1.js";
+import tag2 from "./talmonster/tag2.js";
+import tag3 from "./talmonster/tag3.js";
+import tag4 from "./talmonster/tag4.js";
 
-export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5, rb1, rb2, rb3, rb4, rb5, rb6, rb7, rd1, rd2, rd3, rd4, rd5, rd6, rp1, rp2, rp3, rp4, rp5, rp6, rp7];
+export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5, rb1, rb2, rb3, rb4, rb5, rb6, rb7, rd1, rd2, rd3, rd4, rd5, rd6, rp1, rp2, rp3, rp4, rp5, rp6, rp7, tat1, tat2, tat3, tat4, tat5, tau1, tau2, tau3, tau4, tau5, tae1, tae2, tae3, tae4, tae5, tae6, tae7, tag1, tag2, tag3, tag4];
 
 export function getDiagnosis(code) {
   return DIAGNOSES.find((d) => d.code === code);

@@ -1,6 +1,7 @@
 // Rättar rutor och skärmar i en diagnos och bygger resultatet som läraren läser.
 //
-// markBox     rätt, fel eller tomt för en ruta.
+// markBox     rätt, fel eller tomt för en ruta. Förutom tal finns algebra (algebra.js), rötter och olikheter
+//             (solutions.js) och ordsvar (contains); "" i accept betyder att rutan får lämnas tom.
 // copyOf      det eleven kan skriva av ur uppgiften: varje sida utan ruta i en rad med = ("135/25" för
 //             "{135|25} = [a]"), med ett blandat tal både som uttryck ("2+2/3") och som det skrivs ("2 2/3").
 //             markBox räknar det som avskrivet, inte som svar.
@@ -8,23 +9,29 @@
 // markScreen  rättar en skärm ur en sessionspost { label, answers, skipped, ms }. Förutom rutor, textuppgifter och
 //             tallinjer finns val: choose (ett alternativ, svaret { choice: id }) och pick (markera allt som stämmer,
 //             svaret { <id>: "1" | "" }), pappersuppgifter (paper, svaret { done: "1" }) som inte rättas, skuggning
-//             (shade, svaret { pieces: "0,3" }, rätt när delarnas vikter ger målbråket) och punkter i ett
-//             koordinatsystem (plot, svaret { points: "1,10;2,20" }).
+//             (shade, svaret { pieces: "0,3" }, rätt när delarnas vikter ger målbråket), punkter i ett
+//             koordinatsystem (plot, svaret { points: "1,10;2,20" }) och en rät linje genom två punkter som eleven
+//             sätter ut (line, svaret { points: "1,1;6,3" }, rätt när båda ligger på linjen; graph.js).
 // scoreRun    rättar hela omgången och summerar kolumnerna på resultatblanketten. Pappersuppgifterna räknas inte
 //             i right/total; scored.paper är antalet som eleven markerade Klar på (läraren ska se dem).
 //
 // Allt räknas med exakta värden från value.js, aldrig flyttal.
 
 import { rat, mul, equals, compare, isInteger } from "./value.js";
-import { normalize, parseNumber, parseExpr, parseFractionWord, parseFractionParts, parseAnswer, stripDecoration } from "./parse.js";
+import { normalize, normalizeAlgebra, parseNumber, parseExpr, parseFractionWord, parseFractionParts, parseAnswer, stripDecoration } from "./parse.js";
+import { parseAlgebra, parseAlgebraReadings, variablesOf, isEquivalent, canonicalKey } from "./algebra.js";
+import { parseRoots, sameRoots, parseInequality, sameSet } from "./solutions.js";
 import { markupToExpr } from "./markup.js";
 import { checkCalculation } from "./calc.js";
 import { isShadeRight } from "./figures.js";
-import { isPlotRight, pointsText } from "./graph.js";
+import { isPlotRight, isLineRight, pointsText } from "./graph.js";
 
-// Värdet av ett facit: ett tal, ett uttryck eller ett bråkord ("två femtedelar"). null när det inte är något
-// värde ("Saknar reell lösning").
-const valueOf = (text) => parseNumber(text) ?? parseExpr(text) ?? parseFractionWord(text);
+// Värdet av ett facit: ett tal, ett uttryck eller ett bråkord ("två femtedelar"), med ett ° sist som enhet ("360°").
+// null när det inte är något värde ("Saknar reell lösning").
+const valueOf = (facit) => {
+  const text = String(facit).replace(/\s*°$/, "");
+  return parseNumber(text) ?? parseExpr(text) ?? parseFractionWord(text);
+};
 
 // Ett exakt tal ur datan (en enhetsfaktor eller en gräns i ett intervall): en sträng ("1/10", "0,5"), ett heltal
 // eller ett decimaltal. Ett JS-tal läses från sin decimalskrivning (0.1 blir 1/10, inte ett flyttal). Ett flyttal med
@@ -89,18 +96,32 @@ export function numeratorOver(markup, id) {
 // ("4/10", "4 tiondelar") som sin täljare, eftersom nämnaren redan står där. Formen frågas efter: 2/5 och 0,4 är fel.
 export function markBox(box, raw, copy = null, over = null) {
   const given = parseAnswer(raw);
-  if (given.kind === "empty") return "empty";
-
   const accept = box.accept ?? [];
-  const typed = normalize(stripDecoration(raw)); // "3³." och "Svar: 3³" är 3³ också i en ruta med bestämd form
-  if (accept.some((a) => normalize(a) === typed)) return "right";
+  // "" i accept: rutan får stå tom (TAe7 5, där "Saknar lösning" står i x och y får lämnas tom).
+  if (given.kind === "empty") return accept.includes("") ? "right" : "empty";
+
+  // I en ruta med variabler är x en bokstav, inte gånger ("5x − 3" är inte 5 · −3).
+  const norm = box.algebra || box.roots || box.inequality ? normalizeAlgebra : normalize;
+  const typed = norm(stripDecoration(raw)); // "3³." och "Svar: 3³" är 3³ också i en ruta med bestämd form
+  if (accept.some((a) => norm(a) === typed)) return "right";
 
   // "135 / 25" och "135/25 kr" är uppgiften 135/25 avskriven, hur parenteser, mellanslag och enhet än ser ut.
   const copies = [copy ?? []].flat();
   if (copies.some((c) => [raw, given.text].some((t) => t != null && withoutParens(normalize(t)) === c))) return "wrong";
 
-  // "Saknar lösning" och rest gäller oavsett form: eleven får skriva orden och kvoten på sitt sätt.
+  // "Saknar lösning", "alla x" och rest gäller oavsett form: eleven får skriva orden och kvoten på sitt sätt.
   if (given.kind === "none") return accept.some((a) => parseAnswer(a).kind === "none") ? "right" : "wrong";
+  if (given.kind === "all") return accept.some((a) => parseAnswer(a).kind === "all") ? "right" : "wrong";
+
+  // Ordsvar, algebra, rötter och olikheter läser svaret själva (före rest: "2r3" är 2r³ i en algebraruta).
+  if (box.contains) return markContains(box, raw);
+  if (box.algebra) {
+    const marked = markAlgebra(box, raw);
+    if (marked !== null) return marked;
+  }
+  if (box.roots) return markRoots(box, raw);
+  if (box.inequality) return markInequality(box, raw);
+
   if (given.kind === "rest") {
     const same = (a) => {
       const k = parseAnswer(a);
@@ -125,6 +146,50 @@ export function markBox(box, raw, copy = null, over = null) {
   const unit = inMainUnit(box, given);
   if (unit === null) return "wrong"; // en felskriven faktor i datan: aldrig ett undantag
   return accept.some((a) => equalsFacit(unit, a, given)) ? "right" : "wrong";
+}
+
+// Ordsvar (TAt5 2c): rätt när svaret i gemener innehåller något av orden i contains ("Alla kvadrattal", "kvadrat").
+function markContains(box, raw) {
+  const text = String(raw ?? "").toLowerCase();
+  return box.contains.some((word) => text.includes(String(word).toLowerCase())) ? "right" : "wrong";
+}
+
+// Algebra (algebra.js). "equivalent" (Skriv ett uttryck, Teckna): rätt när uttrycket är lika med något av facits för
+// alla värden på variablerna. "simplified" (Förenkla, Utveckla): rätt när normalformen är densamma som för något av
+// facits, så att ett annat skrivsätt av facit är rätt men den oförenklade uppgiften fel. Ett tal är fel när facit har
+// variabler. null när både svaret och facit är tal (TAu5 7b, facit 1): då rättas rutan som en värderuta, där ett skrivet
+// bråk för ett heltal är fel ("3/3"). Ett utelämnat gångertecken efter / är tvetydigt ("1/2bh"), så svaret är rätt när
+// någon av läsningarna är det (parseAlgebraReadings); facit läses som det skrevs.
+function markAlgebra(box, raw) {
+  const facits = (box.accept ?? []).map(parseAlgebra).filter((tree) => tree !== null);
+  const readings = parseAlgebraReadings(raw, facits.flatMap(variablesOf)); // "180(n − 2) grader": ordet sist är en enhet
+  if (readings.length === 0 || facits.length === 0) return "wrong";
+  if (variablesOf(readings[0]).length === 0) return variablesOf(facits[0]).length === 0 ? null : "wrong";
+  if (box.algebra === "equivalent") return readings.some((typed) => facits.some((facit) => isEquivalent(typed, facit))) ? "right" : "wrong";
+  const keys = new Set(facits.map(canonicalKey).filter((key) => key !== null));
+  return readings.some((typed) => keys.has(canonicalKey(typed))) ? "right" : "wrong";
+}
+
+// Rötter (TAe6): rätt när mängden värden eleven skrev är densamma som i något av facits ("1" eller "1 och 3").
+function markRoots(box, raw) {
+  const given = parseRoots(raw);
+  if (given === null) return "wrong";
+  const same = (a) => {
+    const expected = parseRoots(a);
+    return expected !== null && sameRoots(given, expected);
+  };
+  return (box.accept ?? []).some(same) ? "right" : "wrong";
+}
+
+// Olikheter (TAe5): rätt när lösningsmängden är densamma som facits. box.inequality är bokstaven ("x").
+function markInequality(box, raw) {
+  const given = parseInequality(raw, box.inequality);
+  if (given === null) return "wrong";
+  const same = (a) => {
+    const expected = parseInequality(a, box.inequality);
+    return expected !== null && sameSet(given, expected);
+  };
+  return (box.accept ?? []).some(same) ? "right" : "wrong";
 }
 
 // Är täljaren eleven skrev i en täljarruta lika stor som ett facitsvar?
@@ -231,11 +296,13 @@ export function errorNote(diagnosis, box, raw) {
 }
 
 // Rättar en uppsättning rutor, ett id i taget. Ger antal rätt och de som är fel. rows är skärmens rader
-// (en skärm utan rader, som en textuppgift med bara Svar, har ingen uppgift att skriva av).
-function markBoxes(diagnosis, boxes, answers, rows = []) {
+// (en skärm utan rader, som en textuppgift med bara Svar, har ingen uppgift att skriva av). against säger vilken
+// rutas facit en ruta rättas mot, när det inte är dess eget (par i valfri ordning, pairing).
+function markBoxes(diagnosis, boxes, answers, rows = [], against = new Map()) {
   let right = 0;
   const wrong = [];
-  for (const [id, box] of Object.entries(boxes)) {
+  for (const [id, own] of Object.entries(boxes)) {
+    const box = boxes[against.get(id)] ?? own;
     const raw = rawOf(answers, id);
     const row = rows.find((r) => r.includes(`[${id}]`));
     const marked = row === undefined ? markBox(box, raw) : markBox(box, raw, copyOf(row, id), numeratorOver(row, id));
@@ -243,6 +310,26 @@ function markBoxes(diagnosis, boxes, answers, rows = []) {
     else wrong.push({ id, given: raw ?? "", expected: box.accept[0], note: errorNote(diagnosis, box, raw) });
   }
   return { right, wrong };
+}
+
+// Ordningarna av 0 … n − 1, med 0, 1, … n − 1 först.
+function permutations(n) {
+  if (n === 0) return [[]];
+  return permutations(n - 1).flatMap((p) => Array.from({ length: n }, (_, k) => [...p.slice(0, n - 1 - k), n - 1, ...p.slice(n - 1 - k)]));
+}
+
+// Paren i screen.pairs (TAg4 5: [["a", "b"], ["c", "d"]]) är lösningar (x, y) som får stå i vilken ordning som helst.
+// Varje par eleven skrev rättas mot det facitpar som ger flest rätt (vid lika facits egen ordning). Ger en Map från
+// rutans id till id:t för rutan vars facit den rättas mot.
+function pairing(diagnosis, screen, answers) {
+  const pairs = screen.pairs;
+  let best = null;
+  for (const order of permutations(pairs.length)) {
+    const against = new Map(pairs.flatMap((pair, i) => pair.map((id, j) => [id, pairs[order[i]][j]])));
+    const { right } = markBoxes(diagnosis, screen.boxes, answers, screen.rows, against);
+    if (best === null || right > best.right) best = { right, against };
+  }
+  return best.against;
 }
 
 // Värdet som räkningen i en textuppgift ska visa som svar. Ett svar med rest ("7 rest 1") är kvoten.
@@ -277,11 +364,11 @@ function boxesOf(screen) {
 // "one": hela skärmen är en kolumn, allt rätt eller inget. Textuppgifter, placera och läsa av är aldrig "one".
 const isOneColumn = (screen) => screen.kind === undefined && screen.points === "one";
 
-// Antal kolumner på resultatblanketten som skärmen ger. Ett val (choose), en skuggning (shade) och en plot är en
-// kolumn; pick ger en kolumn per alternativ ("each") eller en för hela skärmen ("one"). En pappersuppgift ger ingen.
+// Antal kolumner på resultatblanketten som skärmen ger. Ett val (choose), en skuggning (shade), en plot och en line är
+// en kolumn; pick ger en kolumn per alternativ ("each") eller en för hela skärmen ("one"). En pappersuppgift ger ingen.
 function columnsOf(screen) {
   if (screen.kind === "paper") return 0;
-  if (screen.kind === "choose" || screen.kind === "shade" || screen.kind === "plot") return 1;
+  if (screen.kind === "choose" || screen.kind === "shade" || screen.kind === "plot" || screen.kind === "line") return 1;
   if (screen.kind === "pick") return screen.points === "one" ? 1 : screen.items.length;
   if (screen.kind === "word" || isOneColumn(screen)) return 1;
   return Object.keys(boxesOf(screen)).length;
@@ -307,6 +394,13 @@ function markPlot(screen, answers) {
   const given = rawOf(answers, "points") ?? "";
   const right = isPlotRight(screen, given);
   return { mark: right ? "right" : "wrong", right: Number(right), wrong: right ? [] : [{ id: "points", given, expected: pointsText(screen.points), note: null }] };
+}
+
+// line: två olika punkter som båda ligger på linjen genom screen.through (isLineRight). expected är facits två punkter.
+function markLine(screen, answers) {
+  const given = rawOf(answers, "points") ?? "";
+  const right = isLineRight(screen, given);
+  return { mark: right ? "right" : "wrong", right: Number(right), wrong: right ? [] : [{ id: "points", given, expected: pointsText(screen.through), note: null }] };
 }
 
 // pick: ett alternativ som inte är markerat är "Nej", inte överhoppat (bara Hoppa över hoppar över skärmen). "each"
@@ -335,10 +429,12 @@ export function markScreen(diagnosis, screen, entry) {
   if (screen.kind === "pick") return { ...result, ...markPick(screen, entry.answers) };
   if (screen.kind === "shade") return { ...result, ...markShade(screen, entry.answers) };
   if (screen.kind === "plot") return { ...result, ...markPlot(screen, entry.answers) };
+  if (screen.kind === "line") return { ...result, ...markLine(screen, entry.answers) };
   // En pappersuppgift rättas inte: Klar betyder att eleven ska visa läraren, och räknas inte i poängen.
   if (screen.kind === "paper") return { ...result, mark: entry.answers?.done === "1" ? "paper" : "skipped" };
 
-  const { right, wrong } = markBoxes(diagnosis, boxesOf(screen), entry.answers, screen.rows);
+  const against = Array.isArray(screen.pairs) ? pairing(diagnosis, screen, entry.answers) : new Map();
+  const { right, wrong } = markBoxes(diagnosis, boxesOf(screen), entry.answers, screen.rows, against);
   const all = wrong.length === 0;
   return { ...result, mark: all ? "right" : "wrong", right: isOneColumn(screen) ? Number(all) : right, wrong };
 }

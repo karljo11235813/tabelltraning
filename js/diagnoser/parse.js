@@ -3,7 +3,8 @@
 // normalize  gör att knapparnas och tangentbordets former blir samma sträng.
 // parseNumber läser ett enkelt tal (heltal, decimal, bråk, blandat tal, rot).
 // parseExpr  läser ett uttryck med räknesätt, potenser och rötter.
-// parseAnswer avgör vad ett svar är: tomt, "saknar lösning", rest, tal (med enhet efter) eller annat.
+// normalizeAlgebra är normalize utan x som gånger (x är en variabel i algebra.js).
+// parseAnswer avgör vad ett svar är: tomt, "saknar lösning", "alla x", rest, tal (med enhet efter) eller annat.
 // parseFractionWord läser ett svenskt bråkord ("en halv", "tre fjärdedelar") som ett tal.
 // parseFractionParts läser ett skrivet bråk eller bråkord som täljare och nämnare, oförkortade ("4/10", "fyra tiondelar").
 // stripDecoration tar bort "Svar:" först och skiljetecken sist, så att "Svar: 8." läses som "8".
@@ -21,6 +22,15 @@ const MAX_EXPONENT = 100n;
 // Strängen som alla jämförelser av exakta svar görs på. Samma sträng för det eleven
 // klickar ihop med knapparna och det eleven skriver med tangentbordet.
 export function normalize(text) {
+  return normalera(text, true);
+}
+
+// Som normalize, men x är aldrig gånger: i en algebraruta är x en variabel ("5x − 3", "2x3" är 2x³).
+export function normalizeAlgebra(text) {
+  return normalera(text, false);
+}
+
+function normalera(text, xÄrGånger) {
   let s = String(text ?? "").toLowerCase().trim();
 
   s = s.replace(/[‐-—−]/g, "-"); // − – — och andra streck blir -
@@ -32,7 +42,7 @@ export function normalize(text) {
 
   // Gånger: × *, punkter som liknar · (⋅ ∙ • ∗), och x bara mellan två operander.
   s = s.replace(/[×*⋅∙•∗]/g, "·");
-  s = s.replace(/(?<=[\d)½])\s*x\s*(?=[\d(√,½-])/g, "·");
+  if (xÄrGånger) s = s.replace(/(?<=[\d)½])\s*x\s*(?=[\d(√,½-])/g, "·");
   // En punkt är gånger där den inte kan vara ett decimaltecken: med mellanrum på båda sidor ("4 . 8"), intill en
   // parentes ("(3+2).4") eller intill ett tal som redan har decimalkomma ("250.0,8.0,7"). Annars är en punkt mellan
   // två siffror ett decimaltecken ("4.8" är 4,8). Räkningen i en textuppgift med heltal läser den också som gånger (calc.js).
@@ -236,6 +246,7 @@ export function parseExpr(text) {
 const SAKNAR_LÖSNING = new Set([
   "saknar reell lösning",
   "saknar lösning",
+  "lösning saknas", // Diamants facit i TAe2 7 och TAg4 4
   "ingen lösning",
   "ingen reell lösning",
   "finns ingen lösning",
@@ -257,14 +268,21 @@ function saknarLösning(mening) {
   return SAKNAR_LÖSNING.has(jämnad);
 }
 
+// Orden för "alla tal är lösningar" (TAe2 6, TAe5 2c), i gemener med ett mellanslag mellan orden. Bokstaven får vara
+// vilken som helst ("alla y"). Också den här listan är kort.
+const ALLA = /^(?:alla (?:\p{L}|reella \p{L}|värden på \p{L}|tal|reella tal)|oändligt många(?: lösningar)?)$/u;
+
+// En bokstav och = först ("x = 4", "a = 5") är bara vilken obekant svaret gäller och räknas bort.
+const LEDANDE_VARIABEL = /^\p{L}\s*=(?!=)\s*/u;
+
 const REST = /^(\d+)\s*(?:\(\s*(?:rest|r)\s*(\d+)\s*\)|(?:rest|r)\s*(\d+))$/i;
 const INTE_ENHET = new Set(["x", "r", "rest"]);
 // Det som får stå efter talet som enhet: bokstäver (också åäö), mellanslag, "/", "." och parenteser,
 // "kr/tim", "elever per klass", "(dagar)". En siffra hör inte dit: "5 kr 4" är inget svar.
 const ENHETSTECKEN = /[\p{L}\s/.()]*$/u;
 const BARA_ENHETSTECKEN = /^[\p{L}\s/.()]*$/u;
-// % och ‰ är enheter utan bokstav. De gäller bara ensamma direkt efter talet: "25 %" men inte "25 % kr".
-const PROCENTTECKEN = /^(.*\S)\s*([%‰])$/su;
+// %, ‰ och ° är enheter utan bokstav. De gäller bara ensamma direkt efter talet: "25 %" men inte "25 % kr", "360°".
+const PROCENTTECKEN = /^(.*\S)\s*([%‰°])$/su;
 const MAX_SVAR = 200; // längre text är aldrig ett tal med enhet
 
 // Enheten efter ett tal, i gemener med ett mellanslag mellan orden och utan parenteser runt det hela
@@ -355,14 +373,17 @@ export function stripDecoration(text) {
   return String(text ?? "").trim().replace(SVAR_FÖRE, "").replace(SLUTTECKEN, "");
 }
 
-// Vad eleven svarade: tomt, "saknar lösning", rest, ett tal eller annat. Ett tal ger value, text (talet
+// Vad eleven svarade: tomt, "saknar lösning", "alla x", rest, ett tal eller annat. Ett tal ger value, text (talet
 // som det skrevs, utan enhet), fraction (true för ett skrivet bråk a/b eller ett bråkord) och unit (enheten
-// efter talet i gemener, "%" och "‰" också, eller null). Ord och skiljetecken efter talet räknas bort som enhet.
+// efter talet i gemener, "%", "‰" och "°" också, eller null). Ord och skiljetecken efter talet räknas bort som enhet.
+// "x = " först räknas bort ("x = 4" är 4).
 export function parseAnswer(text) {
   if (String(text ?? "").trim() === "") return { kind: "empty" };
-  const rå = stripDecoration(text);
+  const rå = stripDecoration(text).replace(LEDANDE_VARIABEL, "");
 
-  if (saknarLösning(rå.toLowerCase().replace(/\s+/g, " "))) return { kind: "none" };
+  const mening = rå.toLowerCase().replace(/\s+/g, " ");
+  if (saknarLösning(mening)) return { kind: "none" };
+  if (ALLA.test(mening)) return { kind: "all" };
 
   const rest = rå.match(REST);
   if (rest) return { kind: "rest", q: BigInt(rest[1]), r: BigInt(rest[2] ?? rest[3]) };

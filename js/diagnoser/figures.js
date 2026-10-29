@@ -2,8 +2,11 @@
 // laddas; allt som ritar görs först när en funktion anropas.
 //
 // En figur är { view: [bredd, höjd], pieces: [{ path: "M … Z" | circle: [cx, cy, r], weight?: 1 }], shaded?: [index],
-// lines?: ["M …"] }. Delarna (pieces) är det som kan skuggas; weight är delens storlek (standard 1) och lines är
-// extra streck som ritas ovanpå. shaded är de delar som redan är skuggade (att läsa av, att välja bland).
+// lines?: ["M …"], labels?: [{ at: [x, y], text: "s" }] }. Delarna (pieces) är det som kan skuggas; weight är delens
+// storlek (standard 1) och lines är extra streck som ritas ovanpå. shaded är de delar som redan är skuggade (att läsa
+// av, att välja bland). labels är beteckningar som sidor och höjder (TAu1: s, b, h), kursiva som variabler; at är
+// textens mitt i figurens koordinater, och storleken följer figurens bredd (labelSize), så att den är lika stor på varje
+// skärm.
 //
 // Rena funktioner (rättningen, mark.js):
 //   parsePieces      det eleven skuggade ("0,3") som en lista med index, utan dubbletter och utan index som inte finns.
@@ -83,6 +86,10 @@ export const shadeFacit = (screen) => screen.facit ?? facitPieces(screen.figure,
 
 let hatchCount = 0; // varje figur har sitt eget mönster-id, så att flera figurer på en sida inte krockar
 
+// Beteckningarnas storlek i figurens koordinater: en tiondel av bredden. En figur ritas lika bred på skärmen (se
+// .dg-fig-stage), så texten blir ungefär lika stor som raderna, hur stor view än är.
+export const labelSize = (figure) => Math.round(figure.view[0]) / 10;
+
 function hatchPattern(id) {
   const defs = svgEl("defs");
   const pattern = svgEl("pattern", { id, patternUnits: "userSpaceOnUse", width: 9, height: 9, patternTransform: "rotate(45)" });
@@ -109,6 +116,9 @@ export function drawFigure(figure, { shaded = figure.shaded ?? [], interactive =
     return node;
   });
   for (const d of figure.lines ?? []) svg.append(svgEl("path", { d, class: "dg-fig-line" }));
+  for (const { at, text } of figure.labels ?? []) {
+    svg.append(svgEl("text", { class: "dg-fig-label", x: at[0], y: at[1], "text-anchor": "middle", "dominant-baseline": "central", "font-size": labelSize(figure) }, text));
+  }
 
   const on = new Set();
   function paint(i, value) {

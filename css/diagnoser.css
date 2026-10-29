@@ -34,7 +34,13 @@
    får också hela bredden: en halv kolumn räcker inte för en längre uppgift och rutan. */
 .dg-rows:has(.dg-row > .dg-input:nth-of-type(3)), .dg-rows:has(> .dg-row:only-child) { column-width: auto; column-count: 1; }
 .dg-row:has(> .dg-input:nth-of-type(3)) > .dg-input { width: 4em; }
+/* En lång rad (render.js, dg-rows-long: TAt4 4) får också en kolumn. En punkt "A = ([a], [b])" (TAg1 1) står på en rad
+   med smalare rutor, så att två punkter ryms bredvid varandra som på bladet. */
+.dg-rows-long { column-width: auto; column-count: 1; }
+.dg-row-point { white-space: nowrap; }
+.dg-row-point > .dg-input { width: 3.2em; }
 .dg-t { white-space: pre-wrap; }
+.dg-var { font-family: KaTeX_Math, "Times New Roman", serif; font-style: italic; }
 .dg-sup { font-size: 0.7em; line-height: 0; }
 .dg-frac { vertical-align: middle; margin: 0 0.2em; }
 /* Ett blandat tal ritat utan KaTeX: heltalet och ett stående bråk bredvid. */
@@ -98,6 +104,8 @@
 .dg-piece { fill: var(--surface); stroke: var(--text); stroke-width: 2.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .dg-piece.is-on { stroke-width: 4.5px; }
 .dg-fig-line { fill: none; stroke: var(--text); stroke-width: 2.5px; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+/* Beteckningar (s, b, h) kursiva som variablerna i raderna. Storleken sätts av koden (labelSize). */
+.dg-fig-label { fill: var(--text); font-family: KaTeX_Math, "Times New Roman", serif; font-style: italic; pointer-events: none; user-select: none; -webkit-user-select: none; }
 .dg-hatch-bg { fill: var(--accent-soft); }
 .dg-hatch-line { stroke: var(--accent-strong); stroke-width: 3.5; }
 .dg-fig.is-interactive { touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -129,6 +137,20 @@
 .dg-chart-num { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-size: 13px; font-weight: 700; }
 .dg-chart-title { fill: var(--text); font-family: "Baloo 2", sans-serif; font-size: 18px; font-weight: 800; }
 .dg-graph-line { stroke: var(--accent-strong); stroke-width: 3; stroke-linecap: round; }
+.dg-graph-curve { fill: none; stroke-linejoin: round; }
+/* Fyra kvadranter (TAg): rutnätet har en bakgrund som ett papper, axlarna har pil och namn, och siffrorna och punkternas
+   bokstäver har en kant i bakgrundens färg, så att rutnätets streck inte går genom dem. */
+.dg-chart-paper { fill: var(--surface); }
+.dg-chart-arrow { fill: var(--text); }
+.dg-axis-name { fill: var(--text); font-family: KaTeX_Math, "Times New Roman", serif; font-size: 21px; font-style: italic; }
+.dg-chart-mark { fill: var(--text); }
+.dg-chart-letter { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-size: 18px; font-weight: 800; }
+.dg-chart.is-crossed .dg-chart-num, .dg-chart-letter { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.dg-chart.is-crossed .dg-chart-num { font-size: 15px; }
+/* Linjen eleven ritar (line), och facits linje streckad bakom "Visa rätt svar". */
+.dg-drawn-line { stroke: var(--accent-strong); stroke-width: 3; stroke-linecap: round; pointer-events: none; }
+.dg-ghost-line { stroke: var(--text); stroke-width: 2.5; stroke-dasharray: 8 6; }
+.dg-chart-hint { margin: 0 0 8px; color: var(--text-muted); font-weight: 700; }
 .dg-point { fill: var(--text); stroke: var(--surface); stroke-width: 2; }
 .dg-hover { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-dasharray: 4 3; pointer-events: none; }
 /* Facits punkter är streckade ringar och syns först med "Visa rätt svar". */
