@@ -1,0 +1,231 @@
+/* Diamantdiagnoser — sidans egna stilar. Färger och typsnitt kommer från styles.css, rutor, bråk och
+   knappar från brak.css (bt-klasserna). Allt nytt här börjar på dg-. */
+
+/* ---------- SKÄRMEN ---------- */
+.dg-screen { text-align: left; }
+.dg-screen-label {
+  display: inline-block;
+  min-width: 2.2em;
+  margin: 0 0 8px;
+  padding: 2px 12px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 1.5rem;
+  line-height: 1.3;
+  text-align: center;
+}
+.dg-prompt { margin: 6px 0 14px; font-weight: 700; font-size: clamp(1.05rem, 2.4vw, 1.25rem); line-height: 1.4; }
+.dg-paper { margin: 0 0 14px; padding: 8px 12px; border-left: 4px solid var(--accent); border-radius: 4px; background: var(--accent-soft); font-weight: 700; }
+
+/* Raderna fylls kolumnvis som på bladet: vänstra kolumnen uppifrån och ned, sedan den högra. På smala
+   skärmar och för långa rader blir det en kolumn. */
+.dg-rows {
+  column-width: 10em;
+  column-gap: 2.4rem;
+  margin: 10px 0 18px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.35rem, 4.5vw, 1.85rem);
+  font-weight: 700;
+}
+.dg-row { break-inside: avoid; margin: 0 0 0.45em; line-height: 1.7; }
+/* En rad med tre eller fler rutor (storleksordning, AUn1 1a och 1b) får hela bredden i stället för att hamna
+   i en kolumn bland flera, och lite smalare rutor så att alla fem ryms på samma rad. En ensam rad (varje AS-skärm)
+   får också hela bredden: en halv kolumn räcker inte för en längre uppgift och rutan. */
+.dg-rows:has(.dg-row > .dg-input:nth-of-type(3)), .dg-rows:has(> .dg-row:only-child) { column-width: auto; column-count: 1; }
+.dg-row:has(> .dg-input:nth-of-type(3)) > .dg-input { width: 4em; }
+.dg-t { white-space: pre-wrap; }
+.dg-sup { font-size: 0.7em; line-height: 0; }
+.dg-frac { vertical-align: middle; margin: 0 0.2em; }
+.dg-root { display: inline-flex; align-items: flex-end; }
+.dg-radical { padding-right: 0.05em; }
+.dg-radicand { padding: 0 0.15em; border-top: 0.07em solid currentColor; line-height: 1.2; }
+/* Matematiken ritas med KaTeX (render.js). KaTeX gör sin text 1,21 gånger raden; här är den lika stor som raden, så att
+   siffrorna blir lika höga som texten i rutorna bredvid. */
+.dg-row .katex { font-size: 1.1em; }
+
+/* ---------- RUTOR ---------- */
+.dg-input {
+  width: 5.2em;
+  max-width: 100%;
+  vertical-align: middle;
+  font-family: "Baloo 2", "Nunito Sans", sans-serif;
+  font-weight: 700;
+}
+.dg-frac .dg-input { width: 4.6em; font-size: 0.85em; }
+.dg-input:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+
+.dg-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0 0 12px; }
+.dg-field-label { min-width: 5.5em; font-weight: 800; font-size: 1.1rem; }
+.dg-input-calc { width: min(100%, 22em); text-align: left; font-size: 1.35rem; }
+.dg-input-answer { width: 9em; text-align: left; font-size: 1.35rem; }
+
+.dg-letter-boxes { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 16px; margin: 16px 0 6px; font-family: "Baloo 2", sans-serif; font-size: clamp(1.2rem, 4.5vw, 1.5rem); font-weight: 700; }
+.dg-letter-box { display: inline-flex; align-items: center; gap: 0.1em; }
+.dg-letter { font-weight: 800; }
+
+/* ---------- SYMBOLRADEN ---------- */
+.dg-symbols { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px 0 6px; }
+.dg-symbol-btn {
+  min-width: 3em;
+  min-height: 2.6em;
+  padding: 0 8px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* ---------- TALLINJEN ---------- */
+.dg-stage { position: relative; max-width: 600px; margin: 0 auto; }
+.dg-line { display: block; width: 100%; height: auto; overflow: visible; }
+.dg-axis { stroke: var(--text); stroke-width: 2; }
+.dg-arrow { fill: var(--text); }
+.dg-tick { stroke: var(--text); stroke-width: 1.5; }
+.dg-tick.is-major { stroke-width: 2; }
+.dg-tick-label { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-size: 24px; font-weight: 700; }
+.dg-mark-letter { fill: var(--text); font-family: "Baloo 2", sans-serif; font-size: 30px; font-weight: 800; }
+
+/* Facket: en plats per bokstav med talet bredvid. Chipet ligger på sin plats tills det dras till linjen, och
+   platsen visas då som en streckad ruta. Zonen över linjen är där de placerade chipsen ligger. */
+.dg-tray { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; margin: 6px 0 12px; }
+.dg-slot { display: inline-flex; align-items: center; gap: 0.45em; font-family: "Baloo 2", sans-serif; font-size: 1.3rem; font-weight: 700; white-space: nowrap; }
+.dg-hold { display: inline-flex; width: 2.7rem; height: 2.5rem; border-radius: 10px; }
+.dg-hold.is-empty { outline: 2px dashed var(--border); outline-offset: -2px; }
+.dg-zone { position: relative; height: calc(var(--dg-stack, 3) * 2.75rem + 0.8rem); }
+.dg-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.5rem;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--accent-strong);
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dg-chip:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.dg-chip.is-placed {
+  position: absolute;
+  bottom: calc(var(--dg-k, 0) * 2.75rem + 0.5rem);
+  transform: translateX(-50%);
+  z-index: calc(10 - var(--dg-k, 0));
+}
+/* Ett streck ner mot linjen; chips som delar streck ligger på varandra och strecket går bakom dem. */
+.dg-chip.is-placed::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: calc(var(--dg-k, 0) * 2.75rem + 0.5rem);
+  transform: translateX(-50%);
+  background: var(--accent);
+}
+.dg-chip.is-dragging {
+  position: fixed;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  cursor: grabbing;
+  box-shadow: var(--shadow);
+}
+.dg-chip.is-dragging::after { display: none; }
+.dg-guide { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed var(--accent); transform: translateX(-1px); pointer-events: none; }
+.dg-guide[hidden] { display: none; }
+
+/* ---------- RESULTATSKÄRMEN ---------- */
+.dg-result { text-align: left; }
+.dg-res-head { margin-bottom: 8px; }
+.dg-res-title { margin: 0; font-size: clamp(1.3rem, 3.4vw, 1.8rem); line-height: 1.25; color: var(--text); }
+.dg-res-date { color: var(--text-muted); font-size: 0.95rem; }
+.dg-res-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; margin: 10px 0 2px; }
+.dg-res-right { font-family: "Baloo 2", sans-serif; font-size: clamp(2.6rem, 9vw, 4.2rem); font-weight: 800; line-height: 1.1; }
+.dg-res-s { font-family: "Baloo 2", sans-serif; font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 800; color: var(--text-muted); }
+.dg-res-time { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; margin-bottom: 14px; }
+.dg-res-total { font-family: "Baloo 2", sans-serif; font-size: clamp(1.4rem, 4vw, 1.9rem); font-weight: 700; }
+.dg-res-guide { color: var(--text-muted); font-size: 0.85rem; }
+
+.dg-res-rows { margin: 0 0 16px; padding: 0; list-style: none; border-top: 2px solid var(--border); }
+.dg-res-row {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 12px;
+  padding: 8px 6px;
+  border-bottom: 2px solid var(--border);
+}
+.dg-res-row.has-detail { background: var(--accent-soft); }
+.dg-res-label { font-family: "Baloo 2", sans-serif; font-size: 1.5rem; font-weight: 800; }
+.dg-res-mark { font-family: "Baloo 2", sans-serif; font-size: 1.5rem; font-weight: 800; }
+.dg-res-secs { color: var(--text-muted); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.dg-res-detail { grid-column: 2 / -1; min-width: 0; margin-top: 6px; font-size: 1.1rem; overflow-wrap: anywhere; }
+
+.dg-res-detail .dg-row { margin: 0 0 4px; font-family: "Baloo 2", sans-serif; font-size: 1.35rem; font-weight: 700; line-height: 1.6; }
+.dg-answer { display: inline-block; max-width: 100%; min-width: 1.6em; padding: 0 0.35em; border-bottom: 2px solid var(--text-muted); text-align: center; font-weight: 800; overflow-wrap: anywhere; }
+.dg-answer.is-wrong { border: 2px solid var(--text); border-radius: 8px; padding: 0 0.4em; }
+.dg-expected { font-size: 0.8em; font-weight: 700; color: var(--text-muted); }
+.dg-note { margin-left: 0.8em; white-space: nowrap; padding: 1px 8px; border-radius: 8px; background: var(--surface); font-size: 0.7em; font-weight: 800; color: var(--text); }
+.dg-detail-line, .dg-word-text, .dg-skipped { margin: 0 0 4px; line-height: 1.5; }
+.dg-detail-label { font-weight: 800; }
+.dg-skipped { color: var(--text-muted); font-weight: 700; }
+.dg-facit { margin: 2px 0 0; }
+
+/* Rätt svar ligger med i sidan men syns först när knappen trycks. */
+.dg-result .dg-expected { display: none; }
+.dg-result.dg-show-answers .dg-expected { display: inline; }
+.dg-result.dg-show-answers .dg-expected-block, .dg-result.dg-show-answers p.dg-expected { display: block; }
+.dg-reveal {
+  display: block;
+  margin: 0 0 14px auto;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  opacity: 0.7;
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.dg-reveal:hover { opacity: 1; }
+.dg-reveal:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; opacity: 1; }
+.dg-back { width: 100%; max-width: 320px; }
+
+/* ---------- SIDAN: LISTAN, DIAGNOSEN, RESULTATET ---------- */
+.dg-sub-title { margin: 12px 0 6px; font-size: 0.95rem; color: var(--text-muted); }
+.dg-saved-title { margin-bottom: 6px; }
+.dg-saved { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dg-saved-empty { margin: 0 0 8px; }
+
+.dg-run-top { padding: 0 2px; }
+.dg-run-code { font-family: "Baloo 2", sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--accent-strong); }
+.dg-run-progress { font-family: "Baloo 2", sans-serif; font-size: 1.15rem; font-weight: 700; }
+.dg-run-clock { min-width: 3.5em; text-align: right; color: var(--text-muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.dg-run-card { text-align: left; }
+
+.dg-actions { display: flex; gap: 12px; margin-top: 14px; }
+.dg-actions .start-btn { flex: 1; margin-top: 0; }
+.dg-actions .bt-secondary-btn { width: auto; flex: 0 0 auto; padding: 16px 22px; font-size: 1.1rem; }
+.dg-cancel-row { margin-top: 10px; text-align: right; }
+.dg-cancel { font-size: 0.85rem; color: var(--text-muted); }
+.dg-cancel-row .bt-reset-confirm { justify-content: flex-end; text-align: left; }
+
+/* Resultatskärmen är ingen .card: styles.css ger h2 i .card sin egen färg och storlek, och titeln ska vara stor. */
+.dg-result-card { padding: 22px; border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+.dg-save-note { margin: 0 0 12px; padding: 8px 12px; border-left: 4px solid var(--text-muted); border-radius: 4px; background: var(--bg); font-weight: 700; }
+
+/* ---------- FÖRHANDSVISNINGEN ---------- */
+.dg-preview-facit { margin: 6px 0 0; padding: 8px 12px; border-left: 4px solid var(--border); background: var(--bg); font-size: 0.95rem; color: var(--text-muted); }
+.dg-preview-facit .dg-row { margin: 0; font-size: 1.1rem; line-height: 1.5; }

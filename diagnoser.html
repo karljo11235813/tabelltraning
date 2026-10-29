@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diamantdiagnoser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/brak.css">
+<link rel="stylesheet" href="css/diagnoser.css">
+<!-- KaTeX före sidans modul (båda skjuts upp och körs i ordning), så att raderna kan ritas med det. Saknas det ritas de som förut. -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+</head>
+<body>
+
+<header>
+  <a class="header-title" href="index.html">Tabellträning</a>
+  <span class="bt-header-sub">Diamantdiagnoser</span>
+</header>
+
+<main class="bt-main">
+
+  <!-- LISTAN -->
+  <section id="dgList" class="card">
+    <a class="back-link" href="index.html">← Tillbaka</a>
+    <div class="page-title-row">
+      <img class="page-title-img" src="img/pages/test.png" alt="">
+      <h1 class="bt-title">Diamantdiagnoser</h1>
+    </div>
+    <p class="bt-intro">Välj den diagnos som din lärare säger. Du får en uppgift i taget och ser inte om du svarat rätt förrän du är klar.</p>
+    <div id="dgAreas"></div>
+    <h2 class="dg-saved-title">Mina resultat</h2>
+    <p class="bt-intro dg-saved-empty" id="dgSavedEmpty" hidden></p>
+    <ul class="dg-saved" id="dgSaved"></ul>
+  </section>
+
+  <!-- DIAGNOSEN -->
+  <section id="dgRun" hidden>
+    <div class="bt-top-row dg-run-top">
+      <span class="dg-run-code" id="dgCode"></span>
+      <span class="dg-run-progress" id="dgProgress"></span>
+      <span class="dg-run-clock" id="dgClock" role="timer" aria-label="Tid"></span>
+    </div>
+    <div class="bt-card dg-run-card" id="dgScreenHost"></div>
+    <div class="dg-actions" id="dgActions">
+      <button type="button" class="bt-secondary-btn dg-skip" id="dgSkip">Hoppa över</button>
+      <button type="button" class="start-btn dg-next" id="dgNext">Nästa</button>
+    </div>
+    <div class="dg-actions" id="dgStartRow" hidden>
+      <button type="button" class="start-btn dg-next" id="dgStart">Börja</button>
+    </div>
+    <div class="dg-cancel-row">
+      <button type="button" class="bt-link dg-cancel" id="dgCancel">Avbryt</button>
+      <div class="bt-reset-confirm" id="dgCancelConfirm" hidden>
+        <span>Avbryta diagnosen? Svaren sparas inte.</span>
+        <button type="button" class="bt-small-btn" id="dgCancelNo">Nej, fortsätt</button>
+        <button type="button" class="bt-small-btn" id="dgCancelYes">Ja, avbryt</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTATET -->
+  <section id="dgResult" class="dg-result-card" hidden>
+    <p class="dg-save-note" id="dgSaveNote" role="status" hidden>Resultatet kunde inte sparas i det här fönstret.</p>
+    <div id="dgResultHost"></div>
+  </section>
+
+</main>
+
+<script type="module" src="js/diagnoser/app.js"></script>
+</body>
+</html>
