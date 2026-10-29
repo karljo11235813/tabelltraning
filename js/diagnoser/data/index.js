@@ -28,8 +28,28 @@ import aup2 from "./aritmetik/aup2.js";
 import aup3 from "./aritmetik/aup3.js";
 import aup4 from "./aritmetik/aup4.js";
 import aup5 from "./aritmetik/aup5.js";
+import rb1 from "./rationella/rb1.js";
+import rb2 from "./rationella/rb2.js";
+import rb3 from "./rationella/rb3.js";
+import rb4 from "./rationella/rb4.js";
+import rb5 from "./rationella/rb5.js";
+import rb6 from "./rationella/rb6.js";
+import rb7 from "./rationella/rb7.js";
+import rd1 from "./rationella/rd1.js";
+import rd2 from "./rationella/rd2.js";
+import rd3 from "./rationella/rd3.js";
+import rd4 from "./rationella/rd4.js";
+import rd5 from "./rationella/rd5.js";
+import rd6 from "./rationella/rd6.js";
+import rp1 from "./rationella/rp1.js";
+import rp2 from "./rationella/rp2.js";
+import rp3 from "./rationella/rp3.js";
+import rp4 from "./rationella/rp4.js";
+import rp5 from "./rationella/rp5.js";
+import rp6 from "./rationella/rp6.js";
+import rp7 from "./rationella/rp7.js";
 
-export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5];
+export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5, rb1, rb2, rb3, rb4, rb5, rb6, rb7, rd1, rd2, rd3, rd4, rd5, rd6, rp1, rp2, rp3, rp4, rp5, rp6, rp7];
 
 export function getDiagnosis(code) {
   return DIAGNOSES.find((d) => d.code === code);

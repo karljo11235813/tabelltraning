@@ -2,8 +2,10 @@
 //
 // storageWorks  går det att skriva till elevens lagring? (false i ett privat fönster)
 // formatStamp   "28 okt 14:05" för en sparad omgång.
-// savedList     de sparade omgångarna som listrader, nyaste först; en kod utan data visas inte.
+// savedList     de sparade omgångarna som listrader, nyaste först; en kod utan data och en omgång som inte går att rätta
+//               (ett datafel) visas inte, så att resten av listan ändå kommer fram.
 // ignoresEnter  ska ett Enter ignoreras? Ett nedhållet Enter, eller ett andra tryck strax efter att en skärm visades.
+// ignoresHeldEnter  ska ett nedhållet Enter på knapparna under skärmen ignoreras? Ja.
 // ignoresResultTap  ska ett klick på resultatskärmens knappar ignoreras? Ja strax efter att skärmen visades.
 
 import { scoreRun } from "./mark.js";
@@ -29,13 +31,23 @@ export function formatStamp(ms) {
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${two(d.getHours())}:${two(d.getMinutes())}`;
 }
 
+// Rättar en omgång, eller null när rättningen kastar: ett datafel i en diagnos ska aldrig stoppa startsidan.
+export function safeScore(diagnosis, run) {
+  try {
+    return scoreRun(diagnosis, run);
+  } catch {
+    return null;
+  }
+}
+
 // runs är redan nyaste först (loadResults). getDiagnosis ger undefined för en kod som inte finns längre.
 export function savedList(runs, getDiagnosis) {
   const items = [];
   for (const run of runs) {
     const diagnosis = getDiagnosis(run.code);
     if (!diagnosis) continue;
-    const scored = scoreRun(diagnosis, run);
+    const scored = safeScore(diagnosis, run);
+    if (scored === null) continue;
     items.push({ run, diagnosis, scored, text: `${run.code} · ${formatStamp(run.startedAt)} · Rätt ${scored.right} av ${scored.total}` });
   }
   return items;
@@ -48,6 +60,12 @@ export const ENTER_GUARD_MS = 300;
 
 export function ignoresEnter({ repeat, shownAt, now }) {
   return repeat === true || now - shownAt < ENTER_GUARD_MS;
+}
+
+// Knapparna under skärmen (Nästa, Klar, Hoppa över): ett nedhållet Enter (repeat) är inget nytt tryck och ska inte
+// klicka knappen igen. Sessionens egen gräns räcker inte, eftersom repeat börjar först efter en halv sekund.
+export function ignoresHeldEnter({ key, repeat }) {
+  return key === "Enter" && repeat === true;
 }
 
 // Dubbelklicket på sista "Nästa" ger ett andra klick med några hundra millisekunder emellan. Det träffar den nya

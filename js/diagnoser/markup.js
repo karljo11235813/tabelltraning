@@ -3,16 +3,20 @@
 //
 //   [id]       en ruta (id är bokstäver, siffror och _; annars är hakparentesen vanlig text)
 //   ^3 ^-5     en exponent; ^(…) tar allt inom parentesen
-//   {topp|botten}  ett stående bråk; topp och botten är markering och får nästlas
+//   {topp|botten}  ett stående bråk; topp och botten är markering och får nästlas. En ruta får stå som hela
+//              täljaren ({[a]|8}, bråk med ruta i täljaren, RB4 5), men ingen annanstans i ett bråk
+//   {hel|topp|botten}  ett blandat tal ("2 2/3" skrivs {2|2|3}); delarna är bara siffror. Ett negativt blandat
+//              tal skrivs med minus framför: -{2|2|3} är −8/3, inte −2 + 2/3
 //   √{…}       en rot med överstreck över innehållet; √3 är roten ur ett tal
 //   allt annat är vanlig text
 //
 // parseMarkup    ger tecken att rita ("-" blir "−" i text och exponenter).
 // markupToExpr   ger uttryckstext som parseExpr läser; vanlig text och exponenter behålls som de står.
-// rowHolds       sätter in svaren och avgör om likheten stämmer.
+// rowHolds       sätter in svaren och avgör om likheten stämmer (i en kedja a = b = c måste alla sidor vara lika).
 // tokensToLatex  ger LaTeX för tecken utan rutor (för KaTeX).
-// layoutRow      delar en rad vid sina rutor och ger LaTeX för varje bit mellan dem (null om en ruta ligger i ett bråk
-//                eller en rot). render.js ritar bitarna med KaTeX när det har laddats, annars som förut.
+// layoutRow      delar en rad vid sina rutor och ger LaTeX för varje bit mellan dem (null om en ruta ligger i en rot
+//                eller i ett bråk på annat sätt än som hela täljaren). Ett bråk med en ruta som täljare är en egen bit
+//                ({ box, denominator }) som render.js ritar med HTML. Bitarna ritas med KaTeX när det har laddats.
 //
 // Trasig markering (oparade { }, bråk utan |) kastar: det är ett fel i datafilen, och en rad som
 // ritas fel ser ut som en annan uppgift för eleven.
@@ -47,6 +51,14 @@ function readExponent(s, i) {
   return null;
 }
 
+// Ett blandat tal ur de tre delarna: var och en är bara siffror (ingen ruta, inget bråk), så att talet alltid
+// går att läsa som heltal plus bråk.
+function mixedNode(parts, markup) {
+  const [whole, top, bottom] = parts.map((nodes) => (nodes.length === 1 && nodes[0].t === "text" && /^\d+$/.test(nodes[0].raw.trim()) ? nodes[0].raw.trim() : null));
+  if (whole === null || top === null || bottom === null) fail(markup, "ett blandat tal har bara siffror (ingen ruta eller annan markering)");
+  return { t: "mixed", whole, top, bottom };
+}
+
 // Läser noder från s[i] tills ett av tecknen i stops dyker upp (eller strängen tar slut).
 // Returnerar noderna och var den stoppade. Texten sparas som den står; "−" läggs på först vid ritning.
 function readNodes(s, i, stops, markup) {
@@ -73,7 +85,15 @@ function readNodes(s, i, stops, markup) {
       const top = readNodes(s, i + 1, ["|", "}"], markup);
       if (s[top.end] !== "|") fail(markup, "bråket saknar |");
       const bottom = readNodes(s, top.end + 1, ["|", "}"], markup);
-      if (s[bottom.end] === "|") fail(markup, "bråket har mer än ett |");
+      if (s[bottom.end] === "|") {
+        // {hel|topp|botten}: ett blandat tal.
+        const third = readNodes(s, bottom.end + 1, ["|", "}"], markup);
+        if (s[third.end] === "|") fail(markup, "ett blandat tal har tre delar, inte fler");
+        if (s[third.end] !== "}") fail(markup, "det blandade talet saknar }");
+        nodes.push(mixedNode([top.nodes, bottom.nodes, third.nodes], markup));
+        i = third.end + 1;
+        continue;
+      }
       if (s[bottom.end] !== "}") fail(markup, "bråket saknar }");
       nodes.push({ t: "frac", top: top.nodes, bottom: bottom.nodes });
       i = bottom.end + 1;
@@ -118,6 +138,8 @@ function toTokens(nodes) {
         return { t: "frac", top: toTokens(n.top), bottom: toTokens(n.bottom) };
       case "root":
         return { t: "root", body: toTokens(n.body) };
+      case "mixed":
+        return { t: "mixed", whole: n.whole, top: n.top, bottom: n.bottom };
     }
   });
 }
@@ -137,6 +159,9 @@ function toExpr(nodes, boxText) {
           return `((${toExpr(n.top, boxText)})/(${toExpr(n.bottom, boxText)}))`;
         case "root":
           return `√(${toExpr(n.body, boxText)})`;
+        case "mixed":
+          // Hela uttrycket i parentes, så att ett minus framför gäller hela talet: -{2|2|3} är −(2 + 2/3).
+          return `(${n.whole}+(${n.top})/(${n.bottom}))`;
       }
     })
     .join("");
@@ -155,26 +180,28 @@ function lookup(fill) {
   };
 }
 
-// {a|b} blir ((a)/(b)), √{x} blir √(x) och [id] blir (fill[id]). Kastar om en ruta saknas i fill.
+// {a|b} blir ((a)/(b)), {h|a|b} blir (h+(a)/(b)), √{x} blir √(x) och [id] blir (fill[id]). Kastar om en ruta saknas i fill.
 export function markupToExpr(markup, fill) {
   return toExpr(parseNodes(markup), lookup(fill));
 }
 
 const countEquals = (s) => s.split("=").length - 1;
 
-// Sant eller falskt när raden har exakt ett = och båda sidor går att läsa (två sidor utan reellt
-// värde räknas som lika). null när den inte går att kontrollera: inget =, flera =, eller en sida
-// som parseExpr inte läser. Kastar om en ruta saknas i fill, men bara för rader som har ett =.
+// Sant eller falskt när raden har minst ett = och alla sidor går att läsa (två sidor utan reellt värde räknas
+// som lika). Med flera = är raden en kedja (a = b = c): alla sidor ska vara lika. null när den inte går att
+// kontrollera: inget =, eller en sida som parseExpr inte läser. Kastar om en ruta saknas i fill, men bara för
+// rader som har ett =.
 export function rowHolds(markup, fill) {
   const nodes = parseNodes(markup);
   // Antalet = räknas på raden utan svar, så att ett = i ett svar inte gör raden till en likhet.
-  if (countEquals(toExpr(nodes, () => "0")) !== 1) return null;
+  const signs = countEquals(toExpr(nodes, () => "0"));
+  if (signs < 1) return null;
 
   const expr = toExpr(nodes, lookup(fill));
-  if (countEquals(expr) !== 1) return null;
-  const [left, right] = expr.split("=").map(parseExpr);
-  if (left === null || right === null) return null;
-  return equals(left, right);
+  if (countEquals(expr) !== signs) return null;
+  const sides = expr.split("=").map(parseExpr);
+  if (sides.some((side) => side === null)) return null;
+  return sides.every((side) => equals(sides[0], side));
 }
 
 // ---------- LATEX ----------
@@ -252,6 +279,8 @@ export function tokensToLatex(tokens) {
           return `\\frac{${tokensToLatex(token.top)}}{${tokensToLatex(token.bottom)}}`;
         case "root":
           return `\\sqrt{${tokensToLatex(token.body)}}`;
+        case "mixed":
+          return `${token.whole}\\frac{${token.top}}{${token.bottom}}`;
         case "box":
           throw new Error("Rutor kan inte skrivas som LaTeX: dela raden vid dem först");
         default:
@@ -268,6 +297,10 @@ export const KATEX_OPTIONS = { throwOnError: true, displayMode: false };
 
 const hasBox = (tokens) =>
   tokens.some((t) => t.t === "box" || (t.t === "frac" && (hasBox(t.top) || hasBox(t.bottom))) || (t.t === "root" && hasBox(t.body)));
+
+// Ett bråk vars täljare är precis en ruta och vars nämnare inte har någon ({[a]|8}): bladets "ruta över 8".
+// Det delas ut som en egen bit, och render.js ritar det med HTML (en ruta över ett streck) mellan KaTeX-bitarna.
+const isBoxFrac = (t) => t.t === "frac" && t.top.length === 1 && t.top[0].t === "box" && !hasBox(t.bottom);
 
 // En bit utan siffror, räknesätt eller formler ("Svar: ", ett mellanrum mellan två rutor) är ingen matematik
 // och ritas som vanlig text.
@@ -301,12 +334,14 @@ const OPERATORS = "+-−·×÷/=";
 const startsWithOperator = (core) => core[0]?.t === "text" && OPERATORS.includes(core[0].s[0]);
 const endsWithOperator = (core) => core.at(-1)?.t === "text" && OPERATORS.includes(core.at(-1).s.at(-1));
 
-// En rad uppdelad vid sina rutor, i ordning: { box: id } för en ruta och { tokens, latex, before, after } för biten
+// En rad uppdelad vid sina rutor, i ordning: { box: id } för en ruta ({ box: id, denominator: tokens } för ett bråk med
+// rutan som täljare och nämnaren som tecken) och { tokens, latex, before, after } för biten
 // mellan två rutor. tokens är biten som parseMarkup gav den (ritas som förut när latex är null, eller KaTeX
 // inte kan rita den); latex är det KaTeX ska rita, med before och after som mellanrum före och efter.
-// null när en ruta ligger i ett bråk eller en rot: då går raden inte att dela, och den ritas som förut.
+// null när en ruta ligger i en rot eller i ett bråk på annat sätt än som hela täljaren: då går raden inte att dela,
+// och den ritas som förut.
 export function layoutRow(tokens) {
-  if (tokens.some((t) => t.t !== "box" && hasBox([t]))) return null;
+  if (tokens.some((t) => t.t !== "box" && !isBoxFrac(t) && hasBox([t]))) return null;
   const parts = [];
   let group = [];
   const flush = (nextIsBox) => {
@@ -332,6 +367,9 @@ export function layoutRow(tokens) {
     if (token.t === "box") {
       flush(true);
       parts.push({ box: token.id });
+    } else if (isBoxFrac(token)) {
+      flush(true);
+      parts.push({ box: token.top[0].id, denominator: token.bottom });
     } else group.push(token);
   }
   flush(false);

@@ -4,11 +4,19 @@
 // toSuperscript    en siffra eller ett minustecken som upphöjt tecken, annars null.
 // snapToTick       närmaste plats på en tallinje för en pixelposition, som text ("−0,4"). Platserna är strecken
 //                  (line.step), eller tätare om linjen har line.snap ("0,1" på en linje med streck var 0,2).
-// renderScreen     en skärm som eleven fyller i: rader med rutor, textuppgift, placera eller läsa av tallinjen.
+// renderScreen     en skärm som eleven fyller i: rader med rutor (och en tabell eller ett koordinatsystem att läsa av,
+//                  graph.js, och en figur, figures.js), textuppgift, placera eller läsa av tallinjen, ett val (choose,
+//                  pick; choice.js), skuggning (shade) och punkter (plot) eller en pappersuppgift (paper). Ger
+//                  { el, read, focusFirst } och, för skärmar där det behövs, keepBlank (tomt är ett svar) och nextLabel
+//                  ("Klar" i stället för "Nästa").
+//
+// Tallinjens streck är decimaltal (steg som "0,1") eller, när något av min, max, step och snap är ett bråk ("1/6"), exakta
+// bråk; platser och bokstäver är då bråktext ("1/3").
 // rowsOf           raderna på en skärm; en skärm utan rows är en text med raden "Svar: [ ]".
 // prettyAnswer     ett facitsvar för visning (^2 som upphöjt, "−" som minustecken).
-// renderFilledRow  en rad med givna texter i stället för rutor (förhandsvisningen och resultatet).
+// renderFilledRow  en rad med givna texter i stället för rutor (förhandsvisningen och resultatet); renderFilledTable en tabell.
 // renderResult     resultatskärmen som läraren läser.
+// guideText        Diamants tidsriktlinje på resultatskärmen ("avbryt efter" utelämnas när stop är null).
 //
 // Uppgifternas matematik ritas med KaTeX när det har laddats (window.katex) och annars, eller om KaTeX inte kan rita
 // en bit, med spans som förut. Det eleven skriver (rutorna, svaren på resultatskärmen) är alltid vanlig text.
@@ -18,6 +26,11 @@
 
 import { parseMarkup, layoutRow, KATEX_OPTIONS } from "./markup.js";
 import { formatTime } from "./session.js";
+import { buildChoice, choiceDetail, choiceFacit } from "./choice.js";
+import { parseNumber } from "./parse.js";
+import { rat, add, sub, mul, div, compare, isInteger } from "./value.js";
+import { figureStage, buildShade, shadeDetail, shadeSkipped } from "./figures.js";
+import { drawTable, cellsOf, chartStage, chartBlock, buildPlot, plotDetail, plotSkipped } from "./graph.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -73,8 +86,9 @@ function formatScaled(value, decimals) {
   return `${value < 0 ? "−" : ""}${whole}${fraction ? `,${fraction}` : ""}`;
 }
 
-// Alla streck: [{ value (heltal), text }], och hur många steg linjen har.
-function ticksOf(line) {
+// Alla streck: [{ key, text, zero }], hur många steg linjen har, keyOf (nyckeln för ett tal som text, att jämföra
+// etiketter med) och isLong(long) (om ett streck är en jämn multipel av long). En decimallinje har heltal som nyckel.
+function decimalTicksOf(line) {
   const decimals = Math.max(decimalsOf(line.step), decimalsOf(line.min), decimalsOf(line.max));
   const toInt = (x) => Math.round(numberOf(x) * 10 ** decimals);
   const first = toInt(line.min);
@@ -82,11 +96,43 @@ function ticksOf(line) {
   const step = Math.max(1, toInt(line.step));
   const count = Math.max(1, Math.round((last - first) / step));
   const ticks = Array.from({ length: count + 1 }, (_, i) => {
-    const value = first + i * step;
-    return { value, text: formatScaled(value, decimals) };
+    const key = first + i * step;
+    return { key, text: formatScaled(key, decimals), zero: key === 0 };
   });
-  return { ticks, count, toInt };
+  const isLong = (long) => {
+    const every = toInt(long);
+    return (tick) => every > 0 && tick.key % every === 0;
+  };
+  return { ticks, count, keyOf: toInt, isLong };
 }
+
+// En linje med bråk ("1/4", "1/6") räknas exakt med bråk (value.js): sjättedelar är inga ändliga decimaltal.
+const isFractionLine = (line) => [line.min, line.max, line.step, line.snap].some((x) => typeof x === "string" && x.includes("/"));
+const exactOf = (x) => {
+  const v = parseNumber(String(x));
+  if (v === null || v.r !== 1n) throw new TypeError(`Inget exakt tal på tallinjen: ${x}`);
+  return v;
+};
+const fractionKey = (v) => `${v.n}/${v.d}`;
+const fractionText = (v) => `${v.n < 0n ? "−" : ""}${v.n < 0n ? -v.n : v.n}${v.d === 1n ? "" : `/${v.d}`}`;
+
+function fractionTicksOf(line) {
+  const [first, last, step] = [line.min, line.max, line.step].map(exactOf);
+  if (compare(step, rat(0)) <= 0) throw new RangeError("Steget på tallinjen ska vara positivt");
+  const steps = div(sub(last, first), step);
+  const count = Math.max(1, Math.round(Number(steps.n) / Number(steps.d)));
+  const ticks = Array.from({ length: count + 1 }, (_, i) => {
+    const value = add(first, mul(step, rat(i)));
+    return { key: fractionKey(value), text: fractionText(value), zero: value.n === 0n, value };
+  });
+  const isLong = (long) => {
+    const every = exactOf(long);
+    return (tick) => every.n > 0n && isInteger(div(tick.value, every));
+  };
+  return { ticks, count, keyOf: (x) => fractionKey(exactOf(x)), isLong };
+}
+
+const ticksOf = (line) => (isFractionLine(line) ? fractionTicksOf(line) : decimalTicksOf(line));
 
 // Strecket som ligger närmast px, när linjens första streck sitter vid x0 och det sista vid x1.
 function nearestIndex(px, count, x0, x1) {
@@ -114,7 +160,7 @@ const xPercentOf = (t) => ((LINE_X0 + t * (LINE_X1 - LINE_X0)) / VBW) * 100;
 // marks ({ a: "8", … }) ritar bokstäverna ovanför linjen, som på bladet. Strecken ritas var line.step;
 // line.long ("1") ger ett längre streck vid varje sådant tal, som bladet har vid heltalen.
 function drawLine(line, marks) {
-  const { ticks, count, toInt } = ticksOf(line);
+  const { ticks, count, keyOf, isLong } = ticksOf(line);
   const withLetters = marks != null;
   const axisY = withLetters ? 40 : 14;
   const height = withLetters ? 82 : 54;
@@ -123,14 +169,14 @@ function drawLine(line, marks) {
   svg.append(svgEl("line", { class: "dg-axis", x1: LINE_X0 - 6, x2: LINE_X1 + 14, y1: axisY, y2: axisY }));
   svg.append(svgEl("polygon", { class: "dg-arrow", points: `${LINE_X1 + 26},${axisY} ${LINE_X1 + 12},${axisY - 6} ${LINE_X1 + 12},${axisY + 6}` }));
 
-  const labelled = new Set((line.labels ?? []).map(toInt));
-  const longEvery = line.long == null ? 0 : toInt(line.long);
+  const labelled = new Set((line.labels ?? []).map(keyOf));
+  const long = line.long == null ? () => false : isLong(line.long);
   ticks.forEach((tick, i) => {
     const x = LINE_X0 + (i / count) * (LINE_X1 - LINE_X0);
-    const major = labelled.has(tick.value) || tick.value === 0 || (longEvery > 0 && tick.value % longEvery === 0);
+    const major = labelled.has(tick.key) || tick.zero || long(tick);
     const half = major ? 10 : 5;
     svg.append(svgEl("line", { class: `dg-tick${major ? " is-major" : ""}`, x1: x, x2: x, y1: axisY - half, y2: axisY + half }));
-    if (labelled.has(tick.value)) svg.append(svgEl("text", { class: "dg-tick-label", x, y: axisY + 34, "text-anchor": "middle" }, tick.text));
+    if (labelled.has(tick.key)) svg.append(svgEl("text", { class: "dg-tick-label", x, y: axisY + 34, "text-anchor": "middle" }, tick.text));
   });
 
   for (const [letter, value] of Object.entries(marks ?? {})) {
@@ -163,6 +209,12 @@ function drawTokens(tokens, boxFor) {
         frac.append(top, bottom);
         return frac;
       }
+      case "mixed": {
+        // Hela talet och ett stående bråk bredvid.
+        const mixed = el("span", "dg-mixed");
+        mixed.append(el("span", "dg-t", token.whole), ...drawTokens([{ t: "frac", top: [{ t: "text", s: token.top }], bottom: [{ t: "text", s: token.bottom }] }], boxFor));
+        return mixed;
+      }
       case "root": {
         const body = el("span", "dg-radicand");
         body.append(...drawTokens(token.body, boxFor));
@@ -181,7 +233,11 @@ const katexLib = () => (typeof window !== "undefined" && typeof window.katex?.re
 
 // En bit av en rad (layoutRow) som element: en ruta, en formel från KaTeX, eller biten ritad som förut.
 function drawPart(part, katex, boxFor) {
-  if (part.box !== undefined) return [boxFor(part.box)];
+  if (part.box !== undefined) {
+    if (part.denominator === undefined) return [boxFor(part.box)];
+    // Ett bråk med rutan som täljare ritas med HTML (rutan över ett streck), mellan KaTeX-bitarna.
+    return drawTokens([{ t: "frac", top: [{ t: "box", id: part.box }], bottom: part.denominator }], boxFor);
+  }
   if (part.latex !== null) {
     try {
       const math = el("span", "dg-math");
@@ -194,8 +250,8 @@ function drawPart(part, katex, boxFor) {
   return drawTokens(part.tokens, boxFor);
 }
 
-function drawRow(markup, boxFor) {
-  const row = el("div", "dg-row");
+function drawRow(markup, boxFor, tag = "div") {
+  const row = el(tag, "dg-row");
   const tokens = parseMarkup(markup);
   const katex = katexLib();
   let parts = null;
@@ -209,6 +265,9 @@ function drawRow(markup, boxFor) {
   return row;
 }
 
+// En rad utan rutor (ett alternativ i ett val) som element; tag är div, eller span inuti en knapp eller en text.
+const drawMarkup = (markup, tag) => drawRow(markup, (id) => el("span", "dg-t", `[${id}]`), tag);
+
 // En rad där varje ruta är ersatt av en text: fill[id], eller "–" när den saknas eller är tom.
 export function renderFilledRow(markup, fill = {}) {
   const row = drawRow(markup, (id) => el("span", "dg-answer", fill[id] ? String(fill[id]) : "–"));
@@ -216,17 +275,25 @@ export function renderFilledRow(markup, fill = {}) {
   return row;
 }
 
+// En tabell där varje ruta är ersatt av en text, som renderFilledRow.
+export function renderFilledTable(table, fill = {}) {
+  return drawTable(table, (markup) => drawRow(markup, (id) => el("span", "dg-answer", fill[id] ? String(fill[id]) : "–"), "span"));
+}
+
 const idsIn = (tokens) =>
   tokens.flatMap((t) => (t.t === "box" ? [t.id] : t.t === "frac" ? [...idsIn(t.top), ...idsIn(t.bottom)] : t.t === "root" ? idsIn(t.body) : []));
 
 // En skärm utan rows (AS3, AS6) är en textuppgift med en enda ruta, a: texten och sedan raden "Svar: [ ]".
 const TEXT_ROW = "Svar: [a]";
-export const rowsOf = (screen) => screen.rows ?? [TEXT_ROW];
+// En skärm med tabell och utan rows har bara tabellens rutor.
+export const rowsOf = (screen) => screen.rows ?? (screen.table ? [] : [TEXT_ROW]);
 const taskText = (screen) => (screen.rows === undefined ? [el("p", "dg-word-text", screen.text)] : []);
 
 // ---------- SKÄRMEN ----------
 
 const PAPER_LINE = "Räkna på papper. Skriv bara svaret här.";
+const PAPER_SCREEN_LINE = "Rita på ett löst papper och visa din lärare.";
+const NO_INPUT_KINDS = ["choose", "pick", "paper", "shade", "plot"]; // skärmar utan textrutor: ingen "Räkna på papper"-rad
 
 // Längsta svar som får skrivas i en ruta. Längre text är aldrig ett svar, och resultatskärmen ska rymma det som skrevs.
 const MAX_ANSWER_LENGTH = 80;
@@ -257,7 +324,11 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
   const root = el("div", `dg-screen dg-screen-${kind}`);
   root.append(el("h2", "dg-screen-label", screen.label));
   if (screen.text) root.append(el("p", "dg-prompt", screen.text));
-  if (diagnosis.paper) root.append(el("p", "dg-paper", PAPER_LINE));
+  if (diagnosis.paper && !NO_INPUT_KINDS.includes(kind)) root.append(el("p", "dg-paper", PAPER_LINE));
+  // Figuren (screen.figure) och grafen att läsa av (screen.chart) står ovanför raderna. I shade och plot är figuren
+  // respektive rutnätet själva svaret och ritas av skärmen.
+  if (screen.figure && kind !== "shade") root.append(figureStage(screen.figure));
+  if (screen.chart && kind !== "plot") root.append(chartStage(screen.chart));
 
   // Alla textrutor i skärmens ordning. Enter går vidare mellan dem.
   const inputs = [];
@@ -317,8 +388,24 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
 
   let read;
   let focusFirst = () => inputs[0]?.focus();
+  let extra = {};
 
-  if (kind === "word") {
+  if (kind === "choose" || kind === "pick") {
+    const { keepBlank, ...view } = buildChoice(screen, root, drawMarkup);
+    ({ read, focusFirst } = view);
+    extra = { keepBlank };
+  } else if (kind === "shade" || kind === "plot") {
+    // Tomt (inget skuggat, inga punkter) är ett svar och fel, som i ett val: bara Hoppa över ger –.
+    const { keepBlank, ...view } = (kind === "shade" ? buildShade : buildPlot)(screen, root);
+    ({ read, focusFirst } = view);
+    extra = { keepBlank };
+  } else if (kind === "paper") {
+    // Eleven ritar på papper och trycker Klar. Figuren ovanför (screen.figure) är konturen att rita i.
+    root.append(el("p", "dg-paper", PAPER_SCREEN_LINE));
+    read = () => ({ done: "1" });
+    focusFirst = () => {};
+    extra = { nextLabel: "Klar" };
+  } else if (kind === "word") {
     const field = (label, extraClass) => {
       const input = makeInput(label, extraClass);
       const wrap = el("label", "dg-field");
@@ -346,16 +433,16 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
     root.append(stage, fields);
     read = () => Object.fromEntries(boxes.map(([letter, input]) => [letter, input.value]));
   } else {
-    const rows = el("div", "dg-rows");
     const boxes = new Map();
-    for (const markup of rowsOf(screen)) {
-      rows.append(drawRow(markup, (id) => {
-        const input = makeInput(`Svar ${id}`);
-        boxes.set(id, input);
-        return input;
-      }));
-    }
-    root.append(rows);
+    const boxFor = (id) => {
+      const input = makeInput(`Svar ${id}`);
+      boxes.set(id, input);
+      return input;
+    };
+    if (screen.table) root.append(drawTable(screen.table, (markup) => drawRow(markup, boxFor, "span")));
+    const rows = el("div", "dg-rows");
+    for (const markup of rowsOf(screen)) rows.append(drawRow(markup, boxFor));
+    if (rows.children.length > 0) root.append(rows);
     read = () => Object.fromEntries([...boxes].map(([id, input]) => [id, input.value]));
   }
 
@@ -385,7 +472,7 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
     root.append(row);
   }
 
-  return { el: root, read: () => read(), focusFirst: () => focusFirst() };
+  return { el: root, read: () => read(), focusFirst: () => focusFirst(), ...extra };
 }
 
 // ---------- PLACERA PÅ TALLINJEN ----------
@@ -524,6 +611,7 @@ const MARKS = {
   wrong: ["✗", "Fel"],
   s: ["S", "Rätt svar men räkningen godkändes inte"],
   skipped: ["–", "Överhoppad"],
+  paper: ["✎", "Visa läraren"],
 };
 
 function formatDate(ms) {
@@ -531,10 +619,11 @@ function formatDate(ms) {
   return new Date(ms).toLocaleString("sv-SE", { dateStyle: "long", timeStyle: "short" });
 }
 
-function guideText(time) {
+export function guideText(time) {
   if (!time) return "";
   const span = time.min === time.max ? `${time.min}` : `${time.min}–${time.max}`;
-  return `Diamant: ${span} min, avbryt efter ca ${time.stop} min`;
+  // RP5 och RP7 har ingen tid att avbryta efter (stop är null).
+  return time.stop == null ? `Diamant: ${span} min` : `Diamant: ${span} min, avbryt efter ca ${time.stop} min`;
 }
 
 // Elevens svar som det stod, "–" när rutan var tom, och facits svar bredvid som visas först med knappen.
@@ -551,9 +640,13 @@ const labelledLine = (label, ...nodes) => {
   return line;
 };
 
-// Raderna där rätt svar står, för en skärm som hoppades över: "–" i varje ruta och facit bredvid.
+// Raderna (och tabellen, och grafen) där rätt svar står, för en skärm som hoppades över: "–" i varje ruta och facit bredvid.
 function expectedRows(screen) {
-  return rowsOf(screen).map((markup) => drawRow(markup, (id) => answerCell("", screen.boxes?.[id]?.accept?.[0], true)));
+  const boxFor = (id) => answerCell("", screen.boxes?.[id]?.accept?.[0], true);
+  const table = screen.table ? [drawTable(screen.table, (markup) => drawRow(markup, boxFor, "span"))] : [];
+  const chart = screen.chart ? [chartStage(screen.chart)] : [];
+  const figure = screen.figure ? [figureStage(screen.figure)] : [];
+  return [...figure, ...chart, ...table, ...rowsOf(screen).map((markup) => drawRow(markup, boxFor))];
 }
 
 function wordDetail(screen, row) {
@@ -586,29 +679,51 @@ function lineDetail(screen, row) {
 function rowsDetail(screen, row) {
   const wrongBy = new Map(row.wrong.map((w) => [w.id, w]));
   const nodes = taskText(screen);
+  const hasWrong = (markup) => idsIn(parseMarkup(markup)).some((id) => wrongBy.has(id));
+  const boxFor = (id) => {
+    const w = wrongBy.get(id);
+    // En ruta som blev rätt visar också det eleven skrev (0,04 för 1/25), inte facit.
+    return w ? answerCell(w.given, w.expected, true) : answerCell(row.answers?.[id] ?? "", null, false);
+  };
+  // Figuren som skulle läsas av (screen.figure) ritas om bredvid raderna, så att läraren ser bilden.
+  if (screen.figure && row.wrong.length > 0) nodes.push(figureStage(screen.figure));
+  // En tabell med en felaktig ruta visas hel, så att läraren ser vad som stod bredvid.
+  if (screen.table && cellsOf(screen.table).some(hasWrong)) nodes.push(drawTable(screen.table, (markup) => drawRow(markup, boxFor, "span")));
   for (const markup of rowsOf(screen)) {
-    if (!idsIn(parseMarkup(markup)).some((id) => wrongBy.has(id))) continue;
-    const drawn = drawRow(markup, (id) => {
-      const w = wrongBy.get(id);
-      // En ruta som blev rätt visar också det eleven skrev (0,04 för 1/25), inte facit.
-      return w ? answerCell(w.given, w.expected, true) : answerCell(row.answers?.[id] ?? "", null, false);
-    });
+    if (!hasWrong(markup)) continue;
+    const drawn = drawRow(markup, boxFor);
     for (const w of row.wrong) if (w.note && idsIn(parseMarkup(markup)).includes(w.id)) drawn.append(el("span", "dg-note", w.note));
     nodes.push(drawn);
   }
+  // Grafen som skulle läsas av syns igen först med "Visa rätt svar".
+  if (screen.chart && row.wrong.length > 0) nodes.push(chartBlock(screen.chart));
   return nodes;
 }
 
+// Uttrycken eleven skrev i en skärms uttrycksrutor (RP6 5, 6). Ett uttryck med rätt värde kan vara rätt skrivet eller
+// bara en bra gissning, så läraren ska se vad som stod (facit visas inte).
+function expressionLines(screen, row) {
+  return Object.entries(screen?.boxes ?? {})
+    .filter(([, box]) => box.expression)
+    .map(([id]) => labelledLine("Svar:", answerCell(row.answers?.[id] ?? "", null, false)));
+}
+
 // Det som står under en rad. En rad som är helt rätt har inget under sig, utom en textuppgift: där visas
-// elevens räkning ändå, så att läraren ser om eleven adderade där facit subtraherar (facit visas inte).
+// elevens räkning ändå, så att läraren ser om eleven adderade där facit subtraherar (facit visas inte). Likadant
+// elevens uttryck i en uttrycksruta.
 function detailFor(screen, row) {
-  if (row.mark === "right") return screen?.kind === "word" ? [labelledLine("Räkning:", answerCell(row.calc ?? "", null, false))] : [];
+  if (row.mark === "paper") return [el("p", "dg-detail-line", "Visa läraren")];
+  if (row.mark === "right") return screen?.kind === "word" ? [labelledLine("Räkning:", answerCell(row.calc ?? "", null, false))] : expressionLines(screen, row);
   if (!screen) return row.wrong.map((w) => labelledLine(`${w.id}:`, answerCell(w.given, w.expected, true)));
 
   if (row.mark === "skipped") {
     const nodes = [el("p", "dg-skipped", "Hoppade över")];
+    if (screen.kind === "paper") return nodes; // ingen rättning, inget facit att dölja
     const hidden = el("div", "dg-expected dg-expected-block");
     if (screen.kind === "word") hidden.append(el("p", "dg-facit", `Facit: ${prettyAnswer(screen.facit ?? screen.accept[0])}`));
+    else if (screen.kind === "choose" || screen.kind === "pick") hidden.append(...choiceFacit(screen, drawMarkup));
+    else if (screen.kind === "shade") hidden.append(...shadeSkipped(screen));
+    else if (screen.kind === "plot") hidden.append(...plotSkipped(screen));
     else if (screen.kind === "place" || screen.kind === "read") {
       const values = screen.kind === "place" ? screen.letters : screen.marks;
       for (const [id, value] of Object.entries(values)) hidden.append(labelledLine(`${id} =`, el("span", "dg-t", prettyAnswer(value))));
@@ -617,6 +732,9 @@ function detailFor(screen, row) {
   }
 
   if (screen.kind === "word") return wordDetail(screen, row);
+  if (screen.kind === "choose" || screen.kind === "pick") return choiceDetail(screen, row, drawMarkup);
+  if (screen.kind === "shade") return shadeDetail(screen, row);
+  if (screen.kind === "plot") return plotDetail(screen, row);
   if (screen.kind === "place" || screen.kind === "read") return lineDetail(screen, row);
   return rowsDetail(screen, row);
 }
@@ -647,6 +765,10 @@ export function renderResult(diagnosis, scored, { onBack } = {}) {
   score.append(el("span", "dg-res-right", `Rätt: ${scored.right} av ${scored.total}`));
   if (scored.s > 0) score.append(el("span", "dg-res-s", `S: ${scored.s}`));
 
+  // Pappersuppgifterna ger ingen poäng; läraren ska se dem. Överhoppade syns som – på sin rad och är inte med här.
+  const paper = scored.screens.filter((row) => row.mark === "paper").map((row) => row.label);
+  const showTeacher = paper.length > 0 ? el("div", "dg-res-paper", `Visa läraren: ${paper.join(", ")}`) : null;
+
   const time = el("div", "dg-res-time");
   time.append(el("span", "dg-res-total", `Tid: ${formatTime(scored.totalMs)}`), el("span", "dg-res-guide", guideText(scored.time ?? diagnosis.time)));
 
@@ -676,7 +798,7 @@ export function renderResult(diagnosis, scored, { onBack } = {}) {
     toggle.textContent = on ? "Dölj rätt svar" : "Visa rätt svar";
   });
 
-  root.append(head, score, time, list, toggle);
+  root.append(head, score, ...(showTeacher ? [showTeacher] : []), time, list, toggle);
   if (onBack) {
     const back = el("button", "start-btn dg-back", "Till listan");
     back.type = "button";

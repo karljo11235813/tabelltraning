@@ -143,6 +143,21 @@ export function equals(a, b) {
   return a.n === b.n && a.d === b.d && a.r === b.r;
 }
 
+// -1, 0 eller 1. Exakt: med samma tecken jämförs kvadraterna (n/d · √r)² = n²·r / d², aldrig flyttal.
+// NONE har ingen ordning och kastar Unsupported.
+export function compare(a, b) {
+  if (isNone(a) || isNone(b)) throw new Unsupported("NONE går inte att jämföra");
+  const sign = (x) => (x.n > 0n ? 1 : x.n < 0n ? -1 : 0);
+  const sa = sign(a);
+  const sb = sign(b);
+  if (sa !== sb) return sa < sb ? -1 : 1;
+  if (sa === 0) return 0;
+  const left = a.n * a.n * a.r * b.d * b.d;
+  const right = b.n * b.n * b.r * a.d * a.d;
+  const byMagnitude = left < right ? -1 : left > right ? 1 : 0;
+  return sa > 0 ? byMagnitude : -byMagnitude;
+}
+
 export function isInteger(a) {
   return !isNone(a) && a.d === 1n && a.r === 1n;
 }

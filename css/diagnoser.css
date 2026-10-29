@@ -37,12 +37,105 @@
 .dg-t { white-space: pre-wrap; }
 .dg-sup { font-size: 0.7em; line-height: 0; }
 .dg-frac { vertical-align: middle; margin: 0 0.2em; }
+/* Ett blandat tal ritat utan KaTeX: heltalet och ett stående bråk bredvid. */
+.dg-mixed { display: inline-flex; align-items: center; white-space: nowrap; }
 .dg-root { display: inline-flex; align-items: flex-end; }
 .dg-radical { padding-right: 0.05em; }
 .dg-radicand { padding: 0 0.15em; border-top: 0.07em solid currentColor; line-height: 1.2; }
 /* Matematiken ritas med KaTeX (render.js). KaTeX gör sin text 1,21 gånger raden; här är den lika stor som raden, så att
    siffrorna blir lika höga som texten i rutorna bredvid. */
 .dg-row .katex { font-size: 1.1em; }
+
+/* ---------- VAL (choose, pick) ---------- */
+/* Brickor med alternativen. En vald bricka har tjock ram och en bock (✓), inte bara färg. Ingen ruta eller ring
+   visas på de ovalda: texten och brickorna säger aldrig hur många som ska väljas, så pick och choose ser likadana ut. */
+.dg-tiles { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 18px; }
+.dg-tile {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  min-height: 3.4rem;
+  margin: 0;
+  padding: 6px 18px;
+  border: 3px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.25rem, 4.2vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.dg-tile[aria-pressed="true"] { border-color: var(--accent-strong); background: var(--accent-soft); }
+.dg-tile[aria-pressed="true"]::before {
+  content: "✓";
+  position: absolute;
+  top: -11px;
+  left: -11px;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 50%;
+  background: var(--accent-strong);
+  color: var(--surface);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45rem;
+  text-align: center;
+}
+.dg-tile:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.dg-tile .dg-row { display: block; margin: 0; line-height: 1.5; }
+
+/* ---------- FIGURER (figures.js) ---------- */
+/* En figur är SVG. En skuggad del syns utan färg: snett streckmönster (fyllningen sätts av koden, se hatchPattern) och
+   tjockare ram. Ramarna har samma tjocklek i pixlar oavsett hur stor figuren ritas. */
+.dg-fig-stage { max-width: 20rem; margin: 6px auto 16px; }
+.dg-fig { display: block; width: 100%; height: auto; overflow: visible; }
+.dg-piece { fill: var(--surface); stroke: var(--text); stroke-width: 2.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.dg-piece.is-on { stroke-width: 4.5px; }
+.dg-fig-line { fill: none; stroke: var(--text); stroke-width: 2.5px; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.dg-hatch-bg { fill: var(--accent-soft); }
+.dg-hatch-line { stroke: var(--accent-strong); stroke-width: 3.5; }
+.dg-fig.is-interactive { touch-action: none; user-select: none; -webkit-user-select: none; }
+.dg-fig.is-interactive .dg-piece { cursor: pointer; }
+.dg-fig.is-interactive .dg-piece:not(.is-on):hover { fill: var(--accent-soft); }
+.dg-fig.is-interactive:focus, .dg-chart.is-interactive:focus { outline: none; }
+.dg-fig.is-interactive .dg-piece:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+/* I en bricka (pick) och på resultatskärmen är figurerna mindre. */
+.dg-tile .dg-fig { width: 7.5rem; }
+.dg-res-detail .dg-fig-stage, .dg-choice-cell .dg-fig-stage { max-width: 9rem; margin: 4px 0 8px; }
+.dg-choice-cell .dg-fig { width: 5.5rem; }
+.dg-detail-line .dg-fig-stage, .dg-detail-line .dg-chart-stage { display: inline-block; vertical-align: middle; }
+.dg-detail-line .dg-fig-stage { width: 9rem; }
+.dg-detail-line .dg-chart-stage { width: min(100%, 22rem); }
+
+/* ---------- TABELL OCH KOORDINATSYSTEM (graph.js) ---------- */
+.dg-table { margin: 10px auto 18px; border-collapse: collapse; font-family: "Baloo 2", sans-serif; font-size: clamp(1.3rem, 4.2vw, 1.7rem); font-weight: 700; }
+.dg-table th, .dg-table td { min-width: 5rem; padding: 6px 16px; border: 2px solid var(--text); text-align: center; }
+.dg-table th { background: var(--accent-soft); color: var(--accent-strong); }
+.dg-table .dg-row { display: inline; margin: 0; line-height: 1.5; }
+.dg-table .dg-input { width: 4.2em; }
+.dg-res-detail .dg-table { margin: 4px 0 8px; font-size: 1.2rem; }
+
+.dg-chart-stage { max-width: 36rem; margin: 6px auto 16px; }
+.dg-chart { display: block; width: 100%; height: auto; overflow: visible; }
+.dg-chart.is-interactive { touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+.dg-grid { stroke: var(--border); stroke-width: 1; }
+.dg-grid-axis { stroke: var(--text); stroke-width: 2.5; }
+.dg-chart-num { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-size: 13px; font-weight: 700; }
+.dg-chart-title { fill: var(--text); font-family: "Baloo 2", sans-serif; font-size: 18px; font-weight: 800; }
+.dg-graph-line { stroke: var(--accent-strong); stroke-width: 3; stroke-linecap: round; }
+.dg-point { fill: var(--text); stroke: var(--surface); stroke-width: 2; }
+.dg-hover { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-dasharray: 4 3; pointer-events: none; }
+/* Facits punkter är streckade ringar och syns först med "Visa rätt svar". */
+.dg-ghost-point { fill: none; stroke: var(--text); stroke-width: 2.5; stroke-dasharray: 3 3; }
+.dg-result .dg-ghost { display: none; }
+.dg-result.dg-show-answers .dg-ghost { display: inline; }
+.dg-res-detail .dg-chart-stage { max-width: 22rem; margin: 4px 0 8px; }
 
 /* ---------- RUTOR ---------- */
 .dg-input {
@@ -179,6 +272,15 @@
 .dg-detail-label { font-weight: 800; }
 .dg-skipped { color: var(--text-muted); font-weight: 700; }
 .dg-facit { margin: 2px 0 0; }
+
+/* Val på resultatskärmen: ett alternativ per rad med ✓ eller ✗ före, och elevens Ja eller Nej efter. */
+.dg-pick-line { margin: 0 0 4px; line-height: 1.7; }
+.dg-pick-mark { display: inline-block; min-width: 1.2em; font-family: "Baloo 2", sans-serif; font-weight: 800; }
+.dg-pick-answer { font-weight: 800; }
+.dg-choice-cell { padding: 0.12em 0.5em; vertical-align: middle; }
+.dg-choice-cell.is-wrong { padding: 0.12em 0.5em; }
+.dg-choice-cell .dg-row { display: inline; margin: 0; font-size: inherit; line-height: 1.5; }
+.dg-res-paper { margin: 6px 0 8px; font-family: "Baloo 2", sans-serif; font-size: clamp(1.2rem, 3.4vw, 1.6rem); font-weight: 800; }
 
 /* Rätt svar ligger med i sidan men syns först när knappen trycks. */
 .dg-result .dg-expected { display: none; }

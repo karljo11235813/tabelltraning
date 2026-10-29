@@ -7,9 +7,8 @@
 import { AREAS, getDiagnosis } from "./data/index.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
-import { scoreRun } from "./mark.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
-import { storageWorks, savedList, ignoresEnter, ignoresResultTap } from "./page.js";
+import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
 
 const SECTIONS = ["dgList", "dgRun", "dgResult"];
@@ -136,16 +135,24 @@ function showCurrent() {
   const { diagnosis, session } = run;
   run.view = renderScreen(diagnosis, session.screen, { onSubmit: next });
   $("dgScreenHost").replaceChildren(run.view.el);
+  $("dgNext").textContent = run.view.nextLabel ?? "Nästa"; // en pappersuppgift avslutas med Klar
   window.scrollTo(0, 0); // en ny skärm börjar överst, också när den förra var scrollad
   run.shownAt = performance.now();
   $("dgProgress").textContent = `${session.index + 1} / ${session.total}`;
+  focusScreen();
+}
+
+// Fokus på första rutan eller brickan. En pappersuppgift har ingen: där är Klar det som ska träffas av Enter.
+function focusScreen() {
   run.view.focusFirst();
+  if (run.view.nextLabel) $("dgNext").focus();
 }
 
 // Sessionen ignorerar ett tryck strax efter att skärmen visades (dubbeltryck på Enter): då görs inget alls.
 function next() {
   if (!run?.session || run.session.done) return;
-  if (run.session.submit(run.view.read())) advance();
+  // Ett val utan något valt är ett svar (keepBlank), inte en överhoppad skärm.
+  if (run.session.submit(run.view.read(), { keepBlank: run.view.keepBlank === true })) advance();
 }
 
 function skip() {
@@ -164,7 +171,22 @@ function finish() {
   const finished = session.run();
   const saved = saveResult(store, finished);
   stopRun();
-  showResult(diagnosis, scoreRun(diagnosis, finished), { saved });
+  // Ett datafel i rättningen ska aldrig lämna en död skärm: då visas ett kort besked och en väg tillbaka.
+  const scored = safeScore(diagnosis, finished);
+  if (scored === null) showScoreError(diagnosis);
+  else showResult(diagnosis, scored, { saved });
+}
+
+function showScoreError(diagnosis) {
+  const root = el("section", "dg-result");
+  const back = el("button", "start-btn dg-back", "Till listan");
+  back.type = "button";
+  back.addEventListener("click", showList);
+  root.append(el("h2", "dg-res-title", `${diagnosis.code} · ${diagnosis.title}`), el("p", "bt-intro", "Resultatet gick inte att rätta. Säg till läraren."), back);
+  $("dgSaveNote").hidden = true;
+  $("dgResultHost").replaceChildren(root);
+  showSection("dgResult");
+  resultShownAt = performance.now();
 }
 
 function stopRun() {
@@ -181,7 +203,7 @@ function askCancel() {
 
 function keepGoing() {
   $("dgCancelConfirm").hidden = true;
-  if (run?.session) run.view.focusFirst();
+  if (run?.session) focusScreen();
   else $("dgStart").focus();
 }
 
@@ -201,6 +223,13 @@ $("dgScreenHost").addEventListener("keydown", (e) => {
     e.preventDefault();
     e.stopPropagation();
   }
+}, true);
+// Samma för knapparna under skärmen (Nästa, Klar, Hoppa över): ett nedhållet Enter på en pappersuppgift är ett klick på
+// Klar om och om igen, som annars rusar genom 4a, 4b, 4c. Bara repeat, inte tiden: ett första tryck är ett riktigt svar.
+$("dgActions").addEventListener("keydown", (e) => {
+  if (!ignoresHeldEnter({ key: e.key, repeat: e.repeat })) return;
+  e.preventDefault();
+  e.stopPropagation();
 }, true);
 // Ett dubbelklick på sista "Nästa" ger ett andra klick som träffar resultatskärmen, där "Visa rätt svar" eller
 // "Till listan" kan ligga på samma plats. Knapparna där ignoreras en stund (före deras egen hantering, capture).

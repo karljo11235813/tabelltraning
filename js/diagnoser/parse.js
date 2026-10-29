@@ -4,6 +4,8 @@
 // parseNumber läser ett enkelt tal (heltal, decimal, bråk, blandat tal, rot).
 // parseExpr  läser ett uttryck med räknesätt, potenser och rötter.
 // parseAnswer avgör vad ett svar är: tomt, "saknar lösning", rest, tal (med enhet efter) eller annat.
+// parseFractionWord läser ett svenskt bråkord ("en halv", "tre fjärdedelar") som ett tal.
+// parseFractionParts läser ett skrivet bråk eller bråkord som täljare och nämnare, oförkortade ("4/10", "fyra tiondelar").
 // stripDecoration tar bort "Svar:" först och skiljetecken sist, så att "Svar: 8." läses som "8".
 
 import { rat, neg, add, sub, mul, div, pow, sqrt, Unsupported } from "./value.js";
@@ -255,21 +257,81 @@ const INTE_ENHET = new Set(["x", "r", "rest"]);
 // "kr/tim", "elever per klass", "(dagar)". En siffra hör inte dit: "5 kr 4" är inget svar.
 const ENHETSTECKEN = /[\p{L}\s/.()]*$/u;
 const BARA_ENHETSTECKEN = /^[\p{L}\s/.()]*$/u;
+// % och ‰ är enheter utan bokstav. De gäller bara ensamma direkt efter talet: "25 %" men inte "25 % kr".
+const PROCENTTECKEN = /^(.*\S)\s*([%‰])$/su;
 const MAX_SVAR = 200; // längre text är aldrig ett tal med enhet
 
-// Talet före en enhet ("22 elever per klass" ger "22"), eller null. Enheten ska vara det sista i texten,
-// bestå av ord och skiljetecken, ha minst en bokstav och inget av x, r och rest (x är gånger, de andra
-// hör till resten). Den längsta enheten som lämnar ett tal kvar vinner.
+// Enheten efter ett tal, i gemener med ett mellanslag mellan orden och utan parenteser runt det hela
+// ("(dagar)" ger "dagar"), eller null när texten inte kan vara en enhet. Den ska bestå av ord och skiljetecken,
+// ha minst en bokstav och inget av x, r och rest (x är gånger, de andra hör till resten).
+function enhetAv(text) {
+  const enhet = text.trim();
+  const ord = enhet.match(/\p{L}+/gu);
+  if (!ord || !BARA_ENHETSTECKEN.test(enhet) || ord.some((o) => INTE_ENHET.has(o.toLowerCase()))) return null;
+  return enhet.toLowerCase().replace(/\s+/g, " ").replace(/^\(([^()]*)\)$/, "$1").trim();
+}
+
+// Talet och enheten ("22 elever per klass" ger { tal: "22", enhet: "elever per klass" }), eller null. Enheten ska vara
+// det sista i texten (eller ett ensamt % eller ‰). Den längsta enheten som lämnar ett tal kvar vinner.
 function talFöreEnhet(rå) {
   if (rå.length > MAX_SVAR) return null;
+  const tecken = rå.match(PROCENTTECKEN);
+  if (tecken) return parseNumber(tecken[1]) ? { tal: tecken[1], enhet: tecken[2] } : null;
   for (let i = rå.search(ENHETSTECKEN); i > 0 && i < rå.length; i++) {
-    const enhet = rå.slice(i);
-    const ord = enhet.match(/\p{L}+/gu);
-    if (!ord || !BARA_ENHETSTECKEN.test(enhet) || ord.some((o) => INTE_ENHET.has(o.toLowerCase()))) continue;
+    const enhet = enhetAv(rå.slice(i));
+    if (enhet === null) continue;
     const tal = rå.slice(0, i).trim();
-    if (tal !== "" && parseNumber(tal)) return tal;
+    if (tal !== "" && parseNumber(tal)) return { tal, enhet };
   }
   return null;
+}
+
+// Svenska bråkord: täljaren som ord (en, ett, två … tio) eller siffror, nämnaren halv … tiondel. Böjningen
+// (en femtedelar, två tredjedel) får vara fel: det är matematiken som rättas.
+const TÄLJARORD = new Map(Object.entries({ en: 1n, ett: 1n, två: 2n, tre: 3n, fyra: 4n, fem: 5n, sex: 6n, sju: 7n, åtta: 8n, nio: 9n, tio: 10n }));
+const NÄMNARORD = new Map(Object.entries({
+  halv: 2n, halva: 2n, halvor: 2n, halvt: 2n,
+  tredjedel: 3n, tredjedelar: 3n, fjärdedel: 4n, fjärdedelar: 4n, femtedel: 5n, femtedelar: 5n,
+  sjättedel: 6n, sjättedelar: 6n, sjundedel: 7n, sjundedelar: 7n, åttondel: 8n, åttondelar: 8n,
+  niondel: 9n, niondelar: 9n, tiondel: 10n, tiondelar: 10n,
+}));
+const BRÅKORD = /^(\p{L}+|\d+) (\p{L}+)(?: (.+))?$/u;
+
+// { value, text, rest } för ett bråkord först i texten (rest är det som står efter), annars null.
+function bråkord(text) {
+  if (text.length > MAX_SVAR) return null;
+  const m = text.toLowerCase().replace(/\s+/g, " ").trim().match(BRÅKORD);
+  if (!m) return null;
+  const [, täljarord, nämnarord, rest = ""] = m;
+  const täljare = /^\d+$/.test(täljarord) ? BigInt(täljarord) : TÄLJARORD.get(täljarord);
+  const nämnare = NÄMNARORD.get(nämnarord);
+  if (täljare === undefined || nämnare === undefined) return null;
+  return { value: rat(täljare, nämnare), num: täljare, den: nämnare, text: `${täljarord} ${nämnarord}`, rest };
+}
+
+// Värdet av ett helt bråkord ("tre fjärdedelar" ger 3/4), annars null. Inga ord efter.
+export function parseFractionWord(text) {
+  const ord = bråkord(String(text ?? ""));
+  return ord !== null && ord.rest === "" ? ord.value : null;
+}
+
+// { num, den } som eleven skrev dem, oförkortade, för ett bråk a/b eller ett bråkord ("4/10", "4 tiondelar", "fyra
+// tiondelar" ger 4 och 10; "2/4" ger 2 och 4, inte 1/2). En enhet efter bråkordet ("4 tiondelar av figuren") räknas
+// bort som i parseAnswer. null för allt annat, också ett blandat tal, ett decimaltal och ett heltal.
+export function parseFractionParts(text) {
+  const rå = stripDecoration(text);
+  const m = normalize(rå).match(/^(\d+)\/(\d+)$/);
+  if (m !== null) return BigInt(m[2]) === 0n ? null : { num: BigInt(m[1]), den: BigInt(m[2]) };
+  const ord = bråkord(rå);
+  if (ord === null || (ord.rest !== "" && enhetEfterBråkord(ord.rest) === null)) return null;
+  return { num: ord.num, den: ord.den };
+}
+
+// Enheten efter ett bråkord ("en halv liter"), eller null. Ett nytt bråkord efter det första ("tre fjärdedelar
+// och en halv") är ingen enhet.
+function enhetEfterBråkord(rest) {
+  const enhet = enhetAv(rest);
+  return enhet !== null && !enhet.split(" ").some((o) => NÄMNARORD.has(o)) ? enhet : null;
 }
 
 // Ett bråk a/b av heltal (b skilt från 1), skrivet som tal: "69/3". Heltal, decimaltal och blandade tal är det inte.
@@ -288,8 +350,8 @@ export function stripDecoration(text) {
 }
 
 // Vad eleven svarade: tomt, "saknar lösning", rest, ett tal eller annat. Ett tal ger value, text (talet
-// som det skrevs, utan enhet) och fraction (true för ett skrivet bråk a/b). Ord och skiljetecken efter
-// talet räknas bort som enhet.
+// som det skrevs, utan enhet), fraction (true för ett skrivet bråk a/b eller ett bråkord) och unit (enheten
+// efter talet i gemener, "%" och "‰" också, eller null). Ord och skiljetecken efter talet räknas bort som enhet.
 export function parseAnswer(text) {
   if (String(text ?? "").trim() === "") return { kind: "empty" };
   const rå = stripDecoration(text);
@@ -300,9 +362,17 @@ export function parseAnswer(text) {
   if (rest) return { kind: "rest", q: BigInt(rest[1]), r: BigInt(rest[2] ?? rest[3]) };
 
   const värde = parseNumber(rå);
-  if (värde) return { kind: "number", value: värde, text: rå, fraction: ärBråk(rå) };
+  if (värde) return { kind: "number", value: värde, text: rå, fraction: ärBråk(rå), unit: null };
 
-  const tal = talFöreEnhet(rå);
-  if (tal !== null) return { kind: "number", value: parseNumber(tal), text: tal, fraction: ärBråk(tal) };
+  // Före enheten: "3 fjärdedelar" är 3/4, inte talet 3 med enheten fjärdedelar.
+  const ord = bråkord(rå);
+  if (ord) {
+    const unit = ord.rest === "" ? null : enhetEfterBråkord(ord.rest);
+    if (ord.rest !== "" && unit === null) return { kind: "other" };
+    return { kind: "number", value: ord.value, text: ord.text, fraction: true, unit };
+  }
+
+  const före = talFöreEnhet(rå);
+  if (före !== null) return { kind: "number", value: parseNumber(före.tal), text: före.tal, fraction: ärBråk(före.tal), unit: före.enhet };
   return { kind: "other" };
 }

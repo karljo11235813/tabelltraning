@@ -4,7 +4,9 @@
 // formatTime     "m:ss" under en timme, annars "h:mm:ss".
 //
 // Klockan startar när sessionen skapas, och varje ny skärm startar när den förra lämnades.
-// Sessionen vet inte vad en ruta betyder: ett svar räknas som överhoppat när alla värden är tomma.
+// Sessionen vet inte vad en ruta betyder: ett svar räknas som överhoppat när alla värden är tomma, utom på en skärm
+// där tomt är ett svar (keepBlank: ett val utan alternativ valt, en figur utan skuggning och ett rutnät utan punkter är
+// fel, och ett alternativ som inte markerats i en pick är "Nej"). Då hoppas skärmen bara över med skip().
 
 // Ett andra tryck så här snart efter att skärmen visades är ett dubbeltryck, inte ett svar.
 const DOUBLE_PRESS_MS = 300;
@@ -36,9 +38,9 @@ export function createSession(diagnosis, now = () => Date.now()) {
     get done() { return entries.length >= screens.length; },
 
     // Båda returnerar true när trycket räknades och false när det ignorerades.
-    submit(answers) {
+    submit(answers, { keepBlank = false } = {}) {
       const given = answers ?? {};
-      return finish(given, Object.values(given).every(isBlank));
+      return finish(given, !keepBlank && Object.values(given).every(isBlank));
     },
     skip() {
       return finish({}, true);
