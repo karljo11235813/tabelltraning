@@ -473,6 +473,23 @@
 /* En rad i listan: diagnosen och ⋯-menyn (länkar till NCM:s PDF:er). */
 .dg-stair-row { display: flex; gap: 8px; align-items: stretch; }
 .dg-stair-row > .bt-stair { flex: 1; min-width: 0; }
+/* Senaste resultatet längst till höger i knappen. Färgen sitter i ram och bakgrund, texten har vanlig färg så att den
+   går att läsa i båda teman; talen står alltid där, så färgen bär aldrig ensam. */
+.dg-stair-score {
+  flex: none;
+  margin-left: auto;
+  padding: 1px 10px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.dg-stair-score.is-green { border-color: var(--success); background: var(--success-soft); }
+/* Sidans --warning är guld i mörkt tema; blandad med --danger blir den orange i båda teman. */
+.dg-stair-score.is-orange { --dg-orange: color-mix(in srgb, var(--warning) 55%, var(--danger)); border-color: var(--dg-orange); background: color-mix(in srgb, var(--dg-orange) 16%, var(--surface)); }
+.dg-stair-score.is-red { border-color: var(--danger); background: var(--danger-soft); }
 .dg-more { position: relative; display: flex; }
 .dg-more-btn {
   width: 44px;

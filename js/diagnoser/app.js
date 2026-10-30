@@ -9,7 +9,7 @@ import { NCM_LINKS } from "./data/links.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
-import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText } from "./page.js";
+import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, latestByCode, scoreLevel } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
 
 const SECTIONS = ["dgList", "dgRun", "dgResult"];
@@ -20,6 +20,8 @@ const store = createStore(() => window.localStorage);
 
 let run = null; // { diagnosis, session, view, startedAt, shownAt, clock }
 let resultShownAt = 0; // när resultatskärmen visades senast (performance.now)
+// Senaste resultatet per diagnos (latestByCode). Räknas när listan visas, inte vid varje tangent i sökrutan.
+let latest = new Map();
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -57,6 +59,14 @@ function renderAreas() {
         const button = el("button", "bt-stair");
         button.type = "button";
         button.append(el("span", "bt-stair-title", `${code} · ${getDiagnosis(code).title}`));
+        const last = latest.get(code);
+        if (last) {
+          // Färgen är aldrig ensam: talen står alltid i märket.
+          const level = scoreLevel(last.right, last.total);
+          const badge = el("span", level ? `dg-stair-score is-${level}` : "dg-stair-score", `${last.right}/${last.total}`);
+          badge.title = `Senast: ${last.right} av ${last.total} rätt`;
+          button.append(badge);
+        }
         button.addEventListener("click", () => startDiagnosis(code));
         const row = el("div", "dg-stair-row");
         row.append(button, moreMenu(code));
@@ -129,8 +139,7 @@ document.addEventListener("keydown", (e) => {
   open.previousElementSibling.focus();
 });
 
-function renderSaved() {
-  const items = savedList(loadResults(store), getDiagnosis);
+function renderSaved(items) {
   const list = $("dgSaved");
   list.textContent = "";
   for (const item of items) {
@@ -152,8 +161,10 @@ function renderSaved() {
 
 function showList() {
   stopRun();
+  const items = savedList(loadResults(store), getDiagnosis);
+  latest = latestByCode(items);
   renderAreas();
-  renderSaved();
+  renderSaved(items);
   showSection("dgList");
 }
 

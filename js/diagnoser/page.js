@@ -55,6 +55,25 @@ export function savedList(runs, getDiagnosis) {
   return items;
 }
 
+// Listans märke vid varje diagnos: det senaste resultatet, så att eleven ser vad hon redan gjort och hur det gick.
+// items är savedList, nyaste först, så det första per kod är det senaste. Diagnoser som inte gjorts saknas.
+export function latestByCode(items) {
+  const latest = new Map();
+  for (const { run, scored } of items) {
+    if (!latest.has(run.code)) latest.set(run.code, { right: scored.right, total: scored.total });
+  }
+  return latest;
+}
+
+// Märkets färg: grön från 90 % rätt, orange från 60 %, annars röd. Räknas i heltal, så att 9 av 10 är precis 90 %.
+// Samma poäng som resultatskärmen: S räknas inte som rätt och pappersuppgifter ingår inte. Utan rättade delar ingen färg.
+export function scoreLevel(right, total) {
+  if (!(total > 0)) return null;
+  if (right * 10 >= total * 9) return "green";
+  if (right * 10 >= total * 6) return "orange";
+  return "red";
+}
+
 // Samma gräns som sessionens dubbeltryck (session.js): ett Enter så här snart efter att skärmen visades hör till
 // förra skärmen. Sessionen ignorerar då själva svaret, men utan det här flyttar Enter ändå fokus mellan rutorna
 // på den nya skärmen. Ett nedhållet Enter börjar upprepas först efter en halv sekund, så det fångas av repeat.
