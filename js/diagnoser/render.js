@@ -299,6 +299,10 @@ const taskText = (screen) => (screen.rows === undefined ? [el("p", "dg-word-text
 
 const PAPER_LINE = "Räkna på papper. Skriv bara svaret här.";
 const PAPER_SCREEN_LINE = "Gör uppgiften på ett löst papper och visa din lärare."; // ritas eller skrivs (SA1 5)
+// Hur svaret skrivs när det har flera delar: rötter i två rutor (screen.roots, TAe6) och flera svar i en ruta (set).
+// Raden står på varje sådan skärm, så den avslöjar inte hur många rötter eller svar det är.
+const ROOTS_LINE = "Skriv en lösning i varje ruta. Har ekvationen bara en lösning lämnar du den andra rutan tom.";
+const SET_LINE = "Skriv alla svar i rutan, med och emellan.";
 const NO_INPUT_KINDS = ["choose", "pick", "paper", "shade", "plot", "line", "clock", "bars"]; // skärmar utan textrutor: ingen "Räkna på papper"-rad
 
 // En rad med fler tecken än så i markeringen är lång (bara TAt4 4; den längsta raden i en annan diagnos har 38).
@@ -358,6 +362,8 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
   root.append(el("h2", "dg-screen-label", screen.label));
   if (screen.text) root.append(el("p", "dg-prompt", screen.text));
   if (diagnosis.paper && !NO_INPUT_KINDS.includes(kind)) root.append(el("p", "dg-paper", PAPER_LINE));
+  if (screen.roots) root.append(el("p", "dg-paper", ROOTS_LINE));
+  if (Object.values(screen.boxes ?? {}).some((box) => box.set)) root.append(el("p", "dg-paper", SET_LINE));
   // Bladets bilder (screen.images: kläder, mynt, kortlek …) står under uppgiften, före figur och diagram.
   if (screen.images) root.append(imagesStage(screen.images));
   // Figuren (screen.figure) och grafen att läsa av (screen.chart) står ovanför raderna. I shade, plot och line är
@@ -474,7 +480,9 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
   } else {
     const boxes = new Map();
     const boxFor = (id) => {
-      const input = makeInput(`Svar ${id}`);
+      // En ruta för flera ord (set: "Tess och Emma", contains: en mening) är bredare.
+      const box = screen.boxes?.[id];
+      const input = makeInput(`Svar ${id}`, box?.set || box?.contains ? "dg-input-wide" : "");
       boxes.set(id, input);
       return input;
     };

@@ -256,6 +256,7 @@ function spaceLatex(run, before, after, variables) {
 
 // Tecken som skrivs som ett LaTeX-kommando.
 const COMMANDS = { "·": "\\cdot", "≈": "\\approx", "≤": "\\leq", "≥": "\\geq", "≠": "\\neq", "±": "\\pm" };
+const SUBSCRIPT_DIGITS = "₀₁₂₃₄₅₆₇₈₉"; // nedsänkta siffror skrivs _{1}
 
 // En text som LaTeX. atStart/atEnd är sant för första och sista tecknet i hela raden: mellanrummet där
 // ritas inte (render.js lägger det utanför formeln).
@@ -287,6 +288,7 @@ function textLatex(s, atStart, atEnd, variables = "") {
     } else {
       if (c === "−" || c === "-") out += "-";
       else if (Object.hasOwn(COMMANDS, c)) out += COMMANDS[c]; // "≈" i avrundningsuppgifter, ≤ ≥ ≠ ± i olikheter och rötter
+      else if (SUBSCRIPT_DIGITS.includes(c)) out += `_{${SUBSCRIPT_DIGITS.indexOf(c)}}`; // x₁ och x₂ (TAe6)
       else if (c === "," && isDigit(s[i - 1]) && isDigit(s[i + 1])) out += "{,}"; // decimalkomma utan mellanrum
       else if (c === "/" && (/\s/.test(s[i - 1] ?? "") || /\s/.test(s[i + 1] ?? ""))) out += "\\mathbin{/}"; // "14 / 2" som på bladet
       else out += Object.hasOwn(LATEX_ESCAPES, c) ? LATEX_ESCAPES[c] : c;

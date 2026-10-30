@@ -559,6 +559,22 @@ function markPick(screen, answers) {
 }
 
 // answers är elevens svar som de skrevs (en kopia), så att resultatskärmen kan visa dem också för rutor som blev rätt.
+// Rutorna läses ihop som en lista med rötter, och tomma rutor räknas bort: "2" och "−2", eller "±2" i den första rutan
+// och den andra tom, är samma svar. Rätt när mängden är densamma som för någon kombination av rutornas accept ("" i
+// accept: rutan får vara tom, för en dubbelrot eller när uppgiften redan ger en rot). Allt tomt är fel.
+function markRootBoxes(screen, answers) {
+  const ids = Object.keys(screen.boxes);
+  const typed = ids.map((id) => String(answers?.[id] ?? "").trim()).filter((t) => t !== "");
+  const given = typed.length === 0 ? null : parseRoots(typed.join(" och "));
+  const combos = ids.reduce((acc, id) => acc.flatMap((parts) => screen.boxes[id].accept.map((a) => [...parts, a])), [[]]);
+  const right = given !== null && combos.some((parts) => {
+    const expected = parseRoots(parts.filter((p) => p !== "").join(" och "));
+    return expected !== null && sameRoots(given, expected);
+  });
+  const wrong = right ? [] : ids.map((id) => ({ id, given: answers?.[id] ?? "", expected: screen.boxes[id].accept[0], note: null }));
+  return { mark: right ? "right" : "wrong", right: Number(right), wrong };
+}
+
 export function markScreen(diagnosis, screen, entry) {
   const result = { label: screen.label, ms: entry.ms ?? 0, mark: "skipped", right: 0, total: columnsOf(screen), s: 0, wrong: [], calc: null, answers: { ...(entry.answers ?? {}) } };
   if (entry.skipped) return result;
@@ -575,6 +591,9 @@ export function markScreen(diagnosis, screen, entry) {
   if (screen.kind === "bars") return { ...result, ...markBars(screen, entry.answers) };
   // En pappersuppgift rättas inte: Klar betyder att eleven ska visa läraren, och räknas inte i poängen.
   if (screen.kind === "paper") return { ...result, mark: entry.answers?.done === "1" ? "paper" : "skipped" };
+
+  // Rötter i flera rutor (screen.roots, TAe6: x₁ och x₂) rättas ihop, som en kolumn.
+  if (screen.roots) return { ...result, ...markRootBoxes(screen, entry.answers) };
 
   const against = Array.isArray(screen.pairs) ? pairing(diagnosis, screen, entry.answers) : new Map();
   const { right, wrong } = markBoxes(diagnosis, boxesOf(screen), entry.answers, screen.rows, against);

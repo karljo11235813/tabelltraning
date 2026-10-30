@@ -39,6 +39,7 @@
 .dg-rows-long { column-width: auto; column-count: 1; }
 .dg-row-point { white-space: nowrap; }
 .dg-row-point > .dg-input { width: 3.2em; }
+.dg-input.dg-input-wide { width: min(100%, 14em); text-align: left; } /* flera ord (set, contains) */
 .dg-t { white-space: pre-wrap; }
 .dg-var { font-family: KaTeX_Math, "Times New Roman", serif; font-style: italic; }
 .dg-sup { font-size: 0.7em; line-height: 0; }
@@ -433,6 +434,9 @@
 .dg-search::placeholder { color: var(--text-muted); }
 .dg-search:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
 .dg-search-empty { margin: 14px 0 0; }
+/* Områdets rubrik med dess del av Diamantloggan till vänster. */
+.dg-area-head { display: flex; align-items: center; gap: 10px; }
+.dg-area-logo { flex-shrink: 0; width: 40px; height: 40px; object-fit: contain; }
 /* Områdena och "Mina resultat". Två klasser, eftersom .card h2 i styles.css annars gör dem 1.05rem. */
 .card .dg-area-title { font-size: 1.5rem; line-height: 1.2; }
 /* En rad i listan: diagnosen och ⋯-menyn (länkar till NCM:s PDF:er). */

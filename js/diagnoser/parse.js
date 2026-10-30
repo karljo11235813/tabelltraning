@@ -34,6 +34,7 @@ export function normalizeAlgebra(text) {
 
 function normalera(text, xÄrGånger) {
   let s = String(text ?? "").toLowerCase().trim();
+  s = s.replace(/(?:kvadrat)?roten ur\s*/g, "√"); // "roten ur 2" är √2
 
   s = s.replace(/[‐-—−]/g, "-"); // − – — och andra streck blir -
   s = s.replace(/[÷:]/g, "/");
@@ -257,13 +258,25 @@ const SAKNAR_LÖSNING = new Set([
   "går inte",
   "odefinierat",
   "inte definierat",
+  "ingen", // "ingen" som svar på "Lös ekvationen"
+  "inget x",
+  "inget tal",
+  "0 lösning",
+  "noll lösning",
+  "∅",
 ]);
 
-// Utjämnar det som bara är ett annat skrivsätt av samma ord: inledande "det", "ej" som "inte", "-ad" som "-at"
-// ("odefinierad") och "reel" som "reell". Därefter ska hela meningen finnas i SAKNAR_LÖSNING.
+// Utjämnar det som bara är ett annat skrivsätt av samma ord: inledande "det", "ekvationen" och "har", plural som
+// singular ("inga lösningar" som "ingen lösning"), "ej" som "inte", "-ad" som "-at" ("odefinierad") och "reel" som
+// "reell". Därefter ska hela meningen finnas i SAKNAR_LÖSNING.
 function saknarLösning(mening) {
   const jämnad = mening
     .replace(/^det(?!\p{L})\s*/u, "")
+    .replace(/^(?:ekvationen|olikheten|ekvationssystemet|systemet) (?=har |saknar |går |kan )/u, "")
+    .replace(/^har (?=ingen |inga |0 |noll )/u, "")
+    .replace(/(?<!\p{L})inga(?!\p{L})/gu, "ingen")
+    .replace(/(?<!\p{L})reella(?!\p{L})/gu, "reell")
+    .replace(/(?<!\p{L})lösningar(?!\p{L})/gu, "lösning")
     .replace(/(?<!\p{L})ej(?!\p{L})/gu, "inte")
     .replace(/(?<!\p{L})reel(?!\p{L})/gu, "reell")
     .replace(/(?<!\p{L})(\p{L}*definierad)(?!\p{L})/gu, (_, ord) => `${ord.slice(0, -1)}t`);
@@ -271,8 +284,11 @@ function saknarLösning(mening) {
 }
 
 // Orden för "alla tal är lösningar" (TAe2 6, TAe5 2c), i gemener med ett mellanslag mellan orden. Bokstaven får vara
-// vilken som helst ("alla y"). Också den här listan är kort.
-const ALLA = /^(?:alla (?:\p{L}|reella \p{L}|värden på \p{L}|tal|reella tal)|oändligt många(?: lösningar)?)$/u;
+// vilken som helst ("alla y"). Ett inledande "ekvationen har" och ett avslutande "fungerar", "gäller", "passar" eller
+// "är lösningar" räknas bort. Ett ensamt "alla" räcker, liksom "vilket tal som helst" och "x kan vara vad som helst".
+const ALLA = /^(?:alla(?: (?:\p{L}|reella \p{L}|\p{L}-värden|värden|värden på \p{L}|tal|reella tal))?|(?:\p{L} kan vara )?(?:vilket (?:\p{L} |tal |värde )?|vad )som helst|oändligt (?:många|antal|med)(?: lösningar)?)$/u;
+const alla = (mening) =>
+  ALLA.test(mening.replace(/^ekvationen har /u, "").replace(/ (?:fungerar|funkar|gäller|passar|duger|är lösningar?)$/u, ""));
 
 // En bokstav och = först ("x = 4", "a = 5") är bara vilken obekant svaret gäller och räknas bort.
 const LEDANDE_VARIABEL = /^\p{L}\s*=(?!=)\s*/u;
@@ -417,7 +433,7 @@ export function parseAnswer(text) {
 
   const mening = rå.toLowerCase().replace(/\s+/g, " ");
   if (saknarLösning(mening)) return { kind: "none" };
-  if (ALLA.test(mening)) return { kind: "all" };
+  if (alla(mening)) return { kind: "all" };
 
   const rest = rå.match(REST);
   if (rest) return { kind: "rest", q: BigInt(rest[1]), r: BigInt(rest[2] ?? rest[3]) };
