@@ -1,8 +1,9 @@
 // Rättar rutor och skärmar i en diagnos och bygger resultatet som läraren läser.
 //
 // markBox     rätt, fel eller tomt för en ruta. Förutom tal finns algebra (algebra.js), rötter och olikheter
-//             (solutions.js), ordsvar (contains), klockslag och tidsskillnader (time, duration; time.js) och svar med π
-//             (pi; pi.js); "" i accept betyder att rutan får lämnas tom.
+//             (solutions.js), ordsvar (contains), klockslag och tidsskillnader (time, duration; time.js), svar med π
+//             (pi; pi.js) och mängdsvar med flera saker i valfri ordning (set); "" i accept betyder att rutan får
+//             lämnas tom.
 // copyOf      det eleven kan skriva av ur uppgiften: varje sida utan ruta i en rad med = ("135/25" för
 //             "{135|25} = [a]"), med ett blandat tal både som uttryck ("2+2/3") och som det skrivs ("2 2/3").
 //             markBox räknar det som avskrivet, inte som svar.
@@ -13,14 +14,15 @@
 //             (shade, svaret { pieces: "0,3" }, rätt när delarnas vikter ger målbråket), punkter i ett
 //             koordinatsystem (plot, svaret { points: "1,10;2,20" }) och en rät linje genom två punkter som eleven
 //             sätter ut (line, svaret { points: "1,1;6,3" }, rätt när båda ligger på linjen; graph.js) och visarna
-//             på en klocka (clock, svaret { minute: "40", hour: "5,6" }; clock.js).
+//             på en klocka (clock, svaret { minute: "40", hour: "5,6" }; clock.js) och ett stapel- eller stolpdiagram som
+//             eleven ritar (bars, svaret { heights: "9;4;3;6" }; bars.js).
 // scoreRun    rättar hela omgången och summerar kolumnerna på resultatblanketten. Pappersuppgifterna räknas inte
 //             i right/total; scored.paper är antalet som eleven markerade Klar på (läraren ska se dem).
 //
 // Allt räknas med exakta värden från value.js, aldrig flyttal.
 
 import { rat, mul, equals, compare, isInteger, Unsupported } from "./value.js";
-import { normalize, normalizeAlgebra, parseNumber, parseExpr, parseFractionWord, parseFractionParts, parseAnswer, stripDecoration } from "./parse.js";
+import { normalize, normalizeAlgebra, parseNumber, parseExpr, parseFractionWord, parseFractionParts, parseAnswer, stripDecoration, parseSetItems, normalizeItem } from "./parse.js";
 import { parseAlgebra, parseAlgebraReadings, variablesOf, isEquivalent, canonicalKey } from "./algebra.js";
 import { parseRoots, sameRoots, parseInequality, sameSet } from "./solutions.js";
 import { markupToExpr } from "./markup.js";
@@ -28,15 +30,16 @@ import { checkCalculation } from "./calc.js";
 import { isShadeRight } from "./figures.js";
 import { isPlotRight, isLineRight, pointsText } from "./graph.js";
 import { markClock } from "./clock.js";
+import { markBars } from "./bars.js";
 import { markTime, markDuration } from "./time.js";
 import { parsePi, parsePiReadings, piBounds, piParts, hasPi, splitUnit } from "./pi.js";
 import { canonicalUnit } from "./units.js";
 import { surd, add as surdAdd, sub as surdSub, compare as surdCompare } from "./surd.js";
 
-// Värdet av ett facit: ett tal, ett uttryck eller ett bråkord ("två femtedelar"), med ett ° sist som enhet ("360°").
-// null när det inte är något värde ("Saknar reell lösning").
+// Värdet av ett facit: ett tal, ett uttryck eller ett bråkord ("två femtedelar"), med ett ° eller °C sist som enhet
+// ("360°", "11 °C"). null när det inte är något värde ("Saknar reell lösning").
 const valueOf = (facit) => {
-  const text = String(facit).replace(/\s*°$/, "");
+  const text = String(facit).replace(/\s*[°º](?:\s*c)?$/i, "");
   return parseNumber(text) ?? parseExpr(text) ?? parseFractionWord(text);
 };
 
@@ -109,8 +112,11 @@ export function markBox(box, raw, copy = null, over = null) {
 
   // I en ruta med variabler är x en bokstav, inte gånger ("5x − 3" är inte 5 · −3).
   const norm = box.algebra || box.roots || box.inequality ? normalizeAlgebra : normalize;
-  const typed = norm(stripDecoration(raw)); // "3³." och "Svar: 3³" är 3³ också i en ruta med bestämd form
-  if (accept.some((a) => norm(a) === typed)) return "right";
+  // Ett klockslag eller en tidsskillnad (time.js) frågar efter en exakt tid: där är "ungefär" inte utsmyckning.
+  const decoration = { approx: !box.time && !box.duration };
+  const typed = norm(stripDecoration(raw, decoration)); // "3³." och "Svar: 3³" är 3³ också i en ruta med bestämd form
+  // Facit läses likadant, så att "cirka 60 %" i accept och "60 %" är samma svar.
+  if (accept.some((a) => norm(stripDecoration(a, decoration)) === typed)) return "right";
 
   // "135 / 25" och "135/25 kr" är uppgiften 135/25 avskriven, hur parenteser, mellanslag och enhet än ser ut.
   const copies = [copy ?? []].flat();
@@ -123,6 +129,7 @@ export function markBox(box, raw, copy = null, over = null) {
   // Ordsvar, algebra, rötter, olikheter, klockslag, tidsskillnader och π läser svaret själva (före rest: "2r3" är 2r³ i
   // en algebraruta).
   if (box.contains) return markContains(box, raw);
+  if (box.set) return markSet(box, raw);
   if (box.algebra) {
     const marked = markAlgebra(box, raw);
     if (marked !== null) return marked;
@@ -149,7 +156,7 @@ export function markBox(box, raw, copy = null, over = null) {
     const parts = parseFractionParts(raw);
     if (parts !== null && parts.den === over) return accept.some((a) => equalsNumerator(parts.num, a)) ? "right" : "wrong";
   }
-  if (box.range) return markRange(box.range, given);
+  if (box.range) return markRange(box, given);
   if (box.expression) return markExpression(box, raw);
 
   // Bara värdeformen godtar ett annat skrivsätt: ett tal, inte ett uttryck, som är lika stort som något av facits svar.
@@ -163,6 +170,29 @@ export function markBox(box, raw, copy = null, over = null) {
 function markContains(box, raw) {
   const text = String(raw ?? "").toLowerCase();
   return box.contains.some((word) => text.includes(String(word).toLowerCase())) ? "right" : "wrong";
+}
+
+// Mängdsvar (STd1 3c, 4d, STd2 2c, 3d, STd6 2b): box.set är sakerna, var och en med sina godtagna stavningar
+// ([["Tess"], ["Emma"]], [["dag 1", "dag ett", "1"], …]). Svaret delas i delar (parseSetItems: vid , ; & + / och orden
+// "och" och "samt"), och det är rätt när delarna och sakerna går att para ihop en mot en, i vilken ordning som helst:
+// ingen sak saknas, ingen del blir över och samma sak två gånger räknas inte två gånger. Gemener och versaler, mellanslag,
+// streck och en punkt sist spelar ingen roll (normalizeItem). Trasig data ger fel svar, aldrig ett undantag.
+function markSet(box, raw) {
+  if (!Array.isArray(box.set) || !box.set.every(Array.isArray)) return "wrong";
+  const items = parseSetItems(raw);
+  const spellings = box.set.map((entry) => new Set(entry.map(normalizeItem)));
+  if (items.length === 0 || items.length !== spellings.length) return "wrong";
+  // Parning med utökande vägar: owner[e] är delen som har fått sak e.
+  const owner = spellings.map(() => -1);
+  const place = (i, seen) =>
+    spellings.some((names, e) => {
+      if (seen.has(e) || !names.has(items[i])) return false;
+      seen.add(e);
+      if (owner[e] !== -1 && !place(owner[e], seen)) return false;
+      owner[e] = i;
+      return true;
+    });
+  return items.every((_, i) => place(i, new Set())) ? "right" : "wrong";
 }
 
 // Algebra (algebra.js). "equivalent" (Skriv ett uttryck, Teckna): rätt när uttrycket är lika med något av facits för
@@ -255,16 +285,21 @@ function typedDecimals(text) {
   return m === null ? null : (m[1] ?? "").length;
 }
 
-// Ett intervall { gt | ge, lt | le, decimals? }: ett vanligt tal (inte ett uttryck) i intervallet och, med decimals,
-// skrivet med precis så många decimaler. Jämförelsen är exakt.
-function markRange(range, given) {
+// Ett intervall box.range { gt | ge, lt | le, decimals? }: ett vanligt tal (inte ett uttryck) i intervallet och, med
+// decimals, skrivet med precis så många decimaler. Gränserna står i rutans huvudenhet, och talet räknas om med units som
+// i en värderuta (inMainUnit): med units { "%": "1/100" } och gränserna 0,58–0,62 är "60 %", "0,6" och "3/5" rätt
+// (SA4 2b). Jämförelsen är exakt.
+function markRange(box, given) {
+  const range = box.range;
   if (given.kind !== "number") return "wrong";
+  const unit = inMainUnit(box, given);
+  if (unit === null) return "wrong"; // en felskriven faktor i datan: aldrig ett undantag
   const inside = [
     ["gt", (c) => c > 0], ["ge", (c) => c >= 0], ["lt", (c) => c < 0], ["le", (c) => c <= 0],
   ].every(([bound, ok]) => {
     if (range[bound] === undefined) return true;
     const limit = tryExact(range[bound]); // en felskriven gräns i datan ger fel svar, aldrig ett undantag
-    return limit !== null && ok(compare(given.value, limit));
+    return limit !== null && ok(compare(unit.value, limit));
   });
   if (!inside) return "wrong";
   return range.decimals === undefined || typedDecimals(given.text) === range.decimals ? "right" : "wrong";
@@ -472,7 +507,7 @@ const isOneColumn = (screen) => screen.kind === undefined && screen.points === "
 // en kolumn; pick ger en kolumn per alternativ ("each") eller en för hela skärmen ("one"). En pappersuppgift ger ingen.
 function columnsOf(screen) {
   if (screen.kind === "paper") return 0;
-  if (screen.kind === "choose" || screen.kind === "shade" || screen.kind === "plot" || screen.kind === "line" || screen.kind === "clock") return 1;
+  if (screen.kind === "choose" || screen.kind === "shade" || screen.kind === "plot" || screen.kind === "line" || screen.kind === "clock" || screen.kind === "bars") return 1;
   if (screen.kind === "pick") return screen.points === "one" ? 1 : screen.items.length;
   if (screen.kind === "word" || isOneColumn(screen)) return 1;
   return Object.keys(boxesOf(screen)).length;
@@ -536,6 +571,8 @@ export function markScreen(diagnosis, screen, entry) {
   if (screen.kind === "line") return { ...result, ...markLine(screen, entry.answers) };
   // clock: visarna, svaret { minute, hour } (clock.js). Rätt minut och timvisaren mellan rätt timstreck.
   if (screen.kind === "clock") return { ...result, ...markClock(screen, entry.answers) };
+  // bars: stapelhöjderna, svaret { heights: "9;4;3;6" } (bars.js). Rätt när varje höjd är facits.
+  if (screen.kind === "bars") return { ...result, ...markBars(screen, entry.answers) };
   // En pappersuppgift rättas inte: Klar betyder att eleven ska visa läraren, och räknas inte i poängen.
   if (screen.kind === "paper") return { ...result, mark: entry.answers?.done === "1" ? "paper" : "skipped" };
 

@@ -7,7 +7,7 @@
 // renderScreen     en skärm som eleven fyller i: rader med rutor (och en tabell eller ett koordinatsystem att läsa av,
 //                  graph.js, och en figur, figures.js), textuppgift, placera eller läsa av tallinjen, ett val (choose,
 //                  pick; choice.js), skuggning (shade), punkter (plot), en rät linje (line), visarna på en klocka (clock;
-//                  clock.js) eller en pappersuppgift (paper). Ger
+//                  clock.js), ett stapel- eller stolpdiagram (bars; bars.js) eller en pappersuppgift (paper). Ger
 //                  { el, read, focusFirst } och, för skärmar där det behövs, keepBlank (tomt är ett svar) och nextLabel
 //                  ("Klar" i stället för "Nästa").
 //
@@ -34,6 +34,8 @@ import { rat, add, sub, mul, div, compare, isInteger } from "./value.js";
 import { figureStage, buildShade, shadeDetail, shadeSkipped } from "./figures.js";
 import { drawTable, cellsOf, chartStage, chartBlock, buildPlot, plotDetail, plotSkipped, buildLine, drawnLineDetail, drawnLineSkipped } from "./graph.js";
 import { buildClock, clockDetail, clockSkipped } from "./clock.js";
+import { diagramStage, diagramBlock } from "./diagram.js";
+import { buildBars, barsDetail, barsSkipped } from "./bars.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -296,8 +298,8 @@ const taskText = (screen) => (screen.rows === undefined ? [el("p", "dg-word-text
 // ---------- SKÄRMEN ----------
 
 const PAPER_LINE = "Räkna på papper. Skriv bara svaret här.";
-const PAPER_SCREEN_LINE = "Rita på ett löst papper och visa din lärare.";
-const NO_INPUT_KINDS = ["choose", "pick", "paper", "shade", "plot", "line", "clock"]; // skärmar utan textrutor: ingen "Räkna på papper"-rad
+const PAPER_SCREEN_LINE = "Gör uppgiften på ett löst papper och visa din lärare."; // ritas eller skrivs (SA1 5)
+const NO_INPUT_KINDS = ["choose", "pick", "paper", "shade", "plot", "line", "clock", "bars"]; // skärmar utan textrutor: ingen "Räkna på papper"-rad
 
 // En rad med fler tecken än så i markeringen är lång (bara TAt4 4; den längsta raden i en annan diagnos har 38).
 const LONG_ROW = 40;
@@ -336,16 +338,36 @@ function chipValue(value) {
   return /^[-−]/.test(value) ? `(${value})` : value;
 }
 
+// Bladets bilder, utklippta ur PDF:en. src är relativ till tabelltraning/ och slås upp från den här modulen, så att
+// samma data fungerar på diagnoser.html och på förhandsgranskningen i tests/diagnoser/. width är bredden i CSS-pixlar.
+function imagesStage(images) {
+  const stage = el("div", "dg-images");
+  for (const { src, alt, width } of images) {
+    const img = el("img", "dg-image");
+    img.src = new URL(`../../${src}`, import.meta.url).href;
+    img.alt = alt;
+    img.width = width;
+    stage.append(img);
+  }
+  return stage;
+}
+
 export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
   const kind = screen.kind ?? "rows";
   const root = el("div", `dg-screen dg-screen-${kind}`);
   root.append(el("h2", "dg-screen-label", screen.label));
   if (screen.text) root.append(el("p", "dg-prompt", screen.text));
   if (diagnosis.paper && !NO_INPUT_KINDS.includes(kind)) root.append(el("p", "dg-paper", PAPER_LINE));
+  // Bladets bilder (screen.images: kläder, mynt, kortlek …) står under uppgiften, före figur och diagram.
+  if (screen.images) root.append(imagesStage(screen.images));
   // Figuren (screen.figure) och grafen att läsa av (screen.chart) står ovanför raderna. I shade, plot och line är
   // figuren respektive rutnätet själva svaret och ritas av skärmen.
   if (screen.figure && kind !== "shade") root.append(figureStage(screen.figure));
   if (screen.chart && kind !== "plot" && kind !== "line") root.append(chartStage(screen.chart));
+  // Ett diagram att läsa av (screen.diagram, diagram.js: stapel-, cirkel-, linje- och lådagram) står också ovanför.
+  if (screen.diagram) root.append(diagramStage(screen.diagram));
+  // En tabell att läsa av där eleven ritar (bars, plot: STd2 5, STd5 4–5) står ovanför ritytan. Den har inga rutor.
+  if (screen.table && (kind === "bars" || kind === "plot")) root.append(drawTable(screen.table, (markup) => drawMarkup(markup, "span")));
 
   // Alla textrutor i skärmens ordning. Enter går vidare mellan dem.
   const inputs = [];
@@ -411,9 +433,9 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
     const { keepBlank, ...view } = buildChoice(screen, root, drawMarkup);
     ({ read, focusFirst } = view);
     extra = { keepBlank };
-  } else if (kind === "shade" || kind === "plot" || kind === "line" || kind === "clock") {
-    // Tomt (inget skuggat, inga punkter) är ett svar och fel, som i ett val: bara Hoppa över ger –.
-    const { keepBlank, ...view } = ({ shade: buildShade, plot: buildPlot, line: buildLine, clock: buildClock })[kind](screen, root);
+  } else if (kind === "shade" || kind === "plot" || kind === "line" || kind === "clock" || kind === "bars") {
+    // Tomt (inget skuggat, inga punkter, inga staplar) är ett svar och fel, som i ett val: bara Hoppa över ger –.
+    const { keepBlank, ...view } = ({ shade: buildShade, plot: buildPlot, line: buildLine, clock: buildClock, bars: buildBars })[kind](screen, root);
     ({ read, focusFirst } = view);
     extra = { keepBlank };
   } else if (kind === "paper") {
@@ -671,7 +693,8 @@ function expectedRows(screen, variables) {
   const table = screen.table ? [drawTable(screen.table, (markup) => drawRow(markup, boxFor, "span", variables))] : [];
   const chart = screen.chart ? [chartStage(screen.chart)] : [];
   const figure = screen.figure ? [figureStage(screen.figure)] : [];
-  return [...figure, ...chart, ...table, ...rowsOf(screen).map((markup) => drawRow(markup, boxFor, "div", variables))];
+  const diagram = screen.diagram ? [diagramStage(screen.diagram)] : [];
+  return [...figure, ...chart, ...diagram, ...table, ...rowsOf(screen).map((markup) => drawRow(markup, boxFor, "div", variables))];
 }
 
 function wordDetail(screen, row) {
@@ -722,6 +745,7 @@ function rowsDetail(screen, row, variables) {
   }
   // Grafen som skulle läsas av syns igen först med "Visa rätt svar".
   if (screen.chart && row.wrong.length > 0) nodes.push(chartBlock(screen.chart));
+  if (screen.diagram && row.wrong.length > 0) nodes.push(diagramBlock(screen.diagram));
   return nodes;
 }
 
@@ -752,6 +776,7 @@ function detailFor(screen, row, variables) {
     else if (screen.kind === "plot") hidden.append(...plotSkipped(screen));
     else if (screen.kind === "line") hidden.append(...drawnLineSkipped(screen));
     else if (screen.kind === "clock") hidden.append(...clockSkipped(screen));
+    else if (screen.kind === "bars") hidden.append(...barsSkipped(screen));
     else if (screen.kind === "place" || screen.kind === "read") {
       const values = screen.kind === "place" ? screen.letters : screen.marks;
       for (const [id, value] of Object.entries(values)) hidden.append(labelledLine(`${id} =`, el("span", "dg-t", prettyAnswer(value))));
@@ -765,6 +790,7 @@ function detailFor(screen, row, variables) {
   if (screen.kind === "plot") return plotDetail(screen, row);
   if (screen.kind === "line") return drawnLineDetail(screen, row);
   if (screen.kind === "clock") return clockDetail(screen, row);
+  if (screen.kind === "bars") return barsDetail(screen, row);
   if (screen.kind === "place" || screen.kind === "read") return lineDetail(screen, row);
   return rowsDetail(screen, row, variables);
 }

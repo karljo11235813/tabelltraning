@@ -37,7 +37,7 @@ for (const [tio, v] of Object.entries(TIOTAL)) {
 const heltal = (ord) => (/^\d{1,3}$/.test(ord) ? Number(ord) : ORDTAL.get(ord) ?? null);
 
 // Texten i gemener, med ett mellanslag mellan orden, utan "Svar:" först och skiljetecken sist.
-const rensa = (text) => stripDecoration(text).toLowerCase().replace(/\s+/g, " ").trim();
+const rensa = (text) => stripDecoration(text, { approx: false }).toLowerCase().replace(/\s+/g, " ").trim(); // "ungefär åtta" är inget klockslag
 
 const MAX_LÄNGD = 100;
 

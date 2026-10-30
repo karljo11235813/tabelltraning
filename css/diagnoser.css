@@ -163,6 +163,17 @@
 .dg-table .dg-row { display: inline; margin: 0; line-height: 1.5; }
 .dg-table .dg-input { width: 4.2em; }
 .dg-res-detail .dg-table { margin: 4px 0 8px; font-size: 1.2rem; }
+/* Smal skärm (telefon): tabellerna krymper (mindre text, tunnare celler, mindre rubriker som bryts) så att fyra–fem
+   kolumner ryms (SA4 3, STd1 6). En tabell som ändå är för bred rullar i sidled inuti sig själv, inte hela sidan.
+   Bredare skärmar ser ut som förut. */
+@media (max-width: 560px) {
+  .dg-table { display: block; width: fit-content; max-width: 100%; overflow-x: auto; font-size: 1.15rem; }
+  .dg-table th, .dg-table td { min-width: 2.6rem; padding: 4px 7px; }
+  .dg-table th { font-size: 0.8em; }
+  /* Fem kolumner eller fler (STd1 6:s busstabell): ännu tätare. */
+  .dg-table:has(th:nth-child(5)) { font-size: 1rem; }
+  .dg-table:has(th:nth-child(5)) :is(th, td) { min-width: 0; padding: 4px 4px; }
+}
 
 .dg-chart-stage { max-width: 36rem; margin: 6px auto 16px; }
 .dg-chart { display: block; width: 100%; height: auto; overflow: visible; }
@@ -193,6 +204,50 @@
 .dg-result .dg-ghost { display: none; }
 .dg-result.dg-show-answers .dg-ghost { display: inline; }
 .dg-res-detail .dg-chart-stage { max-width: 22rem; margin: 4px 0 8px; }
+
+/* ---------- STAPEL- OCH STOLPDIAGRAM SOM ELEVEN RITAR (bars.js) ---------- */
+/* Staplarna och stolparna har accentfärg utan betydelse; facits är streckade ramar bakom "Visa rätt svar" (.dg-ghost).
+   Den valda kolumnen får en ram bara när diagrammet har tangentbordsfokus. */
+.dg-chart.dg-bars.is-interactive { cursor: pointer; }
+/* Genomskinlig fyllning: syns både på skärmen och på resultatradens bakgrund (--accent-soft). */
+.dg-bar { fill: var(--accent-strong); fill-opacity: 0.3; stroke: var(--accent-strong); stroke-width: 2.5; }
+.dg-stick { stroke: var(--accent-strong); stroke-width: 6; }
+.dg-bars-cat { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-size: 16px; font-weight: 700; }
+.dg-chart.dg-bars .dg-chart-num { font-size: 15px; }
+.dg-bars-hover { fill: none; stroke: var(--accent-strong); stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }
+.dg-bars-focus { fill: none; stroke: none; pointer-events: none; }
+.dg-bars:focus-visible .dg-bars-focus { stroke: var(--accent-strong); stroke-width: 2.5; stroke-dasharray: 6 4; }
+.dg-ghost-bar { fill: none; stroke: var(--text); stroke-width: 2.5; stroke-dasharray: 6 4; }
+
+/* ---------- DIAGRAM ATT LÄSA AV (diagram.js) ---------- */
+/* Stapel-, cirkel-, linje- och lådagram och befolkningspyramider. Ingen färg bär mening: serier och sektorer skiljs åt
+   av mönster (fylld, tom, randig, prickig, rutig, snedrandig; mönstren sätts av koden) och linjer av markering och
+   streck. Textstorlekarna sätts av koden, så att måtten stämmer med texten. */
+.dg-diagram-stage { max-width: 27rem; margin: 6px auto 16px; }
+.dg-diagram { display: block; width: 100%; height: auto; overflow: visible; }
+/* Bladets bilder (screen.images). Bilderna har vit bakgrund och står därför på en vit yta, också i mörkt tema. */
+.dg-images { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin: 4px 0 14px; }
+.dg-image { max-width: 100%; height: auto; padding: 6px; border-radius: 10px; background: #fff; }
+.dg-dia-num, .dg-dia-cat, .dg-dia-legend { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-weight: 700; }
+.dg-dia-axis-title, .dg-dia-title { fill: var(--text); font-family: "Baloo 2", sans-serif; font-weight: 800; }
+.dg-dia-minor { stroke: var(--text); stroke-width: 1.5; }
+.dg-dia-shape { stroke: var(--text); stroke-width: 1.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.dg-dia-shape.is-fylld { fill: var(--accent); }
+.dg-dia-shape.is-tom { fill: var(--surface); }
+.dg-dia-pat-bg { fill: var(--surface); }
+.dg-dia-pat-ink { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; }
+.dg-dia-pat-ink.is-thin { stroke-width: 1.6; }
+.dg-dia-pat-dot { fill: var(--accent-strong); }
+.dg-dia-cell { fill: var(--surface); stroke: var(--text); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.dg-dia-unit { fill: var(--accent); }
+.dg-dia-line { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-linejoin: round; }
+.dg-dia-line.is-1 { stroke: var(--text); stroke-dasharray: 7 5; }
+.dg-dia-line.is-2 { stroke-dasharray: 2 4; }
+.dg-dia-marker { fill: var(--accent-strong); stroke: var(--surface); stroke-width: 1.5; }
+.dg-dia-marker.is-1 { fill: var(--text); }
+.dg-dia-box { fill: none; stroke: var(--text); stroke-width: 2.5; }
+.dg-dia-box.is-box { fill: var(--surface); }
+.dg-res-detail .dg-diagram-stage { max-width: 22rem; margin: 4px 0 8px; }
 
 /* ---------- RUTOR ---------- */
 .dg-input {

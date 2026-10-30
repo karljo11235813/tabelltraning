@@ -109,9 +109,10 @@ export function viewOf(figure) {
 // .dg-fig-stage), så texten blir ungefär lika stor som raderna, hur stor view än är.
 export const labelSize = (figure) => Math.round(viewOf(figure)[0]) / 10;
 
-// En beteckning som bara är bokstäver (s, b, h, A) är en variabel eller en punkt och står kursiv. En annan text, som ett
-// mått ("4 cm", "5 kg"), står rak och mindre.
-export const isTextLabel = (text) => !/^[A-Za-zÅÄÖåäö]+$/.test(String(text));
+// En beteckning som är en bokstav, eventuellt med siffror efter (s, b, h, A, x1), eller två–tre versaler (AB, ABC: en
+// sträcka eller en vinkel) är en variabel eller en punkt och står kursiv. En annan text, som ett mått ("4 cm", "5 kg")
+// eller ett ord ("Gul", "röd" i SA1 2:s träddiagram), står rak och mindre.
+export const isTextLabel = (text) => !/^(?:[A-Za-zÅÄÖåäö]\d*|[A-ZÅÄÖ]{2,3})$/.test(String(text));
 const TEXT_LABEL_SCALE = 0.6;
 
 // ---------- LINJALER ----------

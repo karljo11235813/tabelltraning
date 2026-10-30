@@ -2,8 +2,9 @@
 //
 // En tabell (screen.table) är { head: ["kg", "kr"], rows: [["1", "10"], ["5", "[a]"]] }: cellerna är radmarkering med
 // rutor, som en rad (drawTable ritar tabellen, cellen ritas av render.js via drawCell).
-// Ett koordinatsystem (screen.chart, och chart i plot och line) är { x: { min, max, step, label }, y: { … }, line?, lines?,
-// curves?, points? }: axlarna graderas var step, och det som ritas i det är
+// Ett koordinatsystem (screen.chart, och chart i plot och line) är { x: { min, max, step, label, labels? }, y: { … }, line?,
+// lines?, curves?, points? }: axlarna graderas var step (x.labels: en text per streck i stället för siffrorna, bara i
+// första kvadranten, STd5 4–5), och det som ritas i det är
 //   line    lutningen k på räta linjen y = kx ("10"; en graf att läsa av i första kvadranten, RP2),
 //   lines   räta linjer genom två punkter, [[[x1, y1], [x2, y2]], …] med exakta tal (lodräta linjer går också),
 //   curves  kurvor, [{ expr: "x^2 - 2" }]: ett uttryck i x som räknas exakt punkt för punkt och klipps vid kanten,
@@ -341,13 +342,16 @@ export function drawTable(table, drawCell) {
 export const cellsOf = (table) => (table?.rows ?? []).flat();
 
 // Första kvadranten: rutnätet med axlarna längs vänster- och underkanten, siffrorna utanför och titlarna under och
-// ovanför (RP2). Siffrorna står glesare när rutorna är smala.
+// ovanför (RP2). Siffrorna står glesare när rutorna är smala. chart.x.labels (STd5 4–5: månader) är en text per streck
+// i stället för siffrorna; "" lämnar strecket utan text, och alla texter ritas (data.test.js kontrollerar att de ryms).
 function drawQuadrantGrid(svg, g, chart) {
   const everyX = Math.max(1, Math.ceil(30 / g.cellX));
   const everyY = Math.max(1, Math.ceil(16 / g.cellY));
+  const labels = Array.isArray(chart.x.labels) ? chart.x.labels : null;
   g.xs.forEach((tick, i) => {
     svg.append(svgEl("line", { class: i === 0 ? "dg-grid dg-grid-axis" : "dg-grid", x1: g.px(i), x2: g.px(i), y1: g.top, y2: g.top + g.ph }));
-    if (i % everyX === 0) svg.append(svgEl("text", { class: "dg-chart-num", x: g.px(i), y: g.top + g.ph + 20, "text-anchor": "middle" }, tick.text));
+    const text = labels ? String(labels[i] ?? "") : tick.text;
+    if ((labels || i % everyX === 0) && text !== "") svg.append(svgEl("text", { class: "dg-chart-num", x: g.px(i), y: g.top + g.ph + 20, "text-anchor": "middle" }, text));
   });
   g.ys.forEach((tick, j) => {
     svg.append(svgEl("line", { class: j === 0 ? "dg-grid dg-grid-axis" : "dg-grid", x1: g.left, x2: g.left + g.pw, y1: g.py(j), y2: g.py(j) }));

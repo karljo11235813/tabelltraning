@@ -8,6 +8,8 @@
 // parseFractionWord läser ett svenskt bråkord ("en halv", "tre fjärdedelar") som ett tal.
 // parseFractionParts läser ett skrivet bråk eller bråkord som täljare och nämnare, oförkortade ("4/10", "fyra tiondelar").
 // stripDecoration tar bort "Svar:" först och skiljetecken sist, så att "Svar: 8." läses som "8".
+// parseSetItems delar ett svar med flera saker ("Tess och Emma", "Dag 1, 3 och 9") i delar; normalizeItem gör en del
+// jämförbar.
 
 import { rat, neg, add, sub, mul, div, pow, sqrt, Unsupported } from "./value.js";
 
@@ -284,7 +286,8 @@ const INTE_ENHET = new Set(["x", "r", "rest"]);
 const ENHETSTECKEN = /(?:[\p{L}\s/.()²³]|(?<=[mM])\^?[23])*$/u;
 const BARA_ENHETSTECKEN = /^(?:[\p{L}\s/.()²³]|(?<=[mM])\^?[23])*$/u;
 // %, ‰ och ° är enheter utan bokstav. De gäller bara ensamma direkt efter talet: "25 %" men inte "25 % kr", "360°".
-const PROCENTTECKEN = /^(.*\S)\s*([%‰°])$/su;
+// Grader Celsius skrivs "°C", "° C" eller "ºC" (enheten "°c"); "40 grader" läses som andra ordenheter.
+const PROCENTTECKEN = /^(.*\S)\s*([%‰]|[°º](?:\s*c)?)$/isu;
 const MAX_SVAR = 200; // längre text är aldrig ett tal med enhet
 
 // Enheten efter ett tal, i gemener med ett mellanslag mellan orden och utan parenteser runt det hela
@@ -302,7 +305,7 @@ function enhetAv(text) {
 function talFöreEnhet(rå) {
   if (rå.length > MAX_SVAR) return null;
   const tecken = rå.match(PROCENTTECKEN);
-  if (tecken) return parseNumber(tecken[1]) ? { tal: tecken[1], enhet: tecken[2] } : null;
+  if (tecken) return parseNumber(tecken[1]) ? { tal: tecken[1], enhet: tecken[2].toLowerCase().replace(/\s+/g, "").replace("º", "°") } : null;
   for (let i = rå.search(ENHETSTECKEN); i > 0 && i < rå.length; i++) {
     const enhet = enhetAv(rå.slice(i));
     if (enhet === null) continue;
@@ -370,9 +373,38 @@ function ärBråk(text) {
 // Ett ord som börjar på svar ("svaret 8") är inte utsmyckning. Hela texten kan bli tom ("Svar:", ".").
 const SVAR_FÖRE = /^svar(?!\p{L})\s*[:=]?\s*/iu;
 const SLUTTECKEN = /[\s.!?,;:]+$/;
+// Ett ord för närmevärde först ("cirka 60 %", "ca. 9000", "c:a 30", "ungefär hälften", "omkring 25", "≈ 11,6", "~18")
+// säger bara att svaret är ungefärligt (intervallet eller facit avgör om det är rätt). Orden räknas bara bort före ett
+// tal, ett ord eller en parentes, inte före ett räknesätt: "ca + b" i en algebraruta är c · a + b.
+const NÄRMEVÄRDE_FÖRE = /^(?:(?:cirka|ungefär|omkring|ca|c:a)\.?\s+|ca\.|[≈~]\s*)(?=[\d\p{L}(√π½−-])/iu;
 
-export function stripDecoration(text) {
-  return String(text ?? "").trim().replace(SVAR_FÖRE, "").replace(SLUTTECKEN, "");
+// approx: false behåller närmevärdesordet (ett klockslag, time.js: "ungefär åtta" är inget svar på "Hur mycket är klockan?").
+export function stripDecoration(text, { approx = true } = {}) {
+  const utanSvar = String(text ?? "").trim().replace(SVAR_FÖRE, "");
+  return (approx ? utanSvar.replace(NÄRMEVÄRDE_FÖRE, "") : utanSvar).replace(SLUTTECKEN, "");
+}
+
+// En sak i ett mängdsvar i jämförbar form: gemener, alla streck som "-", inga mellanslag och ingen punkt sist
+// ("30 – 34 År." blir "30-34år"). Mellanslag spelar aldrig roll, så "30-34år" och "dag1" är samma sak som "30–34 år"
+// och "dag 1", precis som när hela svaret jämförs med accept (normalize tar bort alla mellanslag).
+export function normalizeItem(text) {
+  return String(text ?? "")
+    .toLowerCase()
+    .replace(/[‐-—−]/g, "-")
+    .replace(/\s+/g, "")
+    .replace(/\.+$/, "");
+}
+
+// Var ett mängdsvar delas: komma, semikolon, &, +, / och radbrytning, och orden "och" och "samt".
+const MÄNGDDELARE = /\s*(?:[,;&+/\n]|(?<!\p{L})(?:och|samt)(?!\p{L}))\s*/iu;
+
+// Delarna i ett svar med flera saker (STd1 3c "Tess och Emma", 4d "Dag 1, 3 och 9"), var och en som normalizeItem
+// ger. "Svar:" först och skiljetecken sist räknas bort (stripDecoration), och tomma delar ("Tess, och Emma") räknas inte.
+export function parseSetItems(text) {
+  return stripDecoration(text)
+    .split(MÄNGDDELARE)
+    .map(normalizeItem)
+    .filter((item) => item !== "");
 }
 
 // Vad eleven svarade: tomt, "saknar lösning", "alla x", rest, ett tal eller annat. Ett tal ger value, text (talet
