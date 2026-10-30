@@ -9,7 +9,7 @@ import { NCM_LINKS } from "./data/links.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
-import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses } from "./page.js";
+import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
 
 const SECTIONS = ["dgList", "dgRun", "dgResult"];
@@ -67,6 +67,11 @@ function renderAreas() {
     host.append(part);
   }
   $("dgSearchEmpty").hidden = shown.size > 0;
+  // En filtrerad lista syns tydligt: raden säger vad som visas och har knappen tillbaka till hela listan. Den står
+  // kvar högst upp medan man rullar (sticky), så att knappen går att nå också långt ned i listan på en mobil.
+  const text = filterText($("dgSearch").value, shown.size, DIAGNOSES.length);
+  $("dgFilter").hidden = text === null;
+  $("dgFilterText").textContent = text ?? "";
 }
 
 // ⋯-menyn bredvid varje diagnos. Varje val är en länk { text, href }; fler val läggs till här.
@@ -309,6 +314,11 @@ $("dgResultHost").addEventListener("click", (e) => {
   }
 }, true);
 $("dgSearch").addEventListener("input", renderAreas);
+$("dgFilterReset").addEventListener("click", () => {
+  $("dgSearch").value = "";
+  renderAreas();
+  $("dgSearch").scrollIntoView({ block: "nearest" });
+});
 $("dgStart").addEventListener("click", begin);
 $("dgNext").addEventListener("click", next);
 $("dgSkip").addEventListener("click", skip);

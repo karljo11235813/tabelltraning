@@ -440,6 +440,36 @@
 .dg-area-logo { flex-shrink: 0; width: 40px; height: 40px; object-fit: contain; }
 /* Områdena och "Mina resultat". Två klasser, eftersom .card h2 i styles.css annars gör dem 1.05rem. */
 .card .dg-area-title { font-size: 1.5rem; line-height: 1.2; }
+/* Raden som visar att listan är filtrerad, med Visa alla. Den står kvar högst upp när man rullar i listan. */
+.dg-filter {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 8px 0 4px;
+  padding: 8px 8px 8px 12px;
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  font-weight: 700;
+  box-shadow: 0 4px 10px -6px rgba(0, 0, 0, 0.4);
+}
+.dg-filter[hidden] { display: none; }
+.dg-filter-reset {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent-strong);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.dg-filter-reset:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
 /* En rad i listan: diagnosen och ⋯-menyn (länkar till NCM:s PDF:er). */
 .dg-stair-row { display: flex; gap: 8px; align-items: stretch; }
 .dg-stair-row > .bt-stair { flex: 1; min-width: 0; }

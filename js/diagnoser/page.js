@@ -8,6 +8,7 @@
 // ignoresHeldEnter  ska ett nedhållet Enter på knapparna under skärmen ignoreras? Ja.
 // ignoresResultTap  ska ett klick på resultatskärmens knappar ignoreras? Ja strax efter att skärmen visades.
 // searchDiagnoses  koderna som passar listans sökruta, i listans ordning.
+// filterText    raden som visar att listan är filtrerad ("Filtrerat på ”rd”: 6 av 108 diagnoser"), eller null utan sökning.
 
 import { scoreRun } from "./mark.js";
 
@@ -100,4 +101,11 @@ export function searchDiagnoses(diagnoses, query) {
       return picked && terms.every((term) => text.includes(term));
     })
     .map((d) => d.code);
+}
+
+// Listan är filtrerad när sökrutan har något annat än mellanslag. Sökordet står som eleven skrev det.
+export function filterText(query, count, total) {
+  const q = String(query ?? "").trim();
+  if (q === "") return null;
+  return `Filtrerat på ”${q}”: ${count} av ${total} diagnoser`;
 }
