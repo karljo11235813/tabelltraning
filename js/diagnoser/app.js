@@ -5,6 +5,7 @@
 // Under en diagnos visas varken rätt eller fel. Ingenting sparas förrän resultatskärmen visas: den som
 // avbryter eller laddar om sidan förlorar omgången.
 import { AREAS, DIAGNOSES, getDiagnosis } from "./data/index.js";
+import { NCM_LINKS } from "./data/links.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
@@ -52,7 +53,9 @@ function renderAreas() {
         button.type = "button";
         button.append(el("span", "bt-stair-title", `${code} · ${getDiagnosis(code).title}`));
         button.addEventListener("click", () => startDiagnosis(code));
-        stairs.append(button);
+        const row = el("div", "dg-stair-row");
+        row.append(button, moreMenu(code));
+        stairs.append(row);
       }
       part.append(stairs);
     }
@@ -60,6 +63,61 @@ function renderAreas() {
   }
   $("dgSearchEmpty").hidden = shown.size > 0;
 }
+
+// ⋯-menyn bredvid varje diagnos. Varje val är en länk { text, href }; fler val läggs till här.
+function moreItems(code) {
+  const ncm = NCM_LINKS[code];
+  return ncm ? [{ text: "Diagnosen (PDF hos NCM)", href: ncm.diagnos }, { text: "Facit (PDF hos NCM)", href: ncm.facit }] : [];
+}
+
+function closeMenus(except = null) {
+  for (const menu of document.querySelectorAll(".dg-more-menu")) {
+    if (menu === except) continue;
+    menu.hidden = true;
+    menu.previousElementSibling.setAttribute("aria-expanded", "false");
+  }
+}
+
+function moreMenu(code) {
+  const wrap = el("div", "dg-more");
+  const items = moreItems(code);
+  if (items.length === 0) return wrap;
+  const toggle = el("button", "dg-more-btn", "⋯");
+  toggle.type = "button";
+  toggle.setAttribute("aria-label", `Mer om ${code}`);
+  toggle.setAttribute("aria-haspopup", "true");
+  toggle.setAttribute("aria-expanded", "false");
+  const menu = el("div", "dg-more-menu");
+  menu.hidden = true;
+  for (const { text, href } of items) {
+    const link = el("a", "dg-more-item", text);
+    link.href = href;
+    link.target = "_blank";
+    link.rel = "noopener";
+    menu.append(link);
+  }
+  toggle.addEventListener("click", () => {
+    const open = menu.hidden;
+    closeMenus(menu);
+    menu.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    if (open) menu.querySelector("a").focus();
+  });
+  wrap.append(toggle, menu);
+  return wrap;
+}
+
+// En öppen meny stängs med ett klick utanför eller Escape (fokus tillbaka till knappen).
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".dg-more")) closeMenus();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const open = document.querySelector(".dg-more-menu:not([hidden])");
+  if (!open) return;
+  closeMenus();
+  open.previousElementSibling.focus();
+});
 
 function renderSaved() {
   const items = savedList(loadResults(store), getDiagnosis);

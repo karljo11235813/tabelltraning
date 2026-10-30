@@ -435,6 +435,39 @@
 .dg-search-empty { margin: 14px 0 0; }
 /* Områdena och "Mina resultat". Två klasser, eftersom .card h2 i styles.css annars gör dem 1.05rem. */
 .card .dg-area-title { font-size: 1.5rem; line-height: 1.2; }
+/* En rad i listan: diagnosen och ⋯-menyn (länkar till NCM:s PDF:er). */
+.dg-stair-row { display: flex; gap: 8px; align-items: stretch; }
+.dg-stair-row > .bt-stair { flex: 1; min-width: 0; }
+.dg-more { position: relative; display: flex; }
+.dg-more-btn {
+  width: 44px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.dg-more-btn:hover, .dg-more-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent-strong); }
+.dg-more-btn:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.dg-more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  display: grid;
+  min-width: 13rem;
+  padding: 6px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.dg-more-menu[hidden] { display: none; }
+.dg-more-item { padding: 8px 10px; border-radius: 6px; color: var(--text); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.dg-more-item:hover, .dg-more-item:focus-visible { background: var(--accent-soft); outline: none; }
 .dg-sub-title { margin: 14px 0 8px; font-size: 1.15rem; }
 .dg-saved-title { margin-bottom: 6px; }
 .dg-saved { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
