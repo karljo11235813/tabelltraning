@@ -34,9 +34,10 @@
    får också hela bredden: en halv kolumn räcker inte för en längre uppgift och rutan. */
 .dg-rows:has(.dg-row > .dg-input:nth-of-type(3)), .dg-rows:has(> .dg-row:only-child) { column-width: auto; column-count: 1; }
 .dg-row:has(> .dg-input:nth-of-type(3)) > .dg-input { width: 4em; }
-/* En lång rad (render.js, dg-rows-long: TAt4 4) får också en kolumn. En punkt "A = ([a], [b])" (TAg1 1) står på en rad
+/* En lång rad (TAt4 4) och rader där någon rad saknar ruta (ekvationen i TAe6, TAe7, TAg4) får också en kolumn
+   (render.js, dg-rows-one), så att raderna står i ordning under varandra. En punkt "A = ([a], [b])" (TAg1 1) står på en rad
    med smalare rutor, så att två punkter ryms bredvid varandra som på bladet. */
-.dg-rows-long { column-width: auto; column-count: 1; }
+.dg-rows-one { column-width: auto; column-count: 1; }
 .dg-row-point { white-space: nowrap; }
 .dg-row-point > .dg-input { width: 3.2em; }
 .dg-input.dg-input-wide { width: min(100%, 14em); text-align: left; } /* flera ord (set, contains) */

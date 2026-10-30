@@ -307,6 +307,7 @@ const NO_INPUT_KINDS = ["choose", "pick", "paper", "shade", "plot", "line", "clo
 
 // En rad med fler tecken än så i markeringen är lång (bara TAt4 4; den längsta raden i en annan diagnos har 38).
 const LONG_ROW = 40;
+const HAS_BOX = /\[[A-Za-z0-9_]+\]/;
 // En koordinat med två rutor: "([a], [b])".
 const POINT_ROW = /\(\s*\[[a-z]+\]\s*,\s*\[[a-z]+\]\s*\)/;
 
@@ -488,8 +489,10 @@ export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
     };
     if (screen.table) root.append(drawTable(screen.table, (markup) => drawRow(markup, boxFor, "span", diagnosis.variables)));
     const rows = el("div", "dg-rows");
-    // En lång rad (TAt4 4: en summa med sex bråk) får en kolumn, så att den inte bryts mitt i.
-    if (rowsOf(screen).some((markup) => markup.length > LONG_ROW)) rows.classList.add("dg-rows-long");
+    // En kolumn i två fall: en lång rad (TAt4 4: en summa med sex bråk), så att den inte bryts mitt i, och en rad utan
+    // ruta (ekvationen som ska lösas i TAe6, TAe7 och TAg4, "eller" i TAg4 5), eftersom raderna då ska läsas i ordning.
+    // Kolumnerna är bara för fristående rader med var sin ruta, som på bladet (AG1).
+    if (rowsOf(screen).some((markup) => markup.length > LONG_ROW || !HAS_BOX.test(markup))) rows.classList.add("dg-rows-one");
     for (const markup of rowsOf(screen)) {
       const row = drawRow(markup, boxFor, "div", diagnosis.variables);
       // En punkt "A = ([a], [b])" (TAg1 1) står på en rad, med smalare rutor.
