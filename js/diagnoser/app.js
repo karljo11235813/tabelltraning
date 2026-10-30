@@ -40,11 +40,16 @@ function renderAreas() {
   const shown = new Set(searchDiagnoses(DIAGNOSES, $("dgSearch").value));
   const host = $("dgAreas");
   host.textContent = "";
-  for (const { area, subs } of AREAS) {
+  for (const { area, logo, subs } of AREAS) {
     const visible = subs.map(({ sub, codes }) => ({ sub, codes: codes.filter((code) => shown.has(code)) })).filter(({ codes }) => codes.length > 0);
     if (visible.length === 0) continue;
     const part = el("section", "bt-part");
-    part.append(el("h2", "bt-part-title dg-area-title", area));
+    const title = el("h2", "bt-part-title dg-area-title dg-area-head");
+    const img = el("img", "dg-area-logo");
+    img.src = logo;
+    img.alt = "";
+    title.append(img, area);
+    part.append(title);
     for (const { sub, codes } of visible) {
       part.append(el("h3", "dg-sub-title", sub));
       const stairs = el("div", "bt-stairs");

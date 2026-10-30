@@ -114,11 +114,21 @@ export function getDiagnosis(code) {
   return DIAGNOSES.find((d) => d.code === code);
 }
 
-// Startsidans grupper: [{ area, subs: [{ sub, codes }] }]. Områdena och delområdena kommer i den ordning
+// Områdets del av NCM:s Diamantlogga (img/diagnoser/diamant.png), relativ till tabelltraning/.
+export const AREA_LOGOS = {
+  "Aritmetik": "img/diagnoser/diamant-aritmetik.png",
+  "Rationella tal": "img/diagnoser/diamant-rationella.png",
+  "Talmönster och algebra": "img/diagnoser/diamant-talmonster.png",
+  "Mätning": "img/diagnoser/diamant-matning.png",
+  "Geometri": "img/diagnoser/diamant-geometri.png",
+  "Sannolikhet och statistik": "img/diagnoser/diamant-sannolikhet.png",
+};
+
+// Startsidans grupper: [{ area, logo, subs: [{ sub, codes }] }]. Områdena och delområdena kommer i den ordning
 // de först förekommer i DIAGNOSES; områden utan diagnoser finns inte med.
 export const AREAS = DIAGNOSES.reduce((areas, d) => {
   let area = areas.find((a) => a.area === d.area);
-  if (!area) areas.push((area = { area: d.area, subs: [] }));
+  if (!area) areas.push((area = { area: d.area, logo: AREA_LOGOS[d.area], subs: [] }));
   let sub = area.subs.find((s) => s.sub === d.sub);
   if (!sub) area.subs.push((sub = { sub: d.sub, codes: [] }));
   sub.codes.push(d.code);
