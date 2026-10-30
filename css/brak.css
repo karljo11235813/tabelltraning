@@ -62,6 +62,16 @@ a.header-title, a.back-link { text-decoration: none; }
 .bt-stair-icon { width: 1.4em; text-align: center; }
 .bt-stair-number { min-width: 1.6em; font-family: "Baloo 2", sans-serif; color: var(--text-muted); }
 .bt-reset { margin-top: 22px; }
+.bt-teacher {
+  margin: 22px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.bt-teacher a { color: var(--accent); font-weight: 700; }
+.bt-teacher cite { font-style: italic; }
 .bt-reset-confirm {
   display: flex;
   flex-wrap: wrap;
