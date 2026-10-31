@@ -1,6 +1,6 @@
 // Vilka diagnoser som har övningar (Öva) och hur bankfilerna laddas: en bank hämtas först när diagnosen övas.
 
-export const PRACTICE_CODES = ["AUn1", "AUn2", "AUn3", "AUn4", "AUp1"];
+export const PRACTICE_CODES = ["AUn1", "AUn2", "AUn3", "AUn4", "AUp1", "AUp2"];
 
 export function hasPractice(code) {
   return PRACTICE_CODES.includes(code);
