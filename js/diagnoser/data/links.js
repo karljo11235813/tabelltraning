@@ -1,7 +1,7 @@
 // Länkar till Diamantdiagnosernas PDF:er hos NCM (https://ncm.gu.se/klassrum/diamantdiagnos/diagnoser/): elevbladet
 // (diagnos) och facit för varje diagnos. Listan visas i ⋯-menyn på startsidan. NCM skriver STl1 och STl2 som "STI1" och
-// "STI2"; adresserna är deras. Geometri (GFo, GSk, GVi) står med fast diagnoserna inte finns här än. De muntliga
-// diagnoserna (AF, MGF, SAF, STF) finns inte i appen och står inte här.
+// "STI2"; adresserna är deras. De muntliga diagnoserna
+// (AF, MGF, SAF, STF) finns inte i appen och står inte här.
 export const NCM_LINKS = {
   AG1: { diagnos: "https://ncm.gu.se/wp-content/uploads/2025/09/AG1-diagnos.pdf", facit: "https://ncm.gu.se/media/diamantdiagnoserna/facit/AG1%20facit.pdf" },
   AG2: { diagnos: "https://ncm.gu.se/wp-content/uploads/2025/09/AG2-diagnos.pdf", facit: "https://ncm.gu.se/media/diamantdiagnoserna/facit/AG2%20facit.pdf" },

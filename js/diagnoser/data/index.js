@@ -94,6 +94,21 @@ import mvo4 from "./matning/mvo4.js";
 import mvo5 from "./matning/mvo5.js";
 import mvo6 from "./matning/mvo6.js";
 import mvo7 from "./matning/mvo7.js";
+import gfo1 from "./geometri/gfo1.js";
+import gfo2 from "./geometri/gfo2.js";
+import gfo3 from "./geometri/gfo3.js";
+import gfo4 from "./geometri/gfo4.js";
+import gfo5 from "./geometri/gfo5.js";
+import gfo6 from "./geometri/gfo6.js";
+import gfo7 from "./geometri/gfo7.js";
+import gfo8 from "./geometri/gfo8.js";
+import gsk1 from "./geometri/gsk1.js";
+import gsk2 from "./geometri/gsk2.js";
+import gsk3 from "./geometri/gsk3.js";
+import gsk4 from "./geometri/gsk4.js";
+import gvi1 from "./geometri/gvi1.js";
+import gvi2 from "./geometri/gvi2.js";
+import gvi3 from "./geometri/gvi3.js";
 import sa1 from "./statistik/sa1.js";
 import sa2 from "./statistik/sa2.js";
 import sa3 from "./statistik/sa3.js";
@@ -108,7 +123,7 @@ import std6 from "./statistik/std6.js";
 import stl1 from "./statistik/stl1.js";
 import stl2 from "./statistik/stl2.js";
 
-export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5, rb1, rb2, rb3, rb4, rb5, rb6, rb7, rd1, rd2, rd3, rd4, rd5, rd6, rp1, rp2, rp3, rp4, rp5, rp6, rp7, tat1, tat2, tat3, tat4, tat5, tau1, tau2, tau3, tau4, tau5, tae1, tae2, tae3, tae4, tae5, tae6, tae7, tag1, tag2, tag3, tag4, mti1, mti2, mti3, mti4, mti5, mma1, mma2, mla1, mla2, mla3, mla4, mar1, mar2, mar3, mar4, mar5, mar6, mar7, mvo1, mvo2, mvo3, mvo4, mvo5, mvo6, mvo7, sa1, sa2, sa3, sa4, sa5, std1, std2, std3, std4, std5, std6, stl1, stl2];
+export const DIAGNOSES = [ag1, ag2, ag3, ag4, ag5, ag6, ag7, ag8, ag9, as1, as2, as3, as4, as5, as6, as7, as8, as9, as10, as11, aun1, aun2, aun3, aun4, aup1, aup2, aup3, aup4, aup5, rb1, rb2, rb3, rb4, rb5, rb6, rb7, rd1, rd2, rd3, rd4, rd5, rd6, rp1, rp2, rp3, rp4, rp5, rp6, rp7, tat1, tat2, tat3, tat4, tat5, tau1, tau2, tau3, tau4, tau5, tae1, tae2, tae3, tae4, tae5, tae6, tae7, tag1, tag2, tag3, tag4, mti1, mti2, mti3, mti4, mti5, mma1, mma2, mla1, mla2, mla3, mla4, mar1, mar2, mar3, mar4, mar5, mar6, mar7, mvo1, mvo2, mvo3, mvo4, mvo5, mvo6, mvo7, gfo1, gfo2, gfo3, gfo4, gfo5, gfo6, gfo7, gfo8, gsk1, gsk2, gsk3, gsk4, gvi1, gvi2, gvi3, sa1, sa2, sa3, sa4, sa5, std1, std2, std3, std4, std5, std6, stl1, stl2];
 
 export function getDiagnosis(code) {
   return DIAGNOSES.find((d) => d.code === code);
