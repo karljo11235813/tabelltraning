@@ -38,8 +38,9 @@ function plotCounts(task, raw) {
 // rutans enhetstabell: utan den är "25 %" fel för 25 (procent och promille är aldrig bara utsmyckning), så ett vanligt fel som
 // 25 skulle inte kännas igen när eleven skriver enheten, som rutan själv godtar. algebra är rutans: ett vanligt fel som är ett uttryck
 // (TAt5: n(n − 1)/2) känns då igen i vilken likvärdig form eleven än skriver det.
-function valueRight(accept, raw, units, algebra) {
-  const box = { accept, ...(units === undefined ? {} : { units }), ...(algebra === undefined ? {} : { algebra }) };
+// pi (Mätning): ett vanligt fel med π ("100π" när eleven tog diametern) är en π-ruta för sig, så att också närmevärdet (314) känns igen.
+function valueRight(accept, raw, units, algebra, pi) {
+  const box = { accept, ...(units === undefined ? {} : { units }), ...(algebra === undefined ? {} : { algebra }), ...(pi === undefined ? {} : { pi }) };
   return markBox(box, raw) === "right" || markBox({ ...box, expression: true }, raw) === "right";
 }
 
@@ -62,7 +63,8 @@ function noteFor(part, task, answers, wrong) {
     return (task.mistakes ?? []).find((m) => count(m.answers.pieces) === count(answers?.pieces))?.text ?? null;
   }
   if (part.formNote && wrong.length > 0 && wrong.every(({ id }) => task.boxes?.[id] && valueRight(task.boxes[id].accept, answers[id], task.boxes[id].units))) return part.formNote;
-  const mistake = (task.mistakes ?? []).find((m) => Object.entries(m.answers).every(([id, value]) => valueRight([value], answers[id], task.boxes?.[id]?.units, task.boxes?.[id]?.algebra)));
+  const piOf = (box, value) => (box?.pi !== undefined && /π/.test(value) ? value : undefined);
+  const mistake = (task.mistakes ?? []).find((m) => Object.entries(m.answers).every(([id, value]) => valueRight([value], answers[id], task.boxes?.[id]?.units, task.boxes?.[id]?.algebra, piOf(task.boxes?.[id], value))));
   return mistake?.text ?? null;
 }
 
