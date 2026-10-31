@@ -24,7 +24,8 @@
 // en bit, med spans som förut. Det eleven skriver (rutorna, svaren på resultatskärmen) är alltid vanlig text.
 //
 // Rutorna visar aldrig vilken form svaret ska ha: samma textruta överallt, och symbolraden är densamma
-// på varje skärm i en diagnos (symbolsOf: de fyra med symbols, och π i en diagnos med en π-ruta). Ingen rätt eller fel
+// på varje skärm i en diagnos (symbolsOf: de fyra med symbols, annars de som diagnosens svar behöver, och π i en diagnos med en
+// π-ruta). Ingen rätt eller fel
 // visas under tiden.
 
 import { parseMarkup, layoutRow, splitVariables, KATEX_OPTIONS } from "./markup.js";
@@ -337,8 +338,26 @@ const SYMBOLS = [
 const PI_SYMBOL = { text: "π", label: "Pi", insert: "π", raised: false };
 const hasPiBox = (diagnosis) => (diagnosis.screens ?? []).some((s) => Object.values(s.boxes ?? {}).some((box) => box.pi !== undefined));
 
-// Symbolradens knappar för en diagnos: de fyra (symbols) och π, eller ingen.
-export const symbolsOf = (diagnosis) => [...(diagnosis.symbols ? SYMBOLS : []), ...(hasPiBox(diagnosis) ? [PI_SYMBOL] : [])];
+// ± (TAe6): en ruta med rötter får ha flera, "±√5" och "3 ± √2".
+const PLUS_MINUS = { text: "±", label: "Plus eller minus", insert: "±", raised: false };
+
+// Alla facits svar i diagnosen som text, utan enheter med exponent (cm², m³ är ingen potens att skriva).
+const answerTexts = (diagnosis) => (diagnosis.screens ?? [])
+  .flatMap((s) => Object.values(s.boxes ?? {}).flatMap((box) => [box.accept ?? [], box.pi ?? []].flat(Infinity)))
+  .map((text) => String(text).replace(/(mm|cm|dm|km|m)[²³]/g, ""));
+
+// Symbolradens knappar för en diagnos: de fyra med symbols. Annars de som någon av diagnosens svar behöver, så att raden är
+// densamma på alla skärmar: upphöjt när något svar har en potens (x², 5^2), √ när något har en rot och ± när en ruta har rötter
+// (TAe6). Sist π i en diagnos med en π-ruta.
+export function symbolsOf(diagnosis) {
+  const texts = answerTexts(diagnosis);
+  const has = (pattern) => texts.some((text) => pattern.test(text));
+  const needed = diagnosis.symbols
+    ? SYMBOLS
+    : SYMBOLS.filter((s) => (s.raised === "toggle" && has(/[²³]|\^/)) || (s.insert === "√" && has(/√/)));
+  const roots = (diagnosis.screens ?? []).some((s) => Object.values(s.boxes ?? {}).some((box) => box.roots));
+  return [...needed, ...(!diagnosis.symbols && (roots || has(/±/)) ? [PLUS_MINUS] : []), ...(hasPiBox(diagnosis) ? [PI_SYMBOL] : [])];
+}
 
 // Sätter in text där markören står i rutan (eller ersätter det markerade), utan att ta bort fokus.
 function insertText(input, text) {

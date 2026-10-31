@@ -56,6 +56,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
   host.replaceChildren();
   let closed = false;
   let bank = null;
+  let symbolSource = null;
   let pool = null;
   let batch = []; // uppgifterna i omgången
   let deck = null;
@@ -153,7 +154,10 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
   function entryAt(index) {
     if (entries[index]) return entries[index];
     const task = batch[index];
-    const view = renderScreen(diagnosis, task, { onSubmit: () => activate() });
+    // Symbolraden följer svaren i diagnosen och i hela banken (symbolsOf), så att den är densamma på alla övningsuppgifter och har
+    // det också en övning behöver (TAt5:s (n + 1)², där diagnosens svar inte har någon potens).
+    symbolSource ??= { ...diagnosis, screens: [...diagnosis.screens, ...bank.tasks] };
+    const view = renderScreen(symbolSource, task, { onSubmit: () => activate() });
     view.el.style.setProperty("--dg-prompt-scale", String(promptScale(task))); // en textuppgift har större text än en rad som "Beräkna"
     // En graf är högst en viss andel av skärmens höjd (33 %, och 36 % för ett nästan kvadratiskt rutnät): CSS räknar bredden ur ritningens
     // bredd / höjd (--dg-chart-ratio), som är olika för ett lågt och ett kvadratiskt rutnät. Samma värden gäller rutnätet som byter plats
