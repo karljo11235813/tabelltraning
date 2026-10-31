@@ -53,23 +53,42 @@ function stairIcon(code) {
 }
 
 // Bara diagnoserna som passar sökrutan. Ett delområde eller område utan någon av dem visas inte.
+// Ett delområde visar från början tre rader: två hela och en som tonar bort, så att det syns att det finns mer. Ett område visar
+// från början bara sitt första delområde. Det som öppnats står öppet medan sidan är öppen, och en sökning visar alltid alla sina träffar.
+const PREVIEW_ROWS = 3;
+const openFolds = new Set();
+
+// Rubriken är en knapp när den fäller ihop något, annars text.
+const foldHead = (folds) => el(folds ? "button" : "span", folds ? "dg-area-head dg-area-toggle" : "dg-area-head");
+
 function renderAreas() {
   const shown = new Set(searchDiagnoses(DIAGNOSES, $("dgSearch").value));
+  const filtered = filterText($("dgSearch").value, shown.size, DIAGNOSES.length);
   const host = $("dgAreas");
   host.textContent = "";
   for (const { area, logo, subs } of AREAS) {
     const visible = subs.map(({ sub, codes }) => ({ sub, codes: codes.filter((code) => shown.has(code)) })).filter(({ codes }) => codes.length > 0);
     if (visible.length === 0) continue;
-    const part = el("section", "bt-part");
-    const title = el("h2", "bt-part-title dg-area-title dg-area-head");
+    const part = el("section", "bt-part dg-area");
+    const areaFolds = filtered === null && visible.length > 1;
+    const title = el("h2", "bt-part-title dg-area-title");
+    const head = foldHead(areaFolds);
     const img = el("img", "dg-area-logo");
     img.src = logo;
     img.alt = "";
-    title.append(img, area);
+    head.append(img, area);
+    title.append(head);
     part.append(title);
     for (const { sub, codes } of visible) {
-      part.append(el("h3", "dg-sub-title", sub));
+      const box = el("div", sub === visible[0].sub ? "dg-sub" : "dg-sub dg-sub-more");
+      const subFolds = filtered === null && codes.length > PREVIEW_ROWS;
+      const subHead = foldHead(subFolds);
+      subHead.append(sub);
+      const subTitle = el("h3", "dg-sub-title");
+      subTitle.append(subHead);
       const stairs = el("div", "bt-stairs");
+      let rows = 0;
+      let fading = null;
       for (const code of codes) {
         const button = el("button", "bt-stair");
         button.type = "button";
@@ -87,18 +106,53 @@ function renderAreas() {
         row.append(button);
         if (hasPractice(code)) row.append(practiceButton(code));
         row.append(moreMenu(code));
+        if (rows === PREVIEW_ROWS - 1) {
+          fading = row;
+          row.classList.add("dg-row-fade");
+        } else if (rows >= PREVIEW_ROWS) {
+          row.classList.add("dg-row-more");
+        }
+        rows += 1;
         stairs.append(row);
       }
-      part.append(stairs);
+      box.append(subTitle, stairs);
+      if (subFolds) box.append(foldToggle(box, subHead, fading, `${area}/${sub}`, `Visa alla ${codes.length} diagnoser`));
+      part.append(box);
     }
+    if (areaFolds) part.append(foldToggle(part, head, null, area, `Visa alla ${visible.length} delområden`));
     host.append(part);
   }
   $("dgSearchEmpty").hidden = shown.size > 0;
   // En filtrerad lista syns tydligt: raden säger vad som visas och har knappen tillbaka till hela listan. Den står
   // kvar högst upp medan man rullar (sticky), så att knappen går att nå också långt ned i listan på en mobil.
-  const text = filterText($("dgSearch").value, shown.size, DIAGNOSES.length);
-  $("dgFilter").hidden = text === null;
-  $("dgFilterText").textContent = text ?? "";
+  $("dgFilter").hidden = filtered === null;
+  $("dgFilterText").textContent = filtered ?? "";
+}
+
+// Rubriken och knappen under gör samma sak. I ett delområde ligger knappen över raden som tonar bort, så ett tryck där öppnar
+// delområdet i stället för att starta en diagnos eleven knappt ser; raden är `inert` så länge, så att Tab inte hamnar på den.
+function foldToggle(box, head, fading, key, closedText) {
+  const more = el("button", "dg-area-more");
+  more.type = "button";
+  head.type = "button";
+  const setOpen = (open) => {
+    box.classList.toggle("is-preview", !open);
+    if (fading) fading.inert = !open;
+    head.setAttribute("aria-expanded", String(open));
+    more.setAttribute("aria-expanded", String(open));
+    more.textContent = open ? "▴ Visa färre" : `▾ ${closedText}`;
+    if (open) openFolds.add(key);
+    else openFolds.delete(key);
+  };
+  const toggle = () => {
+    const open = box.classList.contains("is-preview");
+    setOpen(open);
+    if (!open) head.scrollIntoView({ block: "nearest" }); // listan blir kortare, så att rubriken inte hamnar ovanför skärmen
+  };
+  head.addEventListener("click", toggle);
+  more.addEventListener("click", toggle);
+  setOpen(openFolds.has(key));
+  return more;
 }
 
 // Öva bredvid diagnosknappen för diagnoserna som har övningar.
