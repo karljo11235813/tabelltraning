@@ -36,9 +36,10 @@ function plotCounts(task, raw) {
 
 // Är raw rätt värde, i vilken form det än är skrivet? Andra anropet känner igen uttryck som 48·10^3 som rätt värde. units är
 // rutans enhetstabell: utan den är "25 %" fel för 25 (procent och promille är aldrig bara utsmyckning), så ett vanligt fel som
-// 25 skulle inte kännas igen när eleven skriver enheten, som rutan själv godtar.
-function valueRight(accept, raw, units) {
-  const box = units === undefined ? { accept } : { accept, units };
+// 25 skulle inte kännas igen när eleven skriver enheten, som rutan själv godtar. algebra är rutans: ett vanligt fel som är ett uttryck
+// (TAt5: n(n − 1)/2) känns då igen i vilken likvärdig form eleven än skriver det.
+function valueRight(accept, raw, units, algebra) {
+  const box = { accept, ...(units === undefined ? {} : { units }), ...(algebra === undefined ? {} : { algebra }) };
   return markBox(box, raw) === "right" || markBox({ ...box, expression: true }, raw) === "right";
 }
 
@@ -61,7 +62,7 @@ function noteFor(part, task, answers, wrong) {
     return (task.mistakes ?? []).find((m) => count(m.answers.pieces) === count(answers?.pieces))?.text ?? null;
   }
   if (part.formNote && wrong.length > 0 && wrong.every(({ id }) => task.boxes?.[id] && valueRight(task.boxes[id].accept, answers[id], task.boxes[id].units))) return part.formNote;
-  const mistake = (task.mistakes ?? []).find((m) => Object.entries(m.answers).every(([id, value]) => valueRight([value], answers[id], task.boxes?.[id]?.units)));
+  const mistake = (task.mistakes ?? []).find((m) => Object.entries(m.answers).every(([id, value]) => valueRight([value], answers[id], task.boxes?.[id]?.units, task.boxes?.[id]?.algebra)));
   return mistake?.text ?? null;
 }
 
