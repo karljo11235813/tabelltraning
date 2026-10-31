@@ -38,9 +38,11 @@
     </div>
     <p class="bt-intro dg-search-empty" id="dgSearchEmpty" role="status" hidden>Ingen diagnos passar sökningen.</p>
     <div id="dgAreas"></div>
-    <h2 class="dg-saved-title dg-area-title">Mina resultat</h2>
-    <p class="bt-intro dg-saved-empty" id="dgSavedEmpty" hidden></p>
-    <ul class="dg-saved" id="dgSaved"></ul>
+    <details class="dg-saved-box">
+      <summary><h2 class="dg-saved-title dg-area-title">Mina resultat</h2><span class="dg-saved-count" id="dgSavedCount"></span></summary>
+      <p class="bt-intro dg-saved-empty" id="dgSavedEmpty" hidden></p>
+      <ul class="dg-saved" id="dgSaved"></ul>
+    </details>
   </section>
 
   <!-- DIAGNOSEN -->

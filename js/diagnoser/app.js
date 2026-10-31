@@ -177,6 +177,8 @@ function renderSaved(items) {
     li.append(button);
     list.append(li);
   }
+  // Rubriken visar antalet, så att det syns också när avsnittet är hopfällt (det är det från början).
+  $("dgSavedCount").textContent = items.length > 0 ? `(${items.length})` : "";
   // Ett blockerat fönster (privat läge) kan inte spara, och då ska eleven få veta det i stället för "inga resultat".
   const note = $("dgSavedEmpty");
   if (!storageWorks(store)) note.textContent = "Resultaten kan inte sparas i det här fönstret.";

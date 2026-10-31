@@ -524,7 +524,14 @@
 .dg-more-item { padding: 8px 10px; border-radius: 6px; color: var(--text); font-weight: 600; text-decoration: none; white-space: nowrap; }
 .dg-more-item:hover, .dg-more-item:focus-visible { background: var(--accent-soft); outline: none; }
 .dg-sub-title { margin: 14px 0 8px; font-size: 1.15rem; }
-.dg-saved-title { margin-bottom: 6px; }
+/* Mina resultat är hopfällt från början: rubriken är knappen, med en pil som vrids när avsnittet öppnas. */
+.dg-saved-box > summary { display: flex; align-items: center; gap: 10px; margin: 18px 0 6px; cursor: pointer; list-style: none; }
+.dg-saved-box > summary::-webkit-details-marker { display: none; }
+.dg-saved-box > summary::before { content: "▸"; color: var(--accent); font-size: 1.3rem; line-height: 1; transition: transform 0.15s; }
+.dg-saved-box[open] > summary::before { transform: rotate(90deg); }
+.dg-saved-box > summary:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 3px; border-radius: 6px; }
+.dg-saved-title { margin: 0; }
+.dg-saved-count { color: var(--text-muted); font-weight: 700; }
 .dg-saved { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .dg-saved-empty { margin: 0 0 8px; }
 
