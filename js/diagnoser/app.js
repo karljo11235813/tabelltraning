@@ -53,10 +53,10 @@ function stairIcon(code) {
 }
 
 // Bara diagnoserna som passar sökrutan. Ett delområde eller område utan någon av dem visas inte.
-// Ett delområde visar från början tre rader: två hela och en som tonar bort, så att det syns att det finns mer. Ett område visar
-// från början bara sitt första delområde. Det som öppnats står öppet medan sidan är öppen, och en sökning visar alltid alla sina träffar.
+// Alla delområden syns alltid. Ett delområde visar från början tre rader: två hela och en som tonar bort, så att det syns att det
+// finns mer. Det som öppnats står öppet medan sidan är öppen, och en sökning visar alltid alla sina träffar.
 const PREVIEW_ROWS = 3;
-const openFolds = new Set();
+const openSubs = new Set();
 
 // Färgen är aldrig ensam: talen står alltid i märket.
 function scoreBadge({ right, total }) {
@@ -66,9 +66,6 @@ function scoreBadge({ right, total }) {
   return badge;
 }
 
-// Rubriken är en knapp när den fäller ihop något, annars text.
-const foldHead = (folds) => el(folds ? "button" : "span", folds ? "dg-area-head dg-area-toggle" : "dg-area-head");
-
 function renderAreas() {
   const shown = new Set(searchDiagnoses(DIAGNOSES, $("dgSearch").value));
   const filtered = filterText($("dgSearch").value, shown.size, DIAGNOSES.length);
@@ -77,23 +74,19 @@ function renderAreas() {
   for (const { area, logo, subs } of AREAS) {
     const visible = subs.map(({ sub, codes }) => ({ sub, codes: codes.filter((code) => shown.has(code)) })).filter(({ codes }) => codes.length > 0);
     if (visible.length === 0) continue;
-    const part = el("section", "bt-part dg-area");
-    const areaFolds = filtered === null && visible.length > 1;
-    const title = el("h2", "bt-part-title dg-area-title");
-    const head = foldHead(areaFolds);
+    const part = el("section", "bt-part");
+    const title = el("h2", "bt-part-title dg-area-title dg-area-head");
     const img = el("img", "dg-area-logo");
     img.src = logo;
     img.alt = "";
-    head.append(img, area);
-    title.append(head);
+    title.append(img, area);
     part.append(title);
     for (const { sub, codes } of visible) {
-      const box = el("div", sub === visible[0].sub ? "dg-sub" : "dg-sub dg-sub-more");
-      const subFolds = filtered === null && codes.length > PREVIEW_ROWS;
-      const subHead = foldHead(subFolds);
-      subHead.append(sub);
+      const box = el("div", "dg-sub");
+      const folds = filtered === null && codes.length > PREVIEW_ROWS;
+      const head = el(folds ? "button" : "span", folds ? "dg-sub-toggle" : null, sub); // en knapp när den fäller ihop något
       const subTitle = el("h3", "dg-sub-title");
-      subTitle.append(subHead);
+      subTitle.append(head);
       const stairs = el("div", "bt-stairs");
       let rows = 0;
       let fading = null;
@@ -116,10 +109,9 @@ function renderAreas() {
         stairs.append(row);
       }
       box.append(subTitle, stairs);
-      if (subFolds) box.append(foldToggle(box, subHead, fading, `${area}/${sub}`, `Visa alla ${codes.length} diagnoser`));
+      if (folds) box.append(foldToggle(box, head, fading, sub, codes.length));
       part.append(box);
     }
-    if (areaFolds) part.append(foldToggle(part, head, null, area, `Visa alla ${visible.length} delområden`));
     host.append(part);
   }
   $("dgSearchEmpty").hidden = shown.size > 0;
@@ -129,20 +121,20 @@ function renderAreas() {
   $("dgFilterText").textContent = filtered ?? "";
 }
 
-// Rubriken och knappen under gör samma sak. I ett delområde ligger knappen över raden som tonar bort, så ett tryck där öppnar
-// delområdet i stället för att starta en diagnos eleven knappt ser; raden är `inert` så länge, så att Tab inte hamnar på den.
-function foldToggle(box, head, fading, key, closedText) {
-  const more = el("button", "dg-area-more");
+// Rubriken och knappen under gör samma sak. Knappen ligger över raden som tonar bort, så ett tryck där öppnar delområdet i
+// stället för att starta en diagnos eleven knappt ser; raden är `inert` så länge, så att Tab inte hamnar på den.
+function foldToggle(box, head, fading, sub, count) {
+  const more = el("button", "dg-sub-more");
   more.type = "button";
   head.type = "button";
   const setOpen = (open) => {
     box.classList.toggle("is-preview", !open);
-    if (fading) fading.inert = !open;
+    fading.inert = !open;
     head.setAttribute("aria-expanded", String(open));
     more.setAttribute("aria-expanded", String(open));
-    more.textContent = open ? "▴ Visa färre" : `▾ ${closedText}`;
-    if (open) openFolds.add(key);
-    else openFolds.delete(key);
+    more.textContent = open ? "▴ Visa färre" : `▾ Visa alla ${count} diagnoser`;
+    if (open) openSubs.add(sub);
+    else openSubs.delete(sub);
   };
   const toggle = () => {
     const open = box.classList.contains("is-preview");
@@ -151,7 +143,7 @@ function foldToggle(box, head, fading, key, closedText) {
   };
   head.addEventListener("click", toggle);
   more.addEventListener("click", toggle);
-  setOpen(openFolds.has(key));
+  setOpen(openSubs.has(sub));
   return more;
 }
 
