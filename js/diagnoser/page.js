@@ -2,6 +2,7 @@
 //
 // storageWorks  går det att skriva till elevens lagring? (false i ett privat fönster)
 // formatStamp   "28 okt 14:05" för en sparad omgång.
+// timeAgo       "för 3 dagar sedan": grövre ju längre sedan det var.
 // savedList     de sparade omgångarna som listrader, nyaste först; en kod utan data och en omgång som inte går att rätta
 //               (ett datafel) visas inte, så att resten av listan ändå kommer fram.
 // ignoresEnter  ska ett Enter ignoreras? Ett nedhållet Enter, eller ett andra tryck strax efter att en skärm visades.
@@ -43,6 +44,26 @@ export function safeScore(diagnosis, run) {
 }
 
 // runs är redan nyaste först (loadResults). getDiagnosis ger undefined för en kod som inte finns längre.
+const ago = (count, one, many) => `för ${count === 1 ? one : `${count} ${many}`} sedan`;
+
+// Minuter den första timmen och timmar samma dag. Sedan räknas dagar i kalendern, så att i går kväll är igår också när det bara är tio
+// timmar sedan: dagar i en vecka, veckor i en månad, månader i ett år och sedan år. Avrundas nedåt; en klocka som gått fel ger "nyss".
+export function timeAgo(ms, now = Date.now()) {
+  if (!Number.isFinite(ms)) return "";
+  const minutes = Math.floor((now - ms) / 60_000);
+  if (minutes < 1) return "nyss";
+  const midnight = (t) => new Date(t).setHours(0, 0, 0, 0);
+  const days = Math.round((midnight(now) - midnight(ms)) / 86_400_000); // round: ett dygn kan vara 23 eller 25 timmar
+  if (days === 0 || minutes < 60) {
+    return minutes < 60 ? ago(minutes, "en minut", "minuter") : ago(Math.floor(minutes / 60), "en timme", "timmar");
+  }
+  if (days === 1) return "igår";
+  if (days < 7) return `för ${days} dagar sedan`;
+  if (days < 30) return ago(Math.floor(days / 7), "en vecka", "veckor");
+  if (days < 365) return ago(Math.min(Math.floor(days / 30), 11), "en månad", "månader");
+  return ago(Math.floor(days / 365), "ett år", "år");
+}
+
 export function savedList(runs, getDiagnosis) {
   const items = [];
   for (const run of runs) {

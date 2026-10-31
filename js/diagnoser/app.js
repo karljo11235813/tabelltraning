@@ -10,7 +10,7 @@ import { NCM_LINKS } from "./data/links.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
-import { storageWorks, formatStamp, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, latestByCode, scoreLevel } from "./page.js";
+import { storageWorks, formatStamp, timeAgo, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, latestByCode, scoreLevel } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
 import { hasPractice, loadBank } from "./ova/banks.js";
 import { missedLabels, partsForLabels } from "./ova/pool.js";
@@ -211,7 +211,8 @@ function lastResult(code, leaveFor) {
   if (!last) return el("p", "dg-sheet-none", "Inget resultat än.");
   const button = el("button", "bt-stair dg-sheet-result");
   button.type = "button";
-  button.append(el("span", "bt-stair-title", `Senaste resultat · ${formatStamp(last.item.run.startedAt)}`), scoreBadge(last));
+  button.title = formatStamp(last.item.run.startedAt);
+  button.append(el("span", "bt-stair-title", `Senaste resultat · ${timeAgo(last.item.run.startedAt)}`), scoreBadge(last));
   button.addEventListener("click", leaveFor(() => showResult(last.item.diagnosis, last.item.scored, { saved: true })));
   return button;
 }
