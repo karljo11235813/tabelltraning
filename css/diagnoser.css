@@ -508,22 +508,25 @@
 .dg-stair-score.is-red { border-color: var(--danger); background: var(--danger-soft); }
 /* Kortet som kommer upp nedifrån när man klickar på en diagnos. Utrymmet runt innehållet ligger på .dg-sheet-body, så att ett klick på
    själva <dialog> bara kan vara ett klick utanför kortet. */
-.dg-sheet { width: min(100%, 34rem); max-width: 100%; max-height: 85dvh; margin: auto auto 0; padding: 0; border: 0; border-radius: 16px 16px 0 0; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
-.dg-sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
+.dg-sheet { width: min(100%, 44rem); max-width: 100%; max-height: 90dvh; margin: auto auto 0; padding: 0; border: 0; border-radius: 16px 16px 0 0; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.dg-sheet::backdrop { background: rgba(0, 0, 0, 0.6); }
 .dg-sheet[open] { animation: dg-sheet-up 0.2s ease-out; }
 @keyframes dg-sheet-up { from { transform: translateY(100%); } }
 @media (prefers-reduced-motion: reduce) { .dg-sheet[open] { animation: none; } }
-.dg-sheet-body { display: grid; gap: 14px; padding: 16px 18px max(18px, env(safe-area-inset-bottom)); }
-.dg-sheet-head { display: flex; align-items: center; gap: 10px; }
-.dg-sheet-title { flex: 1; min-width: 0; margin: 0; font-size: 1.2rem; line-height: 1.25; }
+/* Kortet tar minst 60 % av höjden, så att ingen missar det; utrymmet som blir över fördelas mellan raderna. */
+.dg-sheet-body { box-sizing: border-box; display: grid; align-content: space-evenly; gap: 16px; min-height: 60dvh; padding: 24px clamp(18px, 4vw, 32px) max(24px, env(safe-area-inset-bottom)); }
+.dg-sheet-head { display: flex; align-items: center; gap: 14px; }
+.dg-sheet-head .dg-stair-icon { width: 56px; height: 56px; }
+.dg-sheet-title { flex: 1; min-width: 0; margin: 0; font-size: clamp(1.35rem, 3.5vw, 1.8rem); line-height: 1.2; }
 .dg-sheet-close { flex: none; width: 2.4rem; height: 2.4rem; border: 0; border-radius: 8px; background: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; }
 .dg-sheet-close:hover { background: var(--accent-soft); }
 .dg-sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.dg-sheet-actions .start-btn { width: 100%; margin: 0; color: var(--surface); }
+.dg-sheet-actions :is(.start-btn, .bt-secondary-btn) { width: 100%; min-height: 5.5rem; margin: 0; font-size: 1.5rem; }
+.dg-sheet-actions .start-btn { color: var(--surface); }
 .dg-sheet-actions .bt-secondary-btn:disabled { border-color: var(--border); color: var(--text-muted); opacity: 0.6; cursor: default; }
 .dg-sheet :is(button, a):focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
-.dg-sheet-none { margin: 0; color: var(--text-muted); }
-.dg-sheet-links { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.dg-sheet-none { margin: 0; color: var(--text-muted); font-size: 1.1rem; }
+.dg-sheet-links { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 1.05rem; }
 .dg-sheet-links a { color: var(--accent); font-weight: 700; }
 .dg-sub-title { margin: 14px 0 8px; font-size: 1.15rem; }
 /* Mina resultat är hopfällt från början: rubriken är knappen, med en pil som vrids när avsnittet öppnas. */
