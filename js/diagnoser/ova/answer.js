@@ -12,10 +12,12 @@
 //   tallinje      bokstävernas värden (och linjen med bokstäverna för placera)
 //   plot          de rätta punkterna som text, "(1; 12), (2; 24)" (rutnätet med dem ritas i uppgiften själv, renderPlotReveal)
 //   pick          alla alternativen med Ja eller Nej (choiceFacit)
+//   shade         figuren med en rätt skuggning (shadeFacit); elevens egen står kvar i uppgiften (renderShadeReveal)
 
 import { el } from "../dom.js";
 import { choiceFacit } from "../choice.js";
 import { chartStage, parsePoints, decimalText } from "../graph.js";
+import { figureStage, parsePieces, shadeFacit } from "../figures.js";
 import { drawMarkup, prettyAnswer, renderFilledRow, renderFilledTable, renderLineMarks } from "../render.js";
 import { checkTask, verdictText, answerFill, lineValuesText } from "./check.js";
 
@@ -36,12 +38,20 @@ export function renderPlotReveal(task, answers) {
   return stage;
 }
 
+// Uppgiftens figur efter svaret, med elevens skuggning och utan att gå att klicka i; vyn byter ut den klickbara mot den här.
+export function renderShadeReveal(task, answers) {
+  const stage = figureStage(task.figure, { shaded: parsePieces(answers?.pieces, task.figure.pieces.length), label: "Din skuggning" });
+  stage.classList.add("dg-shade-revealed");
+  return stage;
+}
+
 function keyBlock(diagnosis, task) {
   const key = el("div", "dg-practice-key");
   key.append(el("span", "dg-practice-key-label", "Svar:"));
   if (task.kind === "place") key.append(renderLineMarks(task.line, task.letters), el("p", null, lineValuesText(task.letters)));
   else if (task.kind === "read") key.append(el("p", null, lineValuesText(task.marks)));
   else if (task.kind === "plot") key.append(el("p", null, pointsLine(task.points)));
+  else if (task.kind === "shade") key.append(figureStage(task.figure, { shaded: shadeFacit(task), label: "Rätt skuggning" }));
   else if (task.kind === "pick") {
     // Uppgiftens text står redan ovanför: bara alternativen med Ja och Nej.
     const items = el("div", "dg-practice-key-items");

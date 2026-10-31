@@ -2,8 +2,9 @@
 // Allt rättas av markScreen och markBox i mark.js, samma rättning som diagnosen; här läggs bara anteckningarna till.
 //
 // En uppgift är en diagnosskärm av något av slagen: rader med rutor (också en textuppgift med raden "Svar: [a] kr" och en
-// tabell med rutor i cellerna), en tallinje (place, read), punkter att sätta ut (plot) eller ett flerval (pick). Inget skrivet
-// ger inget domslut för något av dem: inga rutor ifyllda, inga punkter utsatta, inget alternativ markerat.
+// tabell med rutor i cellerna), en tallinje (place, read), punkter att sätta ut (plot), ett flerval (pick) eller en figur att
+// skugga (shade). Inget skrivet ger inget domslut för något av dem: inga rutor ifyllda, inga punkter utsatta, inget alternativ
+// markerat, inget skuggat.
 //
 // checkTask    { verdict: "right" | "wrong" | null, note, right, total }.
 // verdictText  "✓ Rätt" eller "✗ Inte rätt." med det eleven skrev (rutor), valde (flerval) eller satte ut (punkter).
@@ -13,6 +14,7 @@
 import { markScreen, markBox } from "../mark.js";
 import { parsePoints, pointsText, pairKey } from "../graph.js";
 import { prettyAnswer } from "../render.js";
+import { parsePieces } from "../figures.js";
 
 const typedIn = (answers) => Object.values(answers ?? {}).some((value) => String(value ?? "").trim() !== "");
 
@@ -52,6 +54,11 @@ function noteFor(part, task, answers, wrong) {
   if (task.kind === "plot") {
     const given = pointSet(answers?.points);
     return (task.mistakes ?? []).find((m) => sameSet(pointSet(m.answers.points), given))?.text ?? null;
+  }
+  // En skuggning: ett vanligt fel gäller antalet skuggade delar, vilka delar det än är (delarna är lika stora i en uppgift med fel).
+  if (task.kind === "shade") {
+    const count = (raw) => parsePieces(raw, task.figure.pieces.length).length;
+    return (task.mistakes ?? []).find((m) => count(m.answers.pieces) === count(answers?.pieces))?.text ?? null;
   }
   if (part.formNote && wrong.length > 0 && wrong.every(({ id }) => task.boxes?.[id] && valueRight(task.boxes[id].accept, answers[id], task.boxes[id].units))) return part.formNote;
   const mistake = (task.mistakes ?? []).find((m) => Object.entries(m.answers).every(([id, value]) => valueRight([value], answers[id], task.boxes?.[id]?.units)));
@@ -100,6 +107,10 @@ export function verdictText(task, result, answers) {
     const { hit, extra } = plotCounts(task, answers?.points);
     const over = extra === 0 ? "" : extra === 1 ? " (en punkt för mycket)" : ` (${extra} punkter för mycket)`;
     return `✗ Inte rätt. ${hit} av ${task.points.length} punkter stämmer${over}.`;
+  }
+  if (task.kind === "shade") {
+    const count = parsePieces(answers?.pieces, task.figure.pieces.length).length;
+    return `✗ Inte rätt. Du skuggade ${count} av ${task.figure.pieces.length} delar.`;
   }
   if (task.kind === "place") return `✗ Inte rätt. ${result.right} av ${result.total} bokstäver står rätt.`;
   if (task.kind === "read") {

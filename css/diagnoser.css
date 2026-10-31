@@ -649,6 +649,8 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
 .dg-practice-stage .dg-chart-title:last-of-type { text-anchor: start; }
 .dg-practice-stage .dg-chart-title:not(:last-of-type) { transform: translateY(4px); }
 .dg-practice-stage .dg-fig-stage { max-width: 15rem; margin: 4px auto 8px; }
+/* Facit till en skuggning (RB1–RB3) är samma figur, mindre, efter etiketten Svar:. */
+.dg-practice-key .dg-fig-stage { order: 2; width: 9rem; max-width: 9rem; margin: 0.1em 0 0.2em; }
 .dg-practice-stage .is-revealed .dg-tile { cursor: default; }
 .dg-practice-stage .is-revealed .dg-chart.is-interactive { cursor: default; }
 

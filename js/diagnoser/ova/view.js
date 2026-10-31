@@ -16,7 +16,7 @@ import { renderScreen } from "../render.js";
 import { loadBank } from "./banks.js";
 import { BATCH_SIZE, createPool } from "./pool.js";
 import { PRACTICE_GUARD_MS, createDeck, routeKey, routeClick, promptScale } from "./deck.js";
-import { renderAnswer, renderPlotReveal } from "./answer.js";
+import { renderAnswer, renderPlotReveal, renderShadeReveal } from "./answer.js";
 
 let active = null; // vyn som är öppen just nu
 
@@ -33,7 +33,7 @@ function poolFor(diagnosis, bank, partIds) {
 // Det som ett klick på uppgiftsytan inte ska räknas som ett klick på: knappar (också alternativen i ett flerval), rutor,
 // tallinjen, facket, symbolraden, koordinatsystemet där eleven sätter ut punkter (ett tryck där sätter ut en punkt och ska aldrig
 // visa svaret) och plotens rutnät efter svaret (ett tryck där ändrar ingenting och går inte vidare).
-const CONTROLS = "button, input, label, a, .dg-stage, .dg-tray, .dg-symbols, .dg-chart.is-interactive, .dg-plot-revealed";
+const CONTROLS = "button, input, label, a, .dg-stage, .dg-tray, .dg-symbols, .dg-chart.is-interactive, .dg-plot-revealed, .dg-fig.is-interactive, .dg-shade-revealed";
 
 function button(className, text, onClick) {
   const node = el("button", className, text);
@@ -203,6 +203,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     for (const input of entry.view.el.querySelectorAll("input")) input.readOnly = true;
     for (const control of entry.view.el.querySelectorAll("button")) control.disabled = true;
     if (entry.task.kind === "plot") entry.view.el.querySelector(".dg-chart-stage")?.replaceWith(renderPlotReveal(entry.task, answers));
+    if (entry.task.kind === "shade") entry.view.el.querySelector(".dg-fig-stage")?.replaceWith(renderShadeReveal(entry.task, answers));
     entry.view.el.classList.add("is-revealed");
     refresh();
     // Uppgiften flyttar sig inte när svaret kommer. Först när svaret börjar under skärmens kant (ovanför huvudknappen) rullar sidan,
