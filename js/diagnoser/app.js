@@ -157,10 +157,17 @@ function foldToggle(box, head, fading, key, closedText) {
 
 // ---------- KORTET ----------
 
+// Facit är lärarens: länken syns först när ordet har skrivits i sökrutan, och bara tills sidan laddas om. Inget på sidan säger att
+// den finns. Det är ingen säkerhet (PDF:erna är öppna hos NCM), bara så att facit inte ligger ett klick bort för eleven.
+const FACIT_WORD = "1123581321";
+let facitUnlocked = false;
+
 // Länkarna på kortet, { text, href }; fler läggs till här.
 function moreItems(code) {
   const ncm = NCM_LINKS[code];
-  return ncm ? [{ text: "Diagnosen (PDF hos NCM)", href: ncm.diagnos }, { text: "Facit (PDF hos NCM)", href: ncm.facit }] : [];
+  if (!ncm) return [];
+  const diagnos = { text: "Diagnosen (PDF hos NCM)", href: ncm.diagnos };
+  return facitUnlocked ? [diagnos, { text: "Facit (PDF hos NCM)", href: ncm.facit }] : [diagnos];
 }
 
 // Ett klick på en diagnos tar upp kortet nedtill: Testa, Öva (gråtonad utan övningar), senaste resultatet och länkarna.
@@ -447,7 +454,13 @@ $("dgResultHost").addEventListener("click", (e) => {
     e.stopPropagation();
   }
 }, true);
-$("dgSearch").addEventListener("input", renderAreas);
+$("dgSearch").addEventListener("input", (e) => {
+  if (e.target.value.trim() === FACIT_WORD) {
+    facitUnlocked = true;
+    e.target.value = "";
+  }
+  renderAreas();
+});
 $("dgFilterReset").addEventListener("click", () => {
   $("dgSearch").value = "";
   renderAreas();
