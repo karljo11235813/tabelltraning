@@ -193,6 +193,14 @@ function drawLine(line, marks) {
   return { svg, count };
 }
 
+// Tallinjen på en egen yta, med bokstäverna ovanför linjen (marks) eller utan (null): en uppgift att läsa av, eller facit
+// till en uppgift att placera. Används av övningarna (Öva).
+export function renderLineMarks(line, marks) {
+  const stage = el("div", "dg-stage");
+  stage.append(drawLine(line, marks).svg);
+  return stage;
+}
+
 // ---------- RADER ----------
 
 // Tecknen från parseMarkup som element. boxFor(id) ger det som står där en ruta står. variables är diagnosens

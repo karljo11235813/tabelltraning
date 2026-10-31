@@ -124,6 +124,12 @@ export const AREA_LOGOS = {
   "Sannolikhet och statistik": "img/diagnoser/diamant-sannolikhet.png",
 };
 
+// Diagnosens lilla bild i listan (generate_diagnosis_icons.py i repo-roten), relativ till tabelltraning/. Filen
+// heter som datafilen: koden med gemener och ä som a (MLä1 → mla1).
+export function iconOf(code) {
+  return `img/diagnoser/ikoner/${code.toLowerCase().replace("ä", "a")}.webp`;
+}
+
 // Startsidans grupper: [{ area, logo, subs: [{ sub, codes }] }]. Områdena och delområdena kommer i den ordning
 // de först förekommer i DIAGNOSES; områden utan diagnoser finns inte med.
 export const AREAS = DIAGNOSES.reduce((areas, d) => {

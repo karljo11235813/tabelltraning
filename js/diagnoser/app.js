@@ -1,18 +1,22 @@
 // Diamantdiagnoser: listan, diagnosen en skärm i taget och resultatskärmen.
 // Rättningen, sessionen och ritandet ligger i mark.js, session.js och render.js, och sidans rena
 // hjälpfunktioner (lagringsprovet, listraderna) i page.js. Här sitter bara det som rör `document`.
+// Öva (övningsvyn för några diagnoser) ritas av ova/view.js; här finns bara knappen i listan och vägen dit och tillbaka.
 //
 // Under en diagnos visas varken rätt eller fel. Ingenting sparas förrän resultatskärmen visas: den som
 // avbryter eller laddar om sidan förlorar omgången.
-import { AREAS, DIAGNOSES, getDiagnosis } from "./data/index.js";
+import { AREAS, DIAGNOSES, getDiagnosis, iconOf } from "./data/index.js";
 import { NCM_LINKS } from "./data/links.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
 import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, latestByCode, scoreLevel } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
+import { hasPractice, loadBank } from "./ova/banks.js";
+import { missedLabels, partsForLabels } from "./ova/pool.js";
+import { openPractice } from "./ova/view.js";
 
-const SECTIONS = ["dgList", "dgRun", "dgResult"];
+const SECTIONS = ["dgList", "dgRun", "dgResult", "dgPractice"];
 const CLOCK_TICK_MS = 500; // tätare än en sekund, så att visningen aldrig släpar efter
 
 const $ = (id) => document.getElementById(id);
@@ -37,6 +41,17 @@ function showSection(id) {
 
 // ---------- LISTAN ----------
 
+// Diagnosens lilla bild först i knappen. Den är bara utsmyckning (alt ""): koden och titeln står bredvid.
+function stairIcon(code) {
+  const img = el("img", "dg-stair-icon");
+  img.src = iconOf(code);
+  img.alt = "";
+  img.width = 32;
+  img.height = 32;
+  img.loading = "lazy";
+  return img;
+}
+
 // Bara diagnoserna som passar sökrutan. Ett delområde eller område utan någon av dem visas inte.
 function renderAreas() {
   const shown = new Set(searchDiagnoses(DIAGNOSES, $("dgSearch").value));
@@ -58,7 +73,7 @@ function renderAreas() {
       for (const code of codes) {
         const button = el("button", "bt-stair");
         button.type = "button";
-        button.append(el("span", "bt-stair-title", `${code} · ${getDiagnosis(code).title}`));
+        button.append(stairIcon(code), el("span", "bt-stair-title", `${code} · ${getDiagnosis(code).title}`));
         const last = latest.get(code);
         if (last) {
           // Färgen är aldrig ensam: talen står alltid i märket.
@@ -69,7 +84,9 @@ function renderAreas() {
         }
         button.addEventListener("click", () => startDiagnosis(code));
         const row = el("div", "dg-stair-row");
-        row.append(button, moreMenu(code));
+        row.append(button);
+        if (hasPractice(code)) row.append(practiceButton(code));
+        row.append(moreMenu(code));
         stairs.append(row);
       }
       part.append(stairs);
@@ -82,6 +99,15 @@ function renderAreas() {
   const text = filterText($("dgSearch").value, shown.size, DIAGNOSES.length);
   $("dgFilter").hidden = text === null;
   $("dgFilterText").textContent = text ?? "";
+}
+
+// Öva bredvid diagnosknappen för diagnoserna som har övningar.
+function practiceButton(code) {
+  const button = el("button", "bt-small-btn dg-practice-btn", "Öva");
+  button.type = "button";
+  button.setAttribute("aria-label", `Öva på ${code}`);
+  button.addEventListener("click", () => startPractice(code, null, showList));
+  return button;
 }
 
 // ⋯-menyn bredvid varje diagnos. Varje val är en länk { text, href }; fler val läggs till här.
@@ -146,7 +172,7 @@ function renderSaved(items) {
     const li = el("li");
     const button = el("button", "bt-stair");
     button.type = "button";
-    button.append(el("span", "bt-stair-title", item.text));
+    button.append(stairIcon(item.diagnosis.code), el("span", "bt-stair-title", item.text));
     button.addEventListener("click", () => showResult(item.diagnosis, item.scored, { saved: true }));
     li.append(button);
     list.append(li);
@@ -278,6 +304,15 @@ function stopRun() {
   run = null;
 }
 
+// ---------- ÖVA ----------
+
+// partIds null ger startskärmen; annars startar en omgång direkt med de delarna. back anropas när vyn avslutas.
+function startPractice(code, partIds, back) {
+  stopRun();
+  showSection("dgPractice");
+  openPractice({ host: $("dgPractice"), diagnosis: getDiagnosis(code), partIds, onExit: back });
+}
+
 // ---------- AVBRYT ----------
 
 function askCancel() {
@@ -296,8 +331,28 @@ function keepGoing() {
 function showResult(diagnosis, scored, { saved }) {
   $("dgSaveNote").hidden = saved;
   $("dgResultHost").replaceChildren(renderResult(diagnosis, scored, { onBack: showList }));
+  if (hasPractice(scored.code) && missedLabels(scored).length > 0) $("dgResultHost").append(missedPracticeButton(scored));
   showSection("dgResult");
   resultShownAt = performance.now();
+}
+
+// Öva på det du missade: en omgång med bara de delar som de felaktiga eller överhoppade skärmarna hör till. Knappen finns
+// också på ett sparat resultat från Mina resultat. Går banken inte att ladda visar vyn sitt eget besked med en väg tillbaka.
+function missedPracticeButton(scored) {
+  const button = el("button", "start-btn dg-practice-missed", "Öva på det du missade");
+  button.type = "button";
+  button.addEventListener("click", async () => {
+    const back = () => showSection("dgResult");
+    let partIds = null;
+    try {
+      partIds = partsForLabels(await loadBank(scored.code), missedLabels(scored));
+    } catch (error) {
+      // partIds null: vyn laddar banken själv, misslyckas igen och visar felet.
+      console.error("Öva: banken gick inte att ladda", error);
+    }
+    startPractice(scored.code, partIds, back);
+  });
+  return button;
 }
 
 // Före skärmens egen hantering (capture): ett dubbeltryck eller nedhållet Enter ska inte flytta fokus på nästa skärm.
@@ -318,7 +373,7 @@ $("dgActions").addEventListener("keydown", (e) => {
 // Ett dubbelklick på sista "Nästa" ger ett andra klick som träffar resultatskärmen, där "Visa rätt svar" eller
 // "Till listan" kan ligga på samma plats. Knapparna där ignoreras en stund (före deras egen hantering, capture).
 $("dgResultHost").addEventListener("click", (e) => {
-  if (!e.target.closest(".dg-reveal, .dg-back")) return;
+  if (!e.target.closest(".dg-reveal, .dg-back, .dg-practice-missed")) return;
   if (ignoresResultTap({ shownAt: resultShownAt, now: performance.now() })) {
     e.preventDefault();
     e.stopPropagation();
