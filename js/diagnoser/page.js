@@ -57,10 +57,11 @@ export function savedList(runs, getDiagnosis) {
 
 // Listans märke vid varje diagnos: det senaste resultatet, så att eleven ser vad hon redan gjort och hur det gick.
 // items är savedList, nyaste först, så det första per kod är det senaste. Diagnoser som inte gjorts saknas.
+// item är hela raden ur savedList, så att kortet kan öppna resultatet.
 export function latestByCode(items) {
   const latest = new Map();
-  for (const { run, scored } of items) {
-    if (!latest.has(run.code)) latest.set(run.code, { right: scored.right, total: scored.total });
+  for (const item of items) {
+    if (!latest.has(item.run.code)) latest.set(item.run.code, { right: item.scored.right, total: item.scored.total, item });
   }
   return latest;
 }

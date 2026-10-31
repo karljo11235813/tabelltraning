@@ -506,36 +506,25 @@
 /* Sidans --warning är guld i mörkt tema; blandad med --danger blir den orange i båda teman. */
 .dg-stair-score.is-orange { --dg-orange: color-mix(in srgb, var(--warning) 55%, var(--danger)); border-color: var(--dg-orange); background: color-mix(in srgb, var(--dg-orange) 16%, var(--surface)); }
 .dg-stair-score.is-red { border-color: var(--danger); background: var(--danger-soft); }
-.dg-more { position: relative; display: flex; }
-.dg-more-btn {
-  width: 44px;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 1.3rem;
-  line-height: 1;
-  cursor: pointer;
-}
-.dg-more-btn:hover, .dg-more-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent-strong); }
-.dg-more-btn:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
-.dg-more-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  z-index: 10;
-  display: grid;
-  min-width: 13rem;
-  padding: 6px;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-.dg-more-menu[hidden] { display: none; }
-.dg-more-item { padding: 8px 10px; border-radius: 6px; color: var(--text); font-weight: 600; text-decoration: none; white-space: nowrap; }
-.dg-more-item:hover, .dg-more-item:focus-visible { background: var(--accent-soft); outline: none; }
+/* Kortet som kommer upp nedifrån när man klickar på en diagnos. Utrymmet runt innehållet ligger på .dg-sheet-body, så att ett klick på
+   själva <dialog> bara kan vara ett klick utanför kortet. */
+.dg-sheet { width: min(100%, 34rem); max-width: 100%; max-height: 85dvh; margin: auto auto 0; padding: 0; border: 0; border-radius: 16px 16px 0 0; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.dg-sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
+.dg-sheet[open] { animation: dg-sheet-up 0.2s ease-out; }
+@keyframes dg-sheet-up { from { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) { .dg-sheet[open] { animation: none; } }
+.dg-sheet-body { display: grid; gap: 14px; padding: 16px 18px max(18px, env(safe-area-inset-bottom)); }
+.dg-sheet-head { display: flex; align-items: center; gap: 10px; }
+.dg-sheet-title { flex: 1; min-width: 0; margin: 0; font-size: 1.2rem; line-height: 1.25; }
+.dg-sheet-close { flex: none; width: 2.4rem; height: 2.4rem; border: 0; border-radius: 8px; background: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; }
+.dg-sheet-close:hover { background: var(--accent-soft); }
+.dg-sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dg-sheet-actions .start-btn { width: 100%; margin: 0; color: var(--surface); }
+.dg-sheet-actions .bt-secondary-btn:disabled { border-color: var(--border); color: var(--text-muted); opacity: 0.6; cursor: default; }
+.dg-sheet :is(button, a):focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.dg-sheet-none { margin: 0; color: var(--text-muted); }
+.dg-sheet-links { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.dg-sheet-links a { color: var(--accent); font-weight: 700; }
 .dg-sub-title { margin: 14px 0 8px; font-size: 1.15rem; }
 /* Mina resultat är hopfällt från början: rubriken är knappen, med en pil som vrids när avsnittet öppnas. */
 .dg-saved-box > summary { display: flex; align-items: center; gap: 10px; margin: 18px 0 6px; cursor: pointer; list-style: none; }
@@ -570,20 +559,6 @@
 .dg-preview-facit .dg-row { margin: 0; font-size: 1.1rem; line-height: 1.5; }
 
 /* ---------- ÖVA ---------- */
-/* Öva på listan: en knapp bredvid diagnosknappen, tydligare än de grå småknapparna. */
-.dg-practice-btn {
-  flex: none;
-  min-width: 4.2rem;
-  padding: 0 14px;
-  border: 2px solid var(--accent);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--accent-strong);
-  font-size: 1rem;
-  font-weight: 800;
-}
-.dg-practice-btn:hover { background: var(--accent-soft); }
-
 /* Öva på det du missade, under resultatet: samma bredd som Till listan. */
 .dg-practice-missed { width: 100%; max-width: 320px; }
 
@@ -834,7 +809,6 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
 
 /* Telefon: raderna bryts, ingenting rullar i sidled. */
 @media (max-width: 480px) {
-  .dg-practice-btn { min-width: 3.3rem; padding: 0 10px; }
   .bt-main:has(> .dg-practice:not([hidden])) { padding-left: 10px; padding-right: 10px; }
   .dg-practice-tools { width: 100%; }
   .dg-practice-tool { flex: 1 1 0; min-height: 2.8rem; padding: 4px 6px; }

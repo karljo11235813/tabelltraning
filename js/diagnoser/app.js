@@ -10,7 +10,7 @@ import { NCM_LINKS } from "./data/links.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
-import { storageWorks, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, latestByCode, scoreLevel } from "./page.js";
+import { storageWorks, formatStamp, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, latestByCode, scoreLevel } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
 import { hasPractice, loadBank } from "./ova/banks.js";
 import { missedLabels, partsForLabels } from "./ova/pool.js";
@@ -58,6 +58,14 @@ function stairIcon(code) {
 const PREVIEW_ROWS = 3;
 const openFolds = new Set();
 
+// Färgen är aldrig ensam: talen står alltid i märket.
+function scoreBadge({ right, total }) {
+  const level = scoreLevel(right, total);
+  const badge = el("span", level ? `dg-stair-score is-${level}` : "dg-stair-score", `${right}/${total}`);
+  badge.title = `Senast: ${right} av ${total} rätt`;
+  return badge;
+}
+
 // Rubriken är en knapp när den fäller ihop något, annars text.
 const foldHead = (folds) => el(folds ? "button" : "span", folds ? "dg-area-head dg-area-toggle" : "dg-area-head");
 
@@ -94,18 +102,10 @@ function renderAreas() {
         button.type = "button";
         button.append(stairIcon(code), el("span", "bt-stair-title", `${code} · ${getDiagnosis(code).title}`));
         const last = latest.get(code);
-        if (last) {
-          // Färgen är aldrig ensam: talen står alltid i märket.
-          const level = scoreLevel(last.right, last.total);
-          const badge = el("span", level ? `dg-stair-score is-${level}` : "dg-stair-score", `${last.right}/${last.total}`);
-          badge.title = `Senast: ${last.right} av ${last.total} rätt`;
-          button.append(badge);
-        }
-        button.addEventListener("click", () => startDiagnosis(code));
+        if (last) button.append(scoreBadge(last));
+        button.addEventListener("click", () => openSheet(code));
         const row = el("div", "dg-stair-row");
         row.append(button);
-        if (hasPractice(code)) row.append(practiceButton(code));
-        row.append(moreMenu(code));
         if (rows === PREVIEW_ROWS - 1) {
           fading = row;
           row.classList.add("dg-row-fade");
@@ -155,69 +155,81 @@ function foldToggle(box, head, fading, key, closedText) {
   return more;
 }
 
-// Öva bredvid diagnosknappen för diagnoserna som har övningar.
-function practiceButton(code) {
-  const button = el("button", "bt-small-btn dg-practice-btn", "Öva");
-  button.type = "button";
-  button.setAttribute("aria-label", `Öva på ${code}`);
-  button.addEventListener("click", () => startPractice(code, null, showList));
-  return button;
-}
+// ---------- KORTET ----------
 
-// ⋯-menyn bredvid varje diagnos. Varje val är en länk { text, href }; fler val läggs till här.
+// Länkarna på kortet, { text, href }; fler läggs till här.
 function moreItems(code) {
   const ncm = NCM_LINKS[code];
   return ncm ? [{ text: "Diagnosen (PDF hos NCM)", href: ncm.diagnos }, { text: "Facit (PDF hos NCM)", href: ncm.facit }] : [];
 }
 
-function closeMenus(except = null) {
-  for (const menu of document.querySelectorAll(".dg-more-menu")) {
-    if (menu === except) continue;
-    menu.hidden = true;
-    menu.previousElementSibling.setAttribute("aria-expanded", "false");
-  }
-}
+// Ett klick på en diagnos tar upp kortet nedtill: Testa, Öva (gråtonad utan övningar), senaste resultatet och länkarna.
+// <dialog> ger fokus på kortet, Escape och fokus tillbaka till raden när det stängs.
+function openSheet(code) {
+  const sheet = $("dgSheet");
+  const leaveFor = (action) => () => {
+    sheet.close();
+    action();
+  };
+  const close = el("button", "dg-sheet-close", "✕");
+  close.type = "button";
+  close.setAttribute("aria-label", "Stäng");
+  close.addEventListener("click", () => sheet.close());
+  const title = el("h2", "dg-sheet-title", `${code} · ${getDiagnosis(code).title}`);
+  title.id = "dgSheetTitle";
+  const head = el("div", "dg-sheet-head");
+  head.append(stairIcon(code), title, close);
 
-function moreMenu(code) {
-  const wrap = el("div", "dg-more");
-  const items = moreItems(code);
-  if (items.length === 0) return wrap;
-  const toggle = el("button", "dg-more-btn", "⋯");
-  toggle.type = "button";
-  toggle.setAttribute("aria-label", `Mer om ${code}`);
-  toggle.setAttribute("aria-haspopup", "true");
-  toggle.setAttribute("aria-expanded", "false");
-  const menu = el("div", "dg-more-menu");
-  menu.hidden = true;
-  for (const { text, href } of items) {
-    const link = el("a", "dg-more-item", text);
+  const test = el("button", "start-btn", "Testa");
+  test.type = "button";
+  test.autofocus = true;
+  test.addEventListener("click", leaveFor(() => startDiagnosis(code)));
+  const practice = el("button", "bt-secondary-btn", "Öva");
+  practice.type = "button";
+  practice.disabled = !hasPractice(code);
+  if (practice.disabled) practice.title = "Den här diagnosen har inga övningar än";
+  practice.addEventListener("click", leaveFor(() => startPractice(code, null, showList)));
+  const actions = el("div", "dg-sheet-actions");
+  actions.append(test, practice);
+
+  const body = el("div", "dg-sheet-body");
+  body.append(head, actions, lastResult(code, leaveFor));
+  const links = el("div", "dg-sheet-links");
+  for (const { text, href } of moreItems(code)) {
+    const link = el("a", null, text);
     link.href = href;
     link.target = "_blank";
     link.rel = "noopener";
-    menu.append(link);
+    links.append(link);
   }
-  toggle.addEventListener("click", () => {
-    const open = menu.hidden;
-    closeMenus(menu);
-    menu.hidden = !open;
-    toggle.setAttribute("aria-expanded", String(open));
-    if (open) menu.querySelector("a").focus();
-  });
-  wrap.append(toggle, menu);
-  return wrap;
+  if (links.childElementCount > 0) body.append(links);
+  sheet.replaceChildren(body);
+  sheet.showModal();
 }
 
-// En öppen meny stängs med ett klick utanför eller Escape (fokus tillbaka till knappen).
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".dg-more")) closeMenus();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape") return;
-  const open = document.querySelector(".dg-more-menu:not([hidden])");
-  if (!open) return;
-  closeMenus();
-  open.previousElementSibling.focus();
-});
+function lastResult(code, leaveFor) {
+  const last = latest.get(code);
+  if (!last) return el("p", "dg-sheet-none", "Inget resultat än.");
+  const button = el("button", "bt-stair dg-sheet-result");
+  button.type = "button";
+  button.append(el("span", "bt-stair-title", `Senaste resultat · ${formatStamp(last.item.run.startedAt)}`), scoreBadge(last));
+  button.addEventListener("click", leaveFor(() => showResult(last.item.diagnosis, last.item.scored, { saved: true })));
+  return button;
+}
+
+// Ett klick utanför stänger kortet. Andra klicket i ett dubbelklick på en diagnos landar på samma ställe, där kortet nu kan ligga, och
+// ett nedhållet Enter skulle trycka på Testa: inget av dem räknas.
+$("dgSheet").addEventListener("click", (e) => {
+  if (e.detail > 1) {
+    e.preventDefault();
+    e.stopPropagation();
+  } else if (e.target === e.currentTarget) {
+    e.currentTarget.close();
+  }
+}, true);
+$("dgSheet").addEventListener("keydown", (e) => {
+  if (e.repeat && (e.key === "Enter" || e.key === " ")) e.preventDefault();
+}, true);
 
 function renderSaved(items) {
   const list = $("dgSaved");
