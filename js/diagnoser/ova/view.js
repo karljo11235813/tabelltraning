@@ -15,8 +15,8 @@ import { el } from "../dom.js";
 import { renderScreen } from "../render.js";
 import { loadBank } from "./banks.js";
 import { BATCH_SIZE, createPool } from "./pool.js";
-import { PRACTICE_GUARD_MS, createDeck, routeKey, routeClick } from "./deck.js";
-import { renderAnswer } from "./answer.js";
+import { PRACTICE_GUARD_MS, createDeck, routeKey, routeClick, promptScale } from "./deck.js";
+import { renderAnswer, renderPlotReveal } from "./answer.js";
 
 let active = null; // vyn som är öppen just nu
 
@@ -30,8 +30,10 @@ function poolFor(diagnosis, bank, partIds) {
   return pools.get(key);
 }
 
-// Det som ett klick på uppgiftsytan inte ska räknas som ett klick på: knappar, rutor, tallinjen, facket och symbolraden.
-const CONTROLS = "button, input, label, a, .dg-stage, .dg-tray, .dg-symbols";
+// Det som ett klick på uppgiftsytan inte ska räknas som ett klick på: knappar (också alternativen i ett flerval), rutor,
+// tallinjen, facket, symbolraden, koordinatsystemet där eleven sätter ut punkter (ett tryck där sätter ut en punkt och ska aldrig
+// visa svaret) och plotens rutnät efter svaret (ett tryck där ändrar ingenting och går inte vidare).
+const CONTROLS = "button, input, label, a, .dg-stage, .dg-tray, .dg-symbols, .dg-chart.is-interactive, .dg-plot-revealed";
 
 function button(className, text, onClick) {
   const node = el("button", className, text);
@@ -152,6 +154,20 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     if (entries[index]) return entries[index];
     const task = batch[index];
     const view = renderScreen(diagnosis, task, { onSubmit: () => activate() });
+    view.el.style.setProperty("--dg-prompt-scale", String(promptScale(task))); // en textuppgift har större text än en rad som "Beräkna"
+    // En graf är högst en viss andel av skärmens höjd (33 %, och 36 % för ett nästan kvadratiskt rutnät): CSS räknar bredden ur ritningens
+    // bredd / höjd (--dg-chart-ratio), som är olika för ett lågt och ett kvadratiskt rutnät. Samma värden gäller rutnätet som byter plats
+    // med det interaktiva efter svaret (renderPlotReveal), så uppgiften flyttar sig inte.
+    const chart = view.el.querySelector("svg.dg-chart");
+    if (chart) {
+      const { width, height } = chart.viewBox.baseVal;
+      if (height > 0) {
+        view.el.style.setProperty("--dg-chart-ratio", String(width / height));
+        view.el.style.setProperty("--dg-chart-h", width / height < 1.3 ? "36vh" : "33vh");
+      }
+    }
+    // En uttrycksruta (RP6 5–6) rymmer "30 000 · 1,04 · 1,03" medan eleven skriver.
+    for (const [id, box] of Object.entries(task.boxes ?? {})) if (box.expression) view.el.querySelector(`input[aria-label="Svar ${id}"]`)?.classList.add("dg-input-expression");
     const answer = el("div", "dg-practice-answer");
     answer.setAttribute("aria-live", "polite");
     entries[index] = { task, view, answer };
@@ -179,12 +195,19 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
   function reveal() {
     const entry = entryAt(deck.index);
     const part = bank.parts.find((p) => p.id === entry.task.part);
-    entry.answer.replaceChildren(renderAnswer({ diagnosis, part, task: entry.task, answers: entry.view.read() }));
-    // Uppgiften står kvar som eleven lämnade den: rutorna går inte att ändra och chipsen går inte att flytta.
+    const answers = entry.view.read();
+    entry.answer.replaceChildren(renderAnswer({ diagnosis, part, task: entry.task, answers }));
+    // Uppgiften står kvar som eleven lämnade den: rutorna går inte att ändra, chipsen går inte att flytta och alternativen i ett
+    // flerval (knappar) går inte att växla. Rutnätet i en plot byts mot samma rutnät utan något att sätta ut punkter med, där
+    // elevens punkter står kvar och facits är streckade ringar; ett tryck på det gör ingenting (CONTROLS).
     for (const input of entry.view.el.querySelectorAll("input")) input.readOnly = true;
     for (const control of entry.view.el.querySelectorAll("button")) control.disabled = true;
+    if (entry.task.kind === "plot") entry.view.el.querySelector(".dg-chart-stage")?.replaceWith(renderPlotReveal(entry.task, answers));
     entry.view.el.classList.add("is-revealed");
     refresh();
+    // Uppgiften flyttar sig inte när svaret kommer. Först när svaret börjar under skärmens kant (ovanför huvudknappen) rullar sidan,
+    // och då precis så mycket att svaret syns (scroll-margin i CSS).
+    if (entry.answer.getBoundingClientRect().top > window.innerHeight - mainButton.offsetHeight - 16) entry.answer.scrollIntoView({ block: "nearest" });
   }
 
   function goBack() {

@@ -595,7 +595,7 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
   cursor: pointer;
 }
 .dg-practice-stage .dg-screen { width: 100%; text-align: center; }
-.dg-practice-stage .dg-prompt { margin: 0 0 6px; font-size: calc(var(--dg-practice-size) * 0.55); }
+.dg-practice-stage .dg-prompt { margin: 0 0 6px; font-size: calc(var(--dg-practice-size) * var(--dg-prompt-scale, 0.55)); line-height: 1.3; }
 .dg-practice-stage .dg-rows { column-count: 1; column-width: auto; margin: 2px 0 4px; font-size: var(--dg-practice-size); }
 .dg-practice-stage .dg-row { margin: 0; line-height: 1.4; }
 .dg-practice-stage .dg-input { line-height: 1.25; }
@@ -628,9 +628,33 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
 .dg-practice-stage .is-revealed .dg-symbols, .dg-practice-stage .is-revealed .dg-tray { opacity: 0.55; }
 .dg-practice-stage .is-revealed .dg-input { border-color: var(--border); }
 
+/* Textuppgift, tabell, graf, figur, punkter och flerval (RP1–RP7): centrerade och lagom stora, så att uppgiften och svaret under
+   den ryms på en 720 px hög skärm. Textens storlek följer dess längd (--dg-prompt-scale sätts av view.js, promptScale i deck.js).
+   Siffrorna och texterna i ett rutnät är i ritningens enheter och skalas med bredden, så de görs större här för att läsas från
+   bakre raden. Efter svaret står uppgiften kvar men tar inga fler tryck: alternativen är avstängda knappar (view.js) och rutnätet
+   i en plot byts mot ett som inte går att sätta ut punkter i (.dg-plot-revealed); här tas bara markören bort. */
+.dg-practice-stage .dg-tiles { justify-content: center; gap: 10px 16px; margin: 6px 0 8px; }
+.dg-practice-stage .dg-tile { min-height: 0; font-size: calc(var(--dg-practice-size) * 0.65); }
+.dg-practice-stage .dg-table { margin: 6px auto 8px; font-size: calc(var(--dg-practice-size) * 0.6); }
+.dg-practice-stage .dg-table th, .dg-practice-stage .dg-table td { padding: 3px 14px; }
+/* Grafen följer skärmens höjd, eftersom det är höjden som räcker till: högst 33 % av den för ett lågt rutnät (färre steg i y än i x, det
+   vanliga; 414 px bred på 1280 × 720 och 621 px på 1920 × 1080) och 36 % för ett kvadratiskt, som annars skulle ta för mycket plats
+   med sin bredd. --dg-chart-ratio (bredd / höjd i ritningen) och --dg-chart-h sätts av view.js. Siffrorna och titlarna är i ritningens
+   enheter och görs så stora som ryms utan att nå varandra eller axeln (graph.js sätter dem på fasta avstånd och delas med diagnosen,
+   så y-titeln flyttas åt höger i stället för upp, och x-titeln ned ett par enheter). Efter svaret är grafen lika stor. */
+.dg-practice-stage { --dg-chart-w: 48rem; }
+.dg-practice-stage .dg-chart-stage { max-width: min(100%, 24rem, calc(var(--dg-chart-h, 33vh) * var(--dg-chart-ratio, 1.6))); margin: 4px auto 8px; }
+.dg-practice-stage .dg-chart-num { font-size: 21px; }
+.dg-practice-stage .dg-chart-title { font-size: 22px; }
+.dg-practice-stage .dg-chart-title:last-of-type { text-anchor: start; }
+.dg-practice-stage .dg-chart-title:not(:last-of-type) { transform: translateY(4px); }
+.dg-practice-stage .dg-fig-stage { max-width: 15rem; margin: 4px auto 8px; }
+.dg-practice-stage .is-revealed .dg-tile { cursor: default; }
+.dg-practice-stage .is-revealed .dg-chart.is-interactive { cursor: default; }
+
 /* Platsen för svaret finns hela tiden, så att huvudknappen och uppgiften inte flyttar sig när svaret kommer. Domslutet och
    facit står på samma rad när det ryms, sedan anteckningen om felet och lösningen. */
-.dg-practice-answer { width: 100%; min-height: calc(var(--dg-practice-size, 1.5rem) * 0.8 * 6); text-align: left; }
+.dg-practice-answer { width: 100%; min-height: calc(var(--dg-practice-size, 1.5rem) * 0.8 * 6); text-align: left; scroll-margin-bottom: 5rem; }
 .dg-practice-answer-body {
   display: flex;
   flex-wrap: wrap;
@@ -643,7 +667,7 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
   background: var(--bg);
   font-size: calc(var(--dg-practice-size, 1.5rem) * 0.8);
 }
-.dg-practice-verdict { order: 1; flex: none; margin: 0; font-family: "Baloo 2", sans-serif; font-weight: 800; line-height: 1.4; }
+.dg-practice-verdict { order: 1; flex: 0 1 auto; max-width: 100%; margin: 0; font-family: "Baloo 2", sans-serif; font-weight: 800; line-height: 1.4; }
 .dg-practice-verdict.is-right { color: var(--success); }
 .dg-practice-verdict.is-wrong { color: var(--danger); }
 .dg-practice-key { order: 2; flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5em; }
@@ -655,6 +679,12 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
 .dg-practice-key .dg-stage { order: 3; flex: 0 0 100%; max-width: none; }
 .dg-practice-key .dg-line { width: min(100%, 460px); }
 .dg-practice-key .dg-row, .dg-practice-solution .dg-row { margin: 0; font-family: "Baloo 2", sans-serif; font-weight: 700; line-height: 1.45; }
+/* Svar för en tabell, en plot och ett flerval: tabellen och alternativen står efter etiketten (före raderna); punkterna i en plot är en rad text. */
+.dg-practice-key .dg-table { order: 2; margin: 0.1em 0 0.2em; font-size: 0.7em; }
+.dg-practice-key .dg-table th, .dg-practice-key .dg-table td { min-width: 3rem; padding: 2px 12px; }
+.dg-practice-key-items { order: 2; flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 0 2.2em; font-size: 0.85em; }
+.dg-practice-key-items .dg-pick-line { margin: 0; line-height: 1.4; }
+.dg-practice-key-items .dg-answer { border-bottom: 0; }
 .dg-practice-text { margin: 0.1em 0; line-height: 1.3; }
 
 /* Huvudknappen: stor, i fast läge längst ned så att den går att nå utan att rulla. */
@@ -682,6 +712,53 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
 @media (min-width: 900px) and (min-height: 801px) {
   .dg-practice-key .dg-line { width: min(100%, calc(var(--dg-practice-size) * 14)); }
 }
+/* En graf (att läsa av) eller ett rutnät att sätta ut punkter i står bredvid texten och raden i stället för under dem, på varje bred
+   skärm: uppgiften, svaret och huvudknappen ryms då på 720 px, och på en hög skärm blir grafen stor. Kolumnen följer bredden
+   (lika bred som grafen, högst 48rem). Texten och raden står mitt för grafen (de flexibla raderna ovanför och under dem delar på det som blir över). */
+@media (min-width: 900px) {
+  .dg-practice-stage .dg-screen:has(> .dg-chart-stage) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) min(var(--dg-chart-w), calc(var(--dg-chart-h, 33vh) * var(--dg-chart-ratio, 1.6)));
+    grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: 28px;
+    align-items: start;
+  }
+  .dg-practice-stage .dg-screen:has(> .dg-chart-stage) > * { grid-column: 1; grid-row: 4; }
+  .dg-practice-stage .dg-screen:has(> .dg-chart-stage) > .dg-prompt { grid-row: 2; text-align: left; }
+  .dg-practice-stage .dg-screen:has(> .dg-chart-stage) > .dg-rows { grid-row: 3; }
+  .dg-practice-stage .dg-screen:has(> .dg-chart-stage) > .dg-chart-stage { grid-column: 2; grid-row: 1 / 6; width: 100%; max-width: min(100%, calc(var(--dg-chart-h, 33vh) * var(--dg-chart-ratio, 1.6))); margin: 4px auto 8px; }
+
+  /* En tabell att fylla i (RP2) står på samma sätt bredvid texten: fem rader och rubriken tar annars mer än halva höjden, och svaret med
+     sin egen tabell skulle hamna under skärmens kant. */
+  .dg-practice-stage .dg-screen:has(> .dg-table) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 40px;
+    align-items: center;
+  }
+  .dg-practice-stage .dg-screen:has(> .dg-table) > .dg-prompt { grid-column: 1; grid-row: 1; margin: 0; text-align: left; }
+  .dg-practice-stage .dg-screen:has(> .dg-table) > .dg-table { grid-column: 2; grid-row: 1; margin: 6px 0 8px; font-size: calc(var(--dg-practice-size) * 0.5); }
+  .dg-practice-stage .dg-screen:has(> .dg-table) > .dg-table :is(th, td) { padding-block: 1px; }
+
+  /* Svaret till en tabell: etiketten Svar: över tabellen, och domslutet, anteckningen och lösningen bredvid den (tabellen är lika bred som
+     den är, så att lösningen får resten av bredden). */
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0.5em;
+    align-items: baseline;
+  }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-key { display: contents; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-verdict { grid-column: 1 / 3; grid-row: 1; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-key-label { grid-column: 3; grid-row: 1; justify-self: center; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-note { grid-column: 1 / 3; grid-row: 2; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-solution { grid-column: 1 / 3; grid-row: 3; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-key .dg-table { grid-column: 3; grid-row: 2 / span 2; align-self: start; margin: 0; font-size: 0.62em; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-key .dg-table th,
+  .dg-practice-answer-body:has(.dg-practice-key .dg-table) .dg-practice-key .dg-table td { padding: 1px 12px; }
+}
+
+/* Placera och läsa av en tallinje (svaret): tallinjen står till höger om texten på en låg skärm. Bara de uppgifterna har .dg-stage i svaret. */
 @media (min-width: 900px) and (max-height: 800px) {
   .dg-practice-answer-body:has(.dg-practice-key .dg-stage) {
     display: grid;
@@ -696,6 +773,8 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
   .dg-practice-answer-body:has(.dg-practice-key .dg-stage) .dg-practice-note { grid-column: 1 / 3; grid-row: 3; }
   .dg-practice-answer-body:has(.dg-practice-key .dg-stage) .dg-practice-solution { grid-column: 1 / 3; grid-row: 4; }
   .dg-practice-answer-body:has(.dg-practice-key .dg-stage) .dg-practice-key .dg-stage { grid-column: 3; grid-row: 1 / span 4; align-self: center; width: 100%; margin: 0; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-stage) .dg-practice-key .dg-row { grid-column: 2; grid-row: 2; }
+  .dg-practice-answer-body:has(.dg-practice-key .dg-stage) .dg-practice-key-items { grid-column: 2; grid-row: 2; }
   .dg-practice-key .dg-line { width: 100%; }
 }
 
@@ -705,6 +784,29 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
   .dg-practice-answer { min-height: calc(var(--dg-practice-size, 1.5rem) * 0.7 * 6); }
   .dg-practice-answer-body { font-size: calc(var(--dg-practice-size, 1.5rem) * 0.7); }
 }
+/* En skärm upp till 900 px hög (en bärbar dator i helskärm, 1536 × 864): samma storlek på svaret, utom för en tallinje, som ser ut som den
+   gör på en högre skärm. */
+@media (min-width: 700px) and (min-height: 801px) and (max-height: 900px) {
+  .dg-practice-stage:not(:has(.dg-stage)) .dg-practice-answer { min-height: calc(var(--dg-practice-size, 1.5rem) * 0.7 * 6); }
+  .dg-practice-stage:not(:has(.dg-stage)) .dg-practice-answer-body { font-size: calc(var(--dg-practice-size, 1.5rem) * 0.7); }
+}
+
+/* Svaret till en tabell, en plot och ett flerval (RP2 och RP6) har egna rader, ett rutnät eller alla alternativen med Ja eller Nej och en
+   lösning som säger varför varje fel alternativ är fel: något mindre text än annars, på varje skärm som är minst 700 px bred (inte bara
+   en låg), så att också domslutet och anteckningen om ett fel ryms. Alternativen är något mindre, så att fyra uttryck med parenteser
+   och tre faktorer ryms på en rad. */
+@media (min-width: 700px) {
+  /* En graf att läsa av (RP2) har bredvid sig en text och en rad: svaret får samma storlek som på en låg skärm, också på en hög. */
+  .dg-practice-stage:has(.dg-chart-stage) .dg-practice-answer-body { font-size: calc(var(--dg-practice-size, 1.5rem) * 0.7); }
+  .dg-practice-stage .dg-practice-answer-body:has(.dg-practice-key .dg-table),
+  .dg-practice-stage:has(.dg-plot-revealed) .dg-practice-answer-body { font-size: calc(var(--dg-practice-size, 1.5rem) * 0.62); }
+  .dg-practice-stage .dg-practice-answer-body:has(.dg-practice-key-items) { font-size: calc(var(--dg-practice-size, 1.5rem) * 0.58); }
+  .dg-practice-key-items { flex: 1 1 0; gap: 0 1.2em; font-size: 0.78em; }
+  .dg-practice-stage .dg-tile { font-size: calc(var(--dg-practice-size) * 0.55); }
+}
+
+/* Uttrycksrutan (RP6 5–6) är bred nog för "30 000 · 1,04 · 1,03" medan eleven skriver (view.js sätter klassen). */
+.dg-practice-stage .dg-input.dg-input-expression { width: 16em; max-width: 100%; text-align: left; }
 
 /* Telefon: raderna bryts, ingenting rullar i sidled. */
 @media (max-width: 480px) {

@@ -4,6 +4,7 @@
 // createDeck         uppgifterna i ordning; activate() visar svaret eller går till nästa, back() går tillbaka.
 // routeKey           vad en tangent ska göra (visa svaret, gå vidare, gå tillbaka), med hänsyn till var fokus står.
 // routeClick         vad ett klick på uppgiftsytan ska göra.
+// promptScale        hur stor uppgiftens text är, som andel av uppgiftsytans grundstorlek.
 //
 // Läraren visar detta på tavlan och klickar sig fram framför klassen. Ett dubbelklick eller en nedhållen tangent får
 // därför aldrig hoppa över ett svar, en elev som skriver i svarsrutan får aldrig flytta uppgiften med mellanslag eller
@@ -83,4 +84,21 @@ export function routeKey({ key, repeat, target }) {
 export function routeClick({ target, inputFocused, detail }) {
   if (target === "control" || detail > 1) return "ignore";
   return inputFocused ? "blur" : "activate";
+}
+
+// En rad att räkna på: en siffra utanför en ruta över en tryckt nämnare ("{[a]|100}" säger bara hur svaret skrivs).
+const hasMathRow = (rows) => (rows ?? []).some((row) => /\d/.test(row.replace(/\{\[\w+\]\|\d+\}/g, "")));
+
+// Uppgiftens texts storlek som andel av --dg-practice-size. Står texten över stor matematik (en rad att räkna på, eller en tallinje)
+// och är kort ("Beräkna", "Skriv i grundpotensform", högst 52 tecken i de första sex bankerna) är den liten. Annars är texten själva
+// uppgiften (en textuppgift, en tabell, en graf, ett flerval) och läses från bakre raden: den är större ju kortare den är, och den
+// längsta berättelsen blir minst, så att den ryms.
+export function promptScale(task) {
+  const length = String(task.text ?? "").length;
+  const instruction = task.kind === "place" || task.kind === "read" || hasMathRow(task.rows);
+  if (instruction && length <= 52) return 0.55;
+  if (length <= 100) return 0.9;
+  if (length <= 160) return 0.8;
+  if (length <= 240) return 0.68;
+  return 0.58;
 }

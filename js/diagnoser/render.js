@@ -16,6 +16,7 @@
 // rowsOf           raderna på en skärm; en skärm utan rows är en text med raden "Svar: [ ]".
 // prettyAnswer     ett facitsvar för visning (^2 som upphöjt, "−" som minustecken).
 // renderFilledRow  en rad med givna texter i stället för rutor (förhandsvisningen och resultatet); renderFilledTable en tabell.
+// drawMarkup       en rad utan rutor som element; tag är div, eller span inuti en knapp eller en text (alternativen i ett val; Öva).
 // renderResult     resultatskärmen som läraren läser.
 // guideText        Diamants tidsriktlinje på resultatskärmen ("avbryt efter" utelämnas när stop är null).
 //
@@ -280,7 +281,7 @@ function drawRow(markup, boxFor, tag = "div", variables = "") {
 }
 
 // En rad utan rutor (ett alternativ i ett val) som element; tag är div, eller span inuti en knapp eller en text.
-const drawMarkup = (markup, tag) => drawRow(markup, (id) => el("span", "dg-t", `[${id}]`), tag);
+export const drawMarkup = (markup, tag) => drawRow(markup, (id) => el("span", "dg-t", `[${id}]`), tag);
 
 // En rad där varje ruta är ersatt av en text: fill[id], eller "–" när den saknas eller är tom. variables som i drawTokens.
 export function renderFilledRow(markup, fill = {}, variables = "") {

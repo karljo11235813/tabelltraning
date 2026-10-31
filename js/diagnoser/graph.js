@@ -86,7 +86,7 @@ export function axisTicks({ min, max, step }) {
 
 // ---------- PUNKTER ----------
 
-const pairKey = (x, y) => (x === null || y === null ? "?" : `${x.n}/${x.d},${y.n}/${y.d}`);
+export const pairKey = (x, y) => (x === null || y === null ? "?" : `${x.n}/${x.d},${y.n}/${y.d}`);
 
 // Det eleven satte ut: "x,y;x,y" med punkt som decimaltecken ("0.5,10"). Det som inte är en punkt hoppas över, och
 // en punkt som står två gånger räknas en gång.
