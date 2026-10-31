@@ -210,6 +210,11 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     if (entry.answer.getBoundingClientRect().top > window.innerHeight - mainButton.offsetHeight - 16) entry.answer.scrollIntoView({ block: "nearest" });
   }
 
+  function skip() {
+    if (deck.skip() === "next") showTask();
+    else showEnd();
+  }
+
   function goBack() {
     if (deck.back()) showTask();
     else mainButton.focus({ preventScroll: true });
@@ -232,8 +237,6 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     const tools = el("div", "dg-practice-tools");
     counter = el("span", "dg-practice-count");
     counter.setAttribute("aria-live", "polite"); // en skärmläsare säger "Uppgift 4 av 20" för varje ny uppgift
-    prevButton = button("bt-small-btn dg-practice-tool", "Föregående", goBack);
-    tools.append(prevButton);
     fullscreenButton = null;
     if (document.fullscreenEnabled) {
       fullscreenButton = button("bt-small-btn dg-practice-tool", "Helskärm", toggleFullscreen);
@@ -245,8 +248,12 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     stage = el("div", "dg-practice-stage");
     stage.addEventListener("pointerdown", onStagePress, true);
     stage.addEventListener("click", onStageClick);
+    // Föregående och Nästa står på var sin sida om huvudknappen, längst ned. Nästa går vidare utan att visa svaret.
+    const nav = el("div", "dg-practice-nav");
+    prevButton = button("bt-secondary-btn dg-practice-step", "← Föregående", goBack);
     mainButton = button("start-btn dg-practice-main", "Visa svar", () => activate());
-    host.replaceChildren(top, stage, mainButton);
+    nav.append(prevButton, mainButton, button("bt-secondary-btn dg-practice-step", "Nästa →", skip));
+    host.replaceChildren(top, stage, nav);
     startKeys();
     showTask();
   }
@@ -264,8 +271,9 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     const done = el("div", "dg-practice-end");
     const message = el("p", "dg-practice-done", `Omgången är klar: ${deck.total} uppgifter.`);
     const more = button("start-btn", `${pool.nextSize()} till`, afterGuard(startBatch));
+    const previous = button("bt-secondary-btn", "← Föregående", afterGuard(showRun)); // tillbaka till sista uppgiften, som den lämnades
     const stop = button("bt-secondary-btn", "Avsluta", afterGuard(exit));
-    done.append(message, more, stop);
+    done.append(message, more, previous, stop);
     host.replaceChildren(done);
     // Fokus på texten och inte på en knapp: ett nedhållet mellanslag eller Enter från sista uppgiften ska inte starta nästa omgång.
     message.tabIndex = -1;

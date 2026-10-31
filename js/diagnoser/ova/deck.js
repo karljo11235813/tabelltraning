@@ -1,7 +1,8 @@
 // Visningsföljden i Öva: en uppgift i taget, svaret först och sedan nästa. Rent, utan `document`.
 //
 // PRACTICE_GUARD_MS  så snart efter en ändring är ett nytt tryck ett dubbeltryck och gör ingenting.
-// createDeck         uppgifterna i ordning; activate() visar svaret eller går till nästa, back() går tillbaka.
+// createDeck         uppgifterna i ordning; activate() visar svaret eller går till nästa, skip() går till nästa utan att visa
+//                    svaret, back() går tillbaka.
 // routeKey           vad en tangent ska göra (visa svaret, gå vidare, gå tillbaka), med hänsyn till var fokus står.
 // routeClick         vad ett klick på uppgiftsytan ska göra.
 // promptScale        hur stor uppgiftens text är, som andel av uppgiftsytans grundstorlek.
@@ -38,6 +39,13 @@ export function createDeck(tasks, now = () => performance.now()) {
         return "next";
       }
       return "end";
+    },
+    // Nästa utan svaret: uppgiften står kvar med Visa svar, om man kommer tillbaka till den.
+    skip() {
+      lastChange = now();
+      if (index === tasks.length - 1) return "end";
+      index += 1;
+      return "next";
     },
     // Svaret som lämnades står kvar, så att läraren ser uppgiften och svaret igen.
     back() {
