@@ -98,7 +98,7 @@ function renderAreas() {
       let rows = 0;
       let fading = null;
       for (const code of codes) {
-        const button = el("button", "bt-stair");
+        const button = el("button", hasPractice(code) ? "bt-stair dg-stair-practice" : "bt-stair");
         button.type = "button";
         button.append(stairIcon(code), el("span", "bt-stair-title", `${code} · ${getDiagnosis(code).title}`));
         const last = latest.get(code);

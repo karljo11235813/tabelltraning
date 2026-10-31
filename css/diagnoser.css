@@ -485,6 +485,8 @@
 .dg-filter-reset:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
 /* En rad i listan: diagnosen och ⋯-menyn (länkar till NCM:s PDF:er). */
 .dg-stair-row { display: flex; gap: 8px; align-items: stretch; }
+/* En diagnos med övningar: annan ton och en tjockare kant till vänster, så att de går att hitta i listan också utan färg. */
+.dg-stair-practice { border-left: 5px solid var(--accent); background: var(--accent-soft); }
 .dg-stair-row > .bt-stair { flex: 1; min-width: 0; }
 /* Diagnosens lilla bild (img/diagnoser/ikoner/) först i knappen, i listan och under Mina resultat. Vit yta som
    bladets bilder, eftersom de mörklila konturerna annars försvinner i mörkt tema. */
