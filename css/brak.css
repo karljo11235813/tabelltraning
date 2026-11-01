@@ -60,6 +60,13 @@ a.header-title, a.back-link { text-decoration: none; }
 .bt-stair.is-mastered .bt-stair-icon { color: var(--success); }
 .bt-stair.is-open .bt-stair-icon { color: var(--text-muted); }
 .bt-stair-icon { width: 1.4em; text-align: center; }
+/* Kapiteltesten står ut på kartan: fylld accentfärg tills testet är klarat, sedan grönt som ett klart steg. */
+.bt-stair.is-test { border-color: var(--accent); background: var(--accent); color: var(--surface); }
+.bt-stair.is-test .bt-stair-icon { color: inherit; }
+.bt-stair.is-test .bt-stair-title { font-weight: 800; }
+.bt-stair.is-test.is-current { box-shadow: 0 0 0 3px var(--accent-soft); }
+.bt-stair.is-test.is-mastered { border-color: var(--success); background: var(--success-soft); color: var(--text); }
+.bt-stair.is-test.is-mastered .bt-stair-icon { color: var(--success); }
 .bt-stair-number { min-width: 1.6em; font-family: "Baloo 2", sans-serif; color: var(--text-muted); }
 .bt-reset { margin-top: 22px; }
 .bt-teacher {
@@ -102,6 +109,7 @@ a.header-title, a.back-link { text-decoration: none; }
 /* ---------- FRÅGA ---------- */
 .bt-top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .bt-dots { display: flex; gap: 8px; }
+.bt-test-status { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-align: center; }
 .bt-dot { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--accent); background: var(--surface); }
 .bt-dot.is-on { background: var(--accent); }
 .bt-card {

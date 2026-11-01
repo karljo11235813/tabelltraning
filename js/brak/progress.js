@@ -43,6 +43,12 @@ export function createProgress(stored, ids) {
       mastered.add(active.id);
       return { streak: active.streak, done: true, next: nextAfter(active.id) };
     },
+    // Ett kapiteltest har ingen svit: det blir klart på en gång. Ger nästa steg som inte är klart.
+    complete(id) {
+      if (!known.has(id)) return null;
+      mastered.add(id);
+      return nextAfter(id);
+    },
     toStored: () => ({ mastered: ids.filter((id) => mastered.has(id)) }),
     reset() {
       mastered.clear();
