@@ -3,12 +3,13 @@
 import { CATEGORIES, PARTS, getCategory, generateQuestion, exampleQuestion } from "./categories/index.js";
 import { check, tipFor } from "./check.js";
 import { createProgress, STORAGE_KEY, STREAK_TO_MASTER } from "./progress.js";
+import { setupTextproblem } from "./textproblem/view.js";
 import { ALLOWED_MISTAKES, FINAL_TEST, STEP_IDS, TESTS, createChapterTest, getTest, questionCount, usesFormRule } from "./chapter-test.js";
 import { renderQuestion, renderSolution, renderExample, firstField, nextFocus } from "./render.js";
 import { createStore } from "../sant-falskt/storage.js";
 
 const NEXT_GUARD_MS = 250; // ett nedhållet Enter ska inte hoppa förbi återkopplingen
-const SCREENS = ["btMap", "btExample", "btQuestion", "btDone"];
+const SCREENS = ["btMap", "btExample", "btQuestion", "btDone", "btProblem"];
 const ICONS = { mastered: "✓", current: "▶", open: "○" };
 const STATUS_LABELS = { mastered: "klar", current: "föreslaget nästa steg", open: "inte klar än" };
 const FORM_RULE = "Enklaste form: förkortat så långt det går, i blandad form om talet är större än 1, och som heltal om det blir ett heltal.";
@@ -358,4 +359,5 @@ document.addEventListener("keydown", (event) => {
   else submitAnswer();
 });
 
+setupTextproblem(showScreen);
 renderMap();

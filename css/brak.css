@@ -7,6 +7,7 @@ a.header-title, a.back-link { text-decoration: none; }
 
 .bt-title { font-size: clamp(1.4rem, 3vw, 1.9rem); color: var(--accent); margin: 0 0 6px; line-height: 1.2; }
 .bt-intro { color: var(--text-muted); margin: 0 0 10px; line-height: 1.5; }
+.bt-intro a { color: var(--accent); font-weight: 700; }
 .bt-of { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
 .bt-link {
   background: none;
@@ -244,4 +245,101 @@ a.header-title, a.back-link { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .bt-shake { animation: none; }
   .bt-card { transition: none; }
+}
+
+/* ---------- TEXTPROBLEM ---------- */
+.bt-textproblem { margin-top: 18px; scroll-margin-top: 12px; }
+.bt-textproblem .bt-title { font-size: clamp(1.4rem, 3vw, 1.9rem); }
+.bt-tp-section-note { margin: 0 0 8px; font-size: 0.9rem; line-height: 1.4; color: var(--text-muted); }
+.bt-tp-row { padding: 6px 10px 6px 14px; }
+.bt-tp-row .bt-stair-title { flex: 1; min-width: 0; }
+.bt-tp-row-image { flex: none; width: 44px; height: 44px; border-radius: 8px; background: #fff; }
+
+/* En del är hopfälld till två rader: en hel och en som tonar bort, med knappen över den raden. Rubriken är också en knapp. */
+.bt-tp-toggle { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.bt-tp-toggle::before { content: "▸"; color: var(--accent); font-size: 0.9em; line-height: 1; transition: transform 0.15s; }
+.bt-tp-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.bt-tp-toggle:focus-visible, .bt-tp-more:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 3px; border-radius: 6px; }
+.is-preview .bt-tp-row-more, .is-preview .bt-tp-section-note { display: none; }
+.is-preview .bt-tp-row-fade {
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
+}
+.bt-tp-more { position: relative; display: block; width: 100%; margin-top: 6px; padding: 6px; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 800; cursor: pointer; }
+.is-preview > .bt-tp-more { margin-top: -2.4rem; padding-top: 2.6rem; }
+
+/* Uppgiften står stor på en projektor, så vyn får hela bredden och sidans rubrikrad står inte i vägen.
+   --tp-size sätts av fitQuestion i view.js. Bilderna har vit bakgrund, också i mörkt tema. */
+.bt-main:has(> .bt-tp-view:not([hidden])) { max-width: 1400px; padding-top: 8px; padding-bottom: 8px; }
+body:has(.bt-tp-view:not([hidden])) > header { display: none; }
+.bt-tp-view { --tp-size: 20px; }
+.bt-tp-view:fullscreen { padding: 8px clamp(16px, 4vw, 48px); overflow-y: auto; background: var(--bg); }
+.bt-tp-first { display: flex; flex-direction: column; min-height: calc(100dvh - 16px); }
+.bt-tp-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.bt-tp-count { font-family: "Baloo 2", sans-serif; font-size: clamp(1.2rem, 1.8vw, 2.2rem); font-weight: 800; color: var(--accent-strong); }
+.bt-tp-stage { flex: 1 0 auto; display: flex; align-items: center; justify-content: center; padding: 12px 0; }
+.bt-tp-content { display: flex; align-items: center; gap: clamp(16px, 3vw, 48px); width: 100%; }
+.bt-tp-text { flex: 1; min-width: 0; font-size: var(--tp-size); line-height: 1.35; }
+/* Bråken i löpande text står mitt på raden och är lite mindre än texten. */
+.bt-tp-text .bt-frac, .bt-tp-solution .bt-frac { vertical-align: middle; font-size: 0.82em; }
+.bt-tp-text p { margin: 0 0 0.5em; }
+.bt-tp-text p:last-child { margin-bottom: 0; }
+.bt-tp-title { font-family: "Baloo 2", sans-serif; font-weight: 800; color: var(--accent-strong); }
+.bt-tp-note { font-size: 0.72em; line-height: 1.35; color: var(--text-muted); }
+.bt-tp-picture { flex: 0 0 clamp(120px, 22vw, 340px); }
+.bt-tp-image { display: block; width: 100%; height: auto; border-radius: 14px; background: #fff; }
+/* Knapparna följer med när sidan rullar, så att Nästa och Dölj lösningen alltid går att nå under en lång lösning. */
+.bt-tp-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr minmax(auto, 320px) 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  background: var(--bg);
+}
+.bt-tp-actions .start-btn { width: 100%; margin: 0; }
+.bt-tp-actions .bt-secondary-btn { width: auto; min-width: 150px; margin: 0; }
+#btProblemPrev { justify-self: start; }
+#btProblemNext { justify-self: end; }
+.bt-tp-actions button:disabled { opacity: 0.4; cursor: default; }
+
+.bt-tp-solution {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 12px;
+  padding: clamp(14px, 2.5vw, 32px);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: clamp(1.05rem, 0.75rem + 1vw, 1.9rem);
+  line-height: 1.4;
+  scroll-margin-top: 8px;
+}
+.bt-tp-solution-title { margin: 0 0 0.5em; font-family: "Baloo 2", sans-serif; font-size: 1.1em; color: var(--accent-strong); }
+.bt-tp-answer { margin-bottom: 0.8em; padding: 0.5em 0.8em; border-radius: 10px; background: var(--success-soft); font-weight: 800; }
+.bt-tp-answer p { margin: 0; }
+.bt-tp-answer-label { font-size: 0.7em; letter-spacing: 0.5px; text-transform: uppercase; }
+.bt-tp-steps p { margin: 0 0 0.4em; }
+.bt-tp-steps p.bt-tp-lead { margin-top: 0.8em; }
+.bt-tp-steps p.bt-tp-eq { font-weight: 700; text-align: center; }
+.bt-tp-figure { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em 1em; margin: 0.8em 0; }
+.bt-tp-figure p { flex: 1 1 14em; margin: 0; font-size: 0.85em; }
+.bt-tp-grid { display: inline-grid; grid-template-columns: repeat(var(--cols), 1em); gap: 0.15em; max-width: 100%; }
+.bt-tp-grid span { aspect-ratio: 1; border: 1.5px solid currentColor; border-radius: 3px; }
+.bt-tp-grid span.is-filled { background: var(--accent); }
+.bt-tp-table-wrap { max-width: 100%; overflow-x: auto; margin: 0.6em 0; }
+.bt-tp-table { border-collapse: collapse; font-size: 0.85em; }
+.bt-tp-table th, .bt-tp-table td { padding: 0.25em 0.6em; border: 1px solid var(--border); text-align: center; }
+.bt-tp-table tr:first-child th { background: var(--accent-soft); }
+.bt-tp-table tr:not(:first-child) th { text-align: left; font-weight: 700; }
+
+@media (max-width: 700px) {
+  .bt-tp-content { flex-direction: column-reverse; }
+  .bt-tp-picture { flex-basis: auto; width: 130px; }
+  .bt-tp-actions { position: static; grid-template-columns: 1fr 1fr; }
+  #btProblemFull { display: none; }
+  .bt-tp-actions .bt-secondary-btn { min-width: 0; width: 100%; }
+  .bt-tp-actions .start-btn { grid-column: 1 / -1; grid-row: 1; }
 }

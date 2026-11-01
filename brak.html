@@ -20,14 +20,15 @@
 
 <main class="bt-main">
 
-  <!-- KARTAN -->
-  <section id="btMap" class="card">
+  <!-- KARTAN OCH TEXTPROBLEMEN -->
+  <div id="btMap">
+  <section class="card">
     <a class="back-link" href="index.html">← Tillbaka</a>
     <div class="page-title-row">
-      <img class="page-title-img" src="img/pages/representationer.png" alt="">
+      <img class="page-title-img" src="img/pages/brak.png" alt="">
       <h1 class="bt-title">Bråktrappan</h1>
     </div>
-    <p class="bt-intro">Ett steg är klart när du svarat rätt sex gånger i rad. Börja uppifrån eller välj det steg du vill öva på. Det är ingen tidsgräns. Sist i varje del finns ett kapiteltest och allra sist ett sluttest.</p>
+    <p class="bt-intro">Ett steg är klart när du svarat rätt sex gånger i rad. Börja uppifrån eller välj det steg du vill öva på. Det är ingen tidsgräns. Sist i varje del finns ett kapiteltest och allra sist ett sluttest. När du kan metoderna går du vidare till <a href="#btTextproblem">Textproblem</a> längre ned på sidan.</p>
     <p class="bt-count" id="btCount"></p>
     <p class="bt-all-done" id="btAllDone" hidden>Du har klarat hela trappan! Du kan repetera vilket steg du vill.</p>
     <div id="btParts"></div>
@@ -43,6 +44,13 @@
       <a href="https://ncm.gu.se/media/ncm/dokument/brak_wiggo_kilborn.pdf" target="_blank" rel="noopener"><cite>Tal i bråk- och decimalform – en röd tråd</cite></a>
       (NCM, Göteborgs universitet, 2014, PDF).</p>
   </section>
+
+  <section class="card bt-textproblem" id="btTextproblem">
+    <h2 class="bt-title">Textproblem</h2>
+    <p class="bt-intro">Här använder du bråk i textuppgifter och problemlösning. Skriv hela lösningen med penna och papper, med alla steg. Öppna sedan lösningen och kontrollera att du har gjort rätt.</p>
+    <div id="btProblems"></div>
+  </section>
+  </div>
 
   <!-- EXEMPEL -->
   <section id="btExample" class="card" hidden>
@@ -75,6 +83,29 @@
         <div class="bt-tip" id="btTip"></div>
         <div class="bt-solution" id="btSolution"></div>
         <button type="button" class="start-btn" id="btNext">Nästa →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EN UPPGIFT, FÖR PROJEKTOR -->
+  <section id="btProblem" class="bt-tp-view" hidden>
+    <div class="bt-tp-first">
+      <div class="bt-tp-top" id="btProblemTop">
+        <button type="button" class="bt-small-btn" id="btProblemBack">← Alla uppgifter</button>
+        <span class="bt-tp-count" id="btProblemCount"></span>
+        <button type="button" class="bt-small-btn" id="btProblemFull">Helskärm</button>
+      </div>
+      <div class="bt-tp-stage">
+        <div class="bt-tp-content" id="btProblemContent">
+          <div class="bt-tp-text" id="btProblemText"></div>
+          <div class="bt-tp-picture" id="btProblemPicture"></div>
+        </div>
+      </div>
+      <div class="bt-tp-solution" id="btProblemSolution" hidden></div>
+      <div class="bt-tp-actions" id="btProblemActions">
+        <button type="button" class="bt-secondary-btn" id="btProblemPrev">← Föregående</button>
+        <button type="button" class="start-btn" id="btProblemReveal" aria-controls="btProblemSolution">Visa lösningen</button>
+        <button type="button" class="bt-secondary-btn" id="btProblemNext">Nästa →</button>
       </div>
     </div>
   </section>
