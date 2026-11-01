@@ -1027,6 +1027,7 @@
     stroke: var(--surface);
     stroke-width: 3px;
   }
+  .pp-runs { fill: none; stroke: var(--text-muted); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
   .pp-hit { fill: transparent; }
   .pp-dot { fill: var(--text-muted); stroke: var(--surface); stroke-width: 1.5; }
   .pp-dot-best { fill: var(--success); }
@@ -1042,7 +1043,8 @@
   .pp-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 0.76rem; color: var(--text-muted); }
   .pp-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .pp-key { display: inline-block; }
-  .pp-key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+  .pp-key-run { position: relative; width: 16px; height: 1.5px; background: var(--text-muted); }
+  .pp-key-run::after { content: ""; position: absolute; left: 4px; top: -3.25px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
   .pp-key-line { width: 16px; height: 3px; border-radius: 2px; background: var(--accent-strong); }
   .pp-key-band { width: 16px; height: 10px; border-radius: 2px; background: var(--accent-soft); }
   .pp-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }

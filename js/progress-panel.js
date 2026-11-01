@@ -11,47 +11,49 @@ const DEFAULT_WIDTH = 476; // the card's inner width on a computer
 const HEIGHT = 170;
 const PAD = { top: 18, right: 10, bottom: 20, left: 28 };
 const HIGHEST_LEVEL_ON_CHART = 80; // the 216 world record would flatten everything else
-const MIN_LINE_RUNS = 4; // the rolling line starts at run 3, and a line needs two points
+const MIN_AVERAGE_RUNS = 4; // the rolling average starts at run 3, and a line needs two points
 
 const px = (v) => v.toFixed(1);
 const oneDecimal = (v) => String(Math.round(v * 10) / 10).replace('.', ',');
 const levelName = (level, s) => s.levelNames[LEVELS.indexOf(level)].replace(/­/g, '');
 
-// The y-axis range and the two levels that matter: the one just passed and the
-// next goal. The axis starts just below the worst run rather than at 0, because
-// the changes the student wants to see are small next to the whole 0-to-top range.
-export function chartLevels(best, worst) {
+// The top of the y-axis, which always starts at 0, and the levels to draw:
+// Godtagbart as the fixed reference, the one just passed and the next goal.
+export function chartLevels(best) {
   const shown = LEVELS.filter(l => l.minCorrect <= HIGHEST_LEVEL_ON_CHART);
   const next = shown.find(l => l.minCorrect > best);
   const passed = shown.filter(l => l.minCorrect <= best).pop();
-  const top = Math.ceil(((next ? next.minCorrect : best) + 3) / 5) * 5;
-  const lowest = Math.min(worst - 3, passed ? passed.minCorrect : Infinity);
-  return { top, bottom: Math.max(0, Math.floor(lowest / 5) * 5), lines: [passed, next].filter(Boolean) };
+  const reference = LEVELS.find(l => l.id === 'acceptable');
+  const highest = Math.max(reference.minCorrect, next ? next.minCorrect : best);
+  return {
+    top: Math.ceil((highest + 3) / 5) * 5,
+    lines: shown.filter(l => l === reference || l === passed || l === next),
+  };
 }
 
 function chartSvg(runs, summary, s, width) {
-  const { top, bottom, lines } = chartLevels(summary.best, summary.worst);
+  const { top, lines } = chartLevels(summary.best);
   const n = runs.length;
   const plotW = width - PAD.left - PAD.right;
   const plotH = HEIGHT - PAD.top - PAD.bottom;
   const right = width - PAD.right;
   const baseline = HEIGHT - PAD.bottom;
   const x = (i) => PAD.left + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
-  const y = (v) => PAD.top + plotH * (1 - (Math.min(top, Math.max(bottom, v)) - bottom) / (top - bottom));
+  const y = (v) => PAD.top + plotH * (1 - Math.min(v, top) / top);
 
   const parts = [];
   const withInterval = summary.rolling.map((r, i) => ({ ...r, i })).filter(r => r.low !== null);
   const points = (key) => withInterval.map(r => px(x(r.i)) + ',' + px(y(r[key])));
-  const showLine = n >= MIN_LINE_RUNS;
+  const showAverage = n >= MIN_AVERAGE_RUNS;
 
   // Text on the chart is limited to the axis, the two levels and the best run.
-  if (showLine) {
+  if (showAverage) {
     parts.push('<polygon class="pp-band" points="' + points('high').concat(points('low').reverse()).join(' ') + '"/>');
   }
 
   const axisNumber = (value) => '<text class="pp-axis" x="' + (PAD.left - 6) + '" y="' + px(y(value) + 4) + '" text-anchor="end">' + value + '</text>';
   parts.push('<line class="pp-base" x1="' + PAD.left + '" x2="' + right + '" y1="' + baseline + '" y2="' + baseline + '"/>');
-  if (!lines.some(level => level.minCorrect === bottom)) parts.push(axisNumber(bottom));
+  parts.push(axisNumber(0));
   lines.forEach((level) => {
     const ly = px(y(level.minCorrect));
     parts.push('<line class="pp-goal" x1="' + PAD.left + '" x2="' + right + '" y1="' + ly + '" y2="' + ly + '"/>');
@@ -61,6 +63,10 @@ function chartSvg(runs, summary, s, width) {
   const axisY = HEIGHT - 4;
   const axisText = (i, anchor) => '<text class="pp-axis" x="' + px(x(i)) + '" y="' + axisY + '" text-anchor="' + anchor + '">' + fill(s.progressAxisRun, { n: i + 1 }) + '</text>';
   parts.push(n === 1 ? axisText(0, 'middle') : axisText(0, 'start') + axisText(n - 1, 'end'));
+
+  if (n > 1) {
+    parts.push('<polyline class="pp-runs" points="' + runs.map((run, i) => px(x(i)) + ',' + px(y(run.correct))).join(' ') + '"/>');
+  }
 
   const dotRadius = n > 100 ? 2 : n > 40 ? 3 : 4;
   const bestIndex = runs.map(r => r.correct).lastIndexOf(summary.best);
@@ -77,7 +83,7 @@ function chartSvg(runs, summary, s, width) {
       + '<circle class="pp-dot' + (i === bestIndex ? ' pp-dot-best' : '') + '" cx="' + cx + '" cy="' + cy + '" r="' + dotRadius + '"/></g>');
   });
 
-  if (showLine) parts.push('<polyline class="pp-line" points="' + points('mean').join(' ') + '"/>');
+  if (showAverage) parts.push('<polyline class="pp-line" points="' + points('mean').join(' ') + '"/>');
 
   lines.forEach((level) => {
     parts.push('<text class="pp-goal-name" x="' + (PAD.left + 6) + '" y="' + px(y(level.minCorrect) - 4) + '">' + levelName(level, s) + '</text>');
@@ -114,7 +120,7 @@ function levelHtml({ level }, s) {
 function legendHtml(s) {
   const item = (key, text) => '<span><i class="pp-key pp-key-' + key + '"></i>' + text + '</span>';
   return '<div class="pp-legend">'
-    + item('dot', s.progressLegendRun)
+    + item('run', s.progressLegendRun)
     + item('line', fill(s.progressLegendAverage, { n: WINDOW }))
     + item('band', s.progressLegendBand)
     + '</div>';
@@ -147,7 +153,7 @@ export function progressHtml(runs, s, { width = DEFAULT_WIDTH } = {}) {
     + levelHtml(summary, s)
     + '<p class="pp-chart-title">' + s.progressChartTitle + '</p>'
     + chartSvg(runs, summary, s, width)
-    + (runs.length >= MIN_LINE_RUNS ? legendHtml(s) : '')
+    + (runs.length >= MIN_AVERAGE_RUNS ? legendHtml(s) : '')
     + tilesHtml(summary, s)
     + tableHtml(runs, s);
 }
