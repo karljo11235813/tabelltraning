@@ -502,16 +502,16 @@ export function renderSolution(question) {
 export function renderExample(question) {
   const block = (label, className, ...content) => {
     const node = el("section", className);
-    node.append(el("h3", "en-example-label", label), ...content);
+    node.append(el("h3", "bt-worked-label", label), ...content);
     return node;
   };
   const task = renderQuestion(question).el;
   task.inert = true;
-  const node = el("div", "en-example");
+  const node = el("div", "bt-worked");
   node.append(
-    block("Uppgiften", "en-example-task", el("p", "bt-prompt", question.prompt), task),
-    block("Så gör du", "en-example-steps", renderSteps(question)),
-    block("Svar", "en-example-answer", renderAnswer(question)),
+    block("Uppgiften", "bt-worked-task", el("p", "bt-prompt", question.prompt), task),
+    block("Så gör du", "bt-worked-steps", renderSteps(question)),
+    block("Svar", "bt-worked-answer", renderAnswer(question)),
   );
   return node;
 }

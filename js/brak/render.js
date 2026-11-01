@@ -1,6 +1,6 @@
 // Ritar byggstenarna från pieces.js: rader, staplade bråk, rutor att fylla i och bilder.
 import { renderPicture } from "../representationer/pictures.js";
-import { fill } from "./pieces.js";
+import { fill, boxIds } from "./pieces.js";
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -170,17 +170,58 @@ export function renderQuestion(question) {
   return renderRows(question.rows, question.boxes, "bt-rows");
 }
 
-// Stegen och sedan frågan med de rätta svaren ifyllda.
+// Frågan med de rätta svaren ifyllda, utan rader som inte har någon ruta: de står redan i frågan.
+function answerRows(question) {
+  return fill(question.rows.filter((row) => boxIds([row]).length > 0), question.boxes);
+}
+
+// En rad som jämförelsetext: en ifylld ruta och samma tal utan ruta ska vara samma sak.
+const plain = (v) => (v?.t === "filled" ? plain(v.piece) : v?.t === "num" ? v.n : v);
+const rowKey = (row) => JSON.stringify(row, (_, v) => plain(v));
+
+// Raderna som stegen ska rita. En rad som står ordagrant i svaret ritas inte två gånger: svaret kommer strax under.
+export function stepRows(question) {
+  const answer = new Set(answerRows(question).map(rowKey));
+  return question.steps.map((step) => (step.row && !answer.has(rowKey(step.row)) ? step.row : null));
+}
+
+function renderSteps(question) {
+  const list = el("ol", "bt-steps");
+  const rows = stepRows(question);
+  question.steps.forEach((step, i) => {
+    const item = el("li", "bt-step");
+    item.append(el("p", "bt-step-text", step.text));
+    if (rows[i]) item.append(renderRows([rows[i]], {}, "bt-rows bt-rows-step").el);
+    list.append(item);
+  });
+  return list;
+}
+
+function renderAnswer(question) {
+  return renderRows(answerRows(question), question.boxes, "bt-rows bt-rows-filled").el;
+}
+
+// Stegen och sedan svaret, under frågan efter ett fel svar.
 export function renderSolution(question) {
   const node = el("div", "bt-solution-body");
-  const list = el("ol", "bt-steps");
-  for (const step of question.steps) {
-    const item = el("li", "bt-step");
-    if (step.text) item.append(el("p", "bt-step-text", step.text));
-    if (step.row) item.append(renderRows([step.row], {}, "bt-rows bt-rows-step").el);
-    list.append(item);
-  }
-  const filled = renderRows(fill(question.rows, question.boxes), question.boxes, "bt-rows bt-rows-filled").el;
-  node.append(list, el("div", "bt-answer-label", "Svar"), filled);
+  node.append(renderSteps(question), el("div", "bt-answer-label", "Svar"), renderAnswer(question));
+  return node;
+}
+
+// Exempelkortet: uppgiften som eleven möter den, med rutor som inte går att fylla i, stegen och svaret en gång.
+export function renderExample(question) {
+  const block = (label, className, ...content) => {
+    const node = el("section", className);
+    node.append(el("h3", "bt-worked-label", label), ...content);
+    return node;
+  };
+  const task = renderQuestion(question).el;
+  task.inert = true;
+  const node = el("div", "bt-worked");
+  node.append(
+    block("Uppgiften", "bt-worked-task", el("p", "bt-prompt", question.prompt), task),
+    block("Så gör du", "bt-worked-steps", renderSteps(question)),
+    block("Svar", "bt-worked-answer", renderAnswer(question)),
+  );
   return node;
 }

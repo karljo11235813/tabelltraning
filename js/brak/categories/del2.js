@@ -4,7 +4,7 @@ import { pick, randInt } from "../../representationer/random.js";
 import { text, num, fr, frv, mixed, mixedOrFrac, op, box, EQ, PLUS, MINUS } from "../pieces.js";
 import { add, sub, compare, lcm, lcmAll, fromMixed, symbolFor } from "../fractions.js";
 import { rawFrac, rawInt, rawMixed } from "../check.js";
-import { sample, coprimeNums, properFraction, pickDenominators, simplifySteps, finishMixed, rewriteSteps, lcdSteps, listPieces } from "./helpers.js";
+import { sample, coprimeNums, properFraction, pickDenominators, simplifySteps, finishMixed, rewriteSteps, lcdSteps, lcdStep, listPieces } from "./helpers.js";
 
 const IDS = ["x", "y", "z"];
 const SIMPLEST = "Räkna ut. Svara i enklaste form.";
@@ -18,7 +18,7 @@ const sammaNamnare = {
   id: "samma-namnare",
   part: 2,
   title: "Addition och subtraktion med samma nämnare",
-  intro: "När nämnarna är lika är delarna lika stora. Då räknar du bara delarna i täljaren — nämnaren ändras inte.",
+  intro: "När nämnarna är lika är delarna lika stora. Då räknar du bara delarna i täljaren, och nämnaren ändras inte. 2/7 + 3/7 är 2 + 3 = 5 sjundedelar, alltså 5/7.",
   exampleSeed: 21,
   formRule: true,
   generate(rng, level) {
@@ -49,7 +49,7 @@ const sammaNamnare = {
         boxes: { x: { kind: "int", expected: n }, s: { kind: "enklaste", expected: answer } },
         steps: [
           { text: `En hel är ${n}/${n}.`, row: [num(1), EQ, fr(n, n)] },
-          { text: `${n} − ${a} = ${total}.`, row: [fr(n, n), MINUS, fr(a, n), EQ, fr(total, n)] },
+          { text: `Räkna delarna: ${n}/${n} − ${a}/${n} = ${total}/${n}.`, row: [fr(n, n), MINUS, fr(a, n), EQ, fr(total, n)] },
           ...simplifySteps(answer),
         ],
       };
@@ -85,7 +85,7 @@ const mgn = {
   id: "mgn",
   part: 2,
   title: "Minsta gemensamma nämnare",
-  intro: "En gemensam nämnare är ett tal som alla nämnarna går jämnt upp i. Den minsta hittar du genom att räkna upp multiplarna av den största nämnaren tills du hittar en som de andra nämnarna också går jämnt upp i.",
+  intro: "En gemensam nämnare är ett tal som alla nämnarna går jämnt upp i. Den minsta hittar du så här: räkna upp multiplarna av den största nämnaren, alltså nämnaren gånger 1, 2, 3 och så vidare. Multiplarna av 4 är 4, 8, 12 och så vidare. Den första multipeln som de andra nämnarna också går jämnt upp i är den minsta gemensamma nämnaren.",
   exampleSeed: 22,
   formRule: false,
   generate(rng, level) {
@@ -134,7 +134,7 @@ const skrivOmMgn = {
   id: "skriv-om-mgn",
   part: 2,
   title: "Skriva bråk med minsta gemensamma nämnare",
-  intro: "Hitta den minsta gemensamma nämnaren. Förläng sedan varje bråk så att det får den nämnaren.",
+  intro: "Hitta den minsta gemensamma nämnaren: räkna upp multiplarna av den största nämnaren tills de andra nämnarna också går jämnt upp. Förläng sedan varje bråk så att det får den nämnaren. Att förlänga är att multiplicera täljaren och nämnaren med samma tal.",
   exampleSeed: 23,
   formRule: false,
   generate(rng, level) {
@@ -147,7 +147,7 @@ const skrivOmMgn = {
       prompt: "Skriv bråken med minsta gemensamma nämnare.",
       rows: fracs.map((f, i) => [frv(f), EQ, box(IDS[i])]),
       boxes: rewriteBoxes(fracs, L),
-      steps: [{ text: `Minsta gemensamma nämnare är ${L}.` }, ...rewriteSteps(fracs, L)],
+      steps: [lcdStep(fracs.map((f) => f.den), L), ...rewriteSteps(fracs, L)],
     };
   },
   mistakes: [
@@ -207,7 +207,7 @@ const jamfora = {
   id: "jamfora",
   part: 2,
   title: "Jämföra bråk",
-  intro: "Bråk med samma nämnare är lätta att jämföra: då är det bara täljarna som skiljer. Skriv därför bråken med minsta gemensamma nämnare först.",
+  intro: "Har två bråk samma nämnare är delarna lika stora, och då är bråket med störst täljare störst. Skriv därför bråken med minsta gemensamma nämnare först och jämför sedan täljarna. Tecknet > betyder större än och < betyder mindre än.",
   exampleSeed: 24,
   formRule: false,
   generate(rng, level) {
@@ -243,10 +243,10 @@ const jamfora = {
       rows: [...fracs.map((f, i) => [frv(f), EQ, box(IDS[i])]), chain(fracs, (i) => box(cids[i]))],
       boxes: { ...rewriteBoxes(fracs, L), ...Object.fromEntries(cids.map((c, i) => [c, { kind: "symbol", expected: syms[i] }])) },
       steps: [
-        { text: `Minsta gemensamma nämnare är ${L}.` },
+        lcdStep(fracs.map((f) => f.den), L),
         ...rewriteSteps(fracs, L),
         { text: "Nu har bråken samma nämnare, så det räcker att jämföra täljarna.", row: chain(rewritten, (i) => op(syms[i])) },
-        { row: chain(fracs, (i) => op(syms[i])) },
+        { text: "De omskrivna bråken är lika stora som bråken i uppgiften, så samma tecken gäller där:", row: chain(fracs, (i) => op(syms[i])) },
       ],
     };
   },
@@ -260,7 +260,7 @@ const olikaNamnare = {
   id: "olika-namnare",
   part: 2,
   title: "Addition och subtraktion med olika nämnare",
-  intro: "Bråk med olika nämnare har olika stora delar, så de går inte att lägga ihop direkt. Skriv dem först med minsta gemensamma nämnare.",
+  intro: "Bråk med olika nämnare har olika stora delar, så de går inte att lägga ihop direkt. Skriv dem först med minsta gemensamma nämnare, så att delarna blir lika stora. Räkna sedan täljarna, precis som när nämnarna är lika.",
   exampleSeed: 25,
   formRule: true,
   generate(rng, level) {
@@ -290,7 +290,7 @@ const olikaNamnare = {
         s: { kind: "enklaste", expected: raw },
       },
       steps: [
-        { text: `Minsta gemensamma nämnare är ${L}.` },
+        lcdStep([f.den, g.den], L),
         ...rewriteSteps([f, g], L),
         { text: `Nu är delarna lika stora: ${n1} ${o.o} ${n2} = ${raw.num}.`, row: [fr(n1, L), o, fr(n2, L), EQ, fr(raw.num, L)] },
         ...simplifySteps(raw),
@@ -326,7 +326,7 @@ const blandadeTal = {
   id: "blandade-tal",
   part: 2,
   title: "Addition och subtraktion med blandade tal",
-  intro: "Räkna de hela för sig och bråkdelarna för sig. Blir bråkdelen en hel eller mer, gör om den till en hel. Räcker inte bråkdelen till när du subtraherar, växla en hel till delar.",
+  intro: "Ett blandat tal, som 4 3/4, består av hela och en bråkdel. Räkna de hela för sig och bråkdelarna för sig. Blir bråkdelen en hel eller mer gör du om den och lägger den hela till de andra hela. Räcker inte bråkdelen till när du subtraherar växlar du: du gör om en hel till delar.",
   exampleSeed: 26,
   formRule: true,
   generate(rng, level) {
@@ -342,8 +342,8 @@ const blandadeTal = {
         rows: [[num(W), MINUS, frv(f), EQ, box("s")]],
         boxes: { s: { kind: "enklaste", expected: sub({ num: W, den: 1 }, f) } },
         steps: [
-          { text: `Växla en hel till ${f.den}/${f.den}.`, row: [num(W), EQ, mixedOrFrac(W - 1, f.den, f.den)] },
-          { text: `${f.den} − ${f.num} = ${left}.`, row: [mixedOrFrac(W - 1, f.den, f.den), MINUS, frv(f), EQ, mixedOrFrac(W - 1, left, f.den)] },
+          { text: `Det finns inga delar att ta av, så växla en hel till ${f.den}/${f.den}.`, row: [num(W), EQ, mixedOrFrac(W - 1, f.den, f.den)] },
+          { text: `Räkna delarna: ${f.den}/${f.den} − ${f.num}/${f.den} = ${left}/${f.den}.`, row: [mixedOrFrac(W - 1, f.den, f.den), MINUS, frv(f), EQ, mixedOrFrac(W - 1, left, f.den)] },
           ...finishMixed(W - 1, left, f.den),
         ],
       };
@@ -377,9 +377,9 @@ const blandadeTal = {
     if (minus) {
       const W = x.whole - 1 - y.whole;
       const n = ax + L - ay;
-      steps.push({ text: `${ax}/${L} är mindre än ${ay}/${L}. Växla en hel till ${L}/${L}.`, row: [mixed(x.whole, ax, L), EQ, mixed(x.whole - 1, ax + L, L)] });
+      steps.push({ text: `${ax}/${L} är mindre än ${ay}/${L}, så det finns inte tillräckligt med delar. Växla en hel till ${L}/${L}: det blir en hel mindre och ${L} delar fler.`, row: [mixed(x.whole, ax, L), EQ, mixed(x.whole - 1, ax + L, L)] });
       steps.push({
-        text: `Hela: ${x.whole - 1} − ${y.whole} = ${W}. Delar: ${ax + L} − ${ay} = ${n}.`,
+        text: `Räkna de hela för sig: ${x.whole - 1} − ${y.whole} = ${W}. Räkna bråkdelarna för sig: ${ax + L}/${L} − ${ay}/${L} = ${n}/${L}.`,
         row: [mixed(x.whole - 1, ax + L, L), MINUS, mixed(y.whole, ay, L), EQ, mixedOrFrac(W, n, L)],
       });
       steps.push(...finishMixed(W, n, L));
@@ -387,7 +387,7 @@ const blandadeTal = {
       const W = x.whole + y.whole;
       const n = ax + ay;
       steps.push({
-        text: `Hela: ${x.whole} + ${y.whole} = ${W}. Delar: ${ax} + ${ay} = ${n}.`,
+        text: `Räkna de hela för sig: ${x.whole} + ${y.whole} = ${W}. Räkna bråkdelarna för sig: ${ax}/${L} + ${ay}/${L} = ${n}/${L}.`,
         row: [mixed(x.whole, ax, L), PLUS, mixed(y.whole, ay, L), EQ, mixed(W, n, L)],
       });
       steps.push(...finishMixed(W, n, L));

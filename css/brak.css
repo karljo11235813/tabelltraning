@@ -87,6 +87,17 @@ a.header-title, a.back-link { text-decoration: none; }
 .bt-form-rule { padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-weight: 700; line-height: 1.45; }
 .bt-example-label { font-size: 1.05rem; margin: 18px 0 6px; }
 .bt-example { padding: 12px 14px; border: 2px dashed var(--border); border-radius: 12px; margin-bottom: 16px; }
+#btExampleIntro { color: var(--text); }
+/* Exempelkortet: uppgiften, stegen och svaret. Enheter och skala använder samma kort. */
+.bt-worked { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.bt-worked-label { margin: 0 0 6px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+.bt-worked-task { padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); }
+.bt-worked-task .bt-prompt { margin: 0 0 8px; }
+.bt-worked-task .bt-rows { margin: 0; }
+.bt-worked-steps .bt-steps { margin-bottom: 0; }
+.bt-worked-answer { padding: 10px 12px; border-left: 5px solid var(--success); border-radius: 10px; background: var(--success-soft); }
+.bt-worked-answer .bt-worked-label { color: var(--text); }
+.bt-worked-answer .bt-rows-filled { margin: 0; }
 
 /* ---------- FRÅGA ---------- */
 .bt-top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }

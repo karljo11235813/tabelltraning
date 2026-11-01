@@ -4,9 +4,16 @@ import { pick, randInt, range } from "../../representationer/random.js";
 import { text, num, fr, frv, val, mixed, pic, box, EQ, TIMES, DIVIDE } from "../pieces.js";
 import { add, div, mul, lcmAll, fromMixed } from "../fractions.js";
 import { rawInt, rawSimplest } from "../check.js";
-import { sample, coprimeNums, properFraction, pickDenominators, simplifySteps, rewriteSteps, rewriteMixedStep, strip, hela } from "./helpers.js";
+import { sample, coprimeNums, properFraction, pickDenominators, simplifySteps, rewriteSteps, rewriteMixedStep, strip, cap, hela, delar, ganger, lcdStep } from "./helpers.js";
 
 const SIMPLEST = "Räkna ut. Svara i enklaste form.";
+
+// När delarna är lika stora delar man täljarna: a ÷ b. Ryms b inte i a är svaret ett bråk mindre än 1.
+function partsLine(a, b) {
+  return a >= b
+    ? `Delarna är lika stora, så frågan är hur många gånger ${delar(b)} ryms i ${delar(a)}: ${a} ÷ ${b}.`
+    : `Delarna är lika stora, så dela täljarna: ${a} ÷ ${b}. ${cap(delar(b))} ryms inte en hel gång i ${delar(a)}, så svaret blir ett bråk mindre än 1.`;
+}
 
 // F ÷ G med minsta gemensamma nämnare: när delarna är lika stora delar man täljarna.
 function lcdDivision(F, G) {
@@ -15,14 +22,14 @@ function lcdDivision(F, G) {
   const n2 = (G.num * L) / G.den;
   const result = { num: n1, den: n2 };
   const steps = [
-    { text: `Minsta gemensamma nämnare är ${L}.` },
-    ...rewriteSteps([F, G], L),
+    lcdStep([F.den, G.den], L),
+    ...(F.den === G.den ? [] : rewriteSteps([F, G], L)),
     {
-      text: `Nu är delarna lika stora, så dela täljarna: hur många gånger ryms ${n2} i ${n1}?`,
+      text: partsLine(n1, n2),
       row: [fr(n1, L), DIVIDE, fr(n2, L), EQ, num(n1), DIVIDE, num(n2), EQ, n2 === 1 ? num(n1) : fr(n1, n2)],
     },
     ...simplifySteps(result),
-    { text: "Samma svar får du om du multiplicerar med det inverterade talet:", row: [frv(F), TIMES, fr(G.den, G.num), EQ, val(div(F, G))] },
+    { text: "Det finns ett annat sätt: att dela med ett bråk är samma sak som att multiplicera med bråket upp och ner. Det kallas det inverterade talet och ger samma svar:", row: [frv(F), TIMES, fr(G.den, G.num), EQ, val(div(F, G))] },
   ];
   return { L, n1, n2, result, steps };
 }
@@ -31,7 +38,7 @@ const heltalDelatStambrak = {
   id: "heltal-delat-stambrak",
   part: 4,
   title: "Heltal delat med stambråk",
-  intro: "3 ÷ 1/4 frågar: hur många fjärdedelar ryms i 3? I varje hel ryms 4 fjärdedelar, så i 3 hela ryms 3 · 4 = 12.",
+  intro: "Ett stambråk är ett bråk med täljaren 1, som 1/4. 3 ÷ 1/4 frågar: hur många fjärdedelar ryms i 3? I varje hel ryms 4 fjärdedelar, så i 3 hela ryms 3 · 4 = 12.",
   exampleSeed: 41,
   formRule: false,
   generate(rng, level) {
@@ -55,7 +62,7 @@ const heltalDelatStambrak = {
         boxes: { x: { kind: "int", expected: parts }, z: { kind: "int", expected: parts / m } },
         steps: [
           { text: `Skriv ${W} med nämnaren ${n}: ${W} · ${n} = ${parts}.`, row: [num(W), EQ, fr(parts, n)] },
-          { text: `${m} delar ryms ${parts / m} gånger i ${parts} delar: ${parts} ÷ ${m} = ${parts / m}.`, row: [num(W), DIVIDE, fr(m, n), EQ, num(parts / m)] },
+          { text: `${delar(m)} ryms ${ganger(parts / m)} i ${delar(parts)}: ${parts} ÷ ${m} = ${parts / m}.`, row: [num(W), DIVIDE, fr(m, n), EQ, num(parts / m)] },
         ],
       };
     }
@@ -138,7 +145,7 @@ const brakDelatBrak = {
   part: 4,
   title: "Bråk delat med bråk",
   intro: "3/4 ÷ 1/4 frågar: hur många fjärdedelar ryms i tre fjärdedelar? Svaret är 3. När nämnarna är lika delar du täljarna. Är nämnarna olika, skriv först bråken med minsta gemensamma nämnare.",
-  exampleSeed: 42,
+  exampleSeed: 147,
   formRule: true,
   generate(rng, level) {
     if (level === 0) {
@@ -171,7 +178,7 @@ const brakDelatBrak = {
         rows: [[fr(a, d), DIVIDE, fr(b, d), EQ, num(a), DIVIDE, num(b), EQ, box("s")]],
         boxes: { s: { kind: "enklaste", expected: answer } },
         steps: [
-          { text: `Delarna är lika stora: hur många gånger ryms ${b} delar i ${a} delar?`, row: [fr(a, d), DIVIDE, fr(b, d), EQ, num(a), DIVIDE, num(b), EQ, fr(a, b)] },
+          { text: partsLine(a, b), row: [fr(a, d), DIVIDE, fr(b, d), EQ, num(a), DIVIDE, num(b), EQ, fr(a, b)] },
           ...simplifySteps(answer),
         ],
       };
@@ -207,7 +214,7 @@ const blandatDelatBlandat = {
   id: "blandat-delat-blandat",
   part: 4,
   title: "Blandade tal delat med blandade tal",
-  intro: "Skriv först de blandade talen i bråkform. Dela sedan som med vanliga bråk: skriv dem med minsta gemensamma nämnare och dela täljarna.",
+  intro: "Blandade tal går inte att dela direkt: hela delat med hela och delar delat med delar ger fel svar. Skriv först de blandade talen i bråkform. Dela sedan som med vanliga bråk: skriv dem med minsta gemensamma nämnare, så att delarna blir lika stora, och dela täljarna.",
   exampleSeed: 43,
   formRule: true,
   generate(rng, level) {

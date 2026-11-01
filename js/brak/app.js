@@ -3,7 +3,7 @@
 import { CATEGORIES, PARTS, getCategory, generateQuestion, exampleQuestion } from "./categories/index.js";
 import { check, tipFor } from "./check.js";
 import { createProgress, STORAGE_KEY, STREAK_TO_MASTER } from "./progress.js";
-import { renderQuestion, renderSolution, firstField, nextFocus } from "./render.js";
+import { renderQuestion, renderSolution, renderExample, firstField, nextFocus } from "./render.js";
 import { createStore } from "../sant-falskt/storage.js";
 
 const NEXT_GUARD_MS = 250; // ett nedhållet Enter ska inte hoppa förbi återkopplingen
@@ -84,8 +84,7 @@ function showExample() {
   $("btExampleIntro").textContent = category.intro;
   $("btFormRule").textContent = FORM_RULE;
   $("btFormRule").hidden = !category.formRule;
-  const example = exampleQuestion(category);
-  $("btExampleBody").replaceChildren(el("p", "bt-prompt", example.prompt), renderSolution(example));
+  $("btExampleBody").replaceChildren(renderExample(exampleQuestion(category)));
   $("btReady").textContent = run.question ? "Tillbaka till uppgiften" : "Jag är redo";
   showScreen("btExample");
   $("btReady").focus();

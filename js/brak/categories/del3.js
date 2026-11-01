@@ -4,7 +4,7 @@ import { pick, randInt } from "../../representationer/random.js";
 import { text, num, fr, frv, mixed, op, pic, box, EQ, PLUS, TIMES, DIVIDE } from "../pieces.js";
 import { add, mul, fromMixed } from "../fractions.js";
 import { rawFrac, rawInt, rawMixed, rawSimplest } from "../check.js";
-import { sample, coprimeNums, properFraction, simplifySteps, strip, rewriteMixedStep } from "./helpers.js";
+import { sample, coprimeNums, properFraction, simplifySteps, strip, rewriteMixedStep, delar, stycken } from "./helpers.js";
 
 const SIMPLEST = "Räkna ut. Svara i enklaste form.";
 
@@ -12,7 +12,7 @@ const upprepadAddition = {
   id: "upprepad-addition",
   part: 3,
   title: "Bråk gånger heltal",
-  intro: "3 · 2/7 betyder 2/7 + 2/7 + 2/7. Nämnaren ändras inte — det är bara antalet delar i täljaren som multipliceras.",
+  intro: "3 · 2/7 betyder 2/7 + 2/7 + 2/7. Det blir 3 · 2 = 6 sjundedelar, alltså 6/7. Nämnaren ändras inte, det är bara antalet delar i täljaren som multipliceras.",
   exampleSeed: 31,
   formRule: true,
   generate(rng, level) {
@@ -49,7 +49,7 @@ const upprepadAddition = {
       rows: [[num(k), TIMES, fr(a, d), EQ, fr(text(`${k} · ${a}`), d), EQ, fr(box("p"), d), EQ, box("s")]],
       boxes: { p: { kind: "int", expected: p }, s: { kind: "enklaste", expected: answer } },
       steps: [
-        { text: `Att addera ${a}/${d} ${k} gånger ger ${k} · ${a} delar. Bara täljaren multipliceras.`, row: [num(k), TIMES, fr(a, d), EQ, fr(p, d)] },
+        { text: `${k} · ${a}/${d} är ${a}/${d} adderat ${k} gånger, alltså ${k} · ${a} = ${p} delar. Bara täljaren multipliceras.`, row: [num(k), TIMES, fr(a, d), EQ, fr(p, d)] },
         ...simplifySteps(answer),
       ],
     };
@@ -93,7 +93,7 @@ const bradelAvAntal = {
         steps: [split],
       };
     }
-    const scale = { text: `${a}/${n} är ${a} sådana delar: ${a} · ${q} = ${a * q}.`, row: [fr(a, n), TIMES, num(M), EQ, num(a * q)] };
+    const scale = (word) => ({ text: `${a}/${n} är ${a} sådana delar: ${a} · ${q} = ${a * q}.`, row: [fr(a, n), word, num(M), EQ, num(a * q)] });
     if (level === 1) {
       return {
         key: `${a}/${n} av ${M}`,
@@ -101,7 +101,7 @@ const bradelAvAntal = {
         prompt: "Räkna ut.",
         rows: [[fr(1, n), text("av"), num(M), EQ, box("x")], [fr(a, n), text("av"), num(M), EQ, box("y")]],
         boxes: { x: { kind: "int", expected: q }, y: { kind: "int", expected: a * q } },
-        steps: [split, scale],
+        steps: [split, scale(text("av"))],
       };
     }
     return {
@@ -110,7 +110,7 @@ const bradelAvAntal = {
       prompt: "”Av” betyder gånger. Räkna ut.",
       rows: [[fr(a, n), text("av"), num(M), text("är samma sak som")], [fr(a, n), TIMES, num(M), EQ, box("y")]],
       boxes: { y: { kind: "int", expected: a * q } },
-      steps: [split, scale],
+      steps: [split, scale(TIMES)],
     };
   },
   mistakes: [
@@ -135,14 +135,15 @@ const bradelAvAntal = {
   ],
 };
 
-// 1/n och a/d. Delbar: n går jämnt upp i a (dela täljaren). Annars multipliceras nämnaren.
+// 1/n och a/d. Delbar: n går jämnt upp i a (dela täljaren). Annars multipliceras nämnaren, och då delar a och n
+// inget tal: svaret a/(d · n) ska redan vara i enklaste form, eftersom sidan lovar enklaste form och rutan vill ha just det bråket.
 function pickUnitCase(rng, divisible) {
   return sample(() => {
     const n = randInt(rng, 2, 5);
     const d = randInt(rng, 3, 12);
     const a = pick(rng, coprimeNums(d));
     if (divisible !== (a % n === 0)) return null;
-    return divisible || d * n <= 60 ? { n, a, d } : null;
+    return divisible || (d * n <= 60 && gcd(a, n) === 1) ? { n, a, d } : null;
   });
 }
 
@@ -152,7 +153,7 @@ const stambrakGangerBrak = {
   id: "stambrak-ganger-brak",
   part: 3,
   title: "Stambråk gånger bråk",
-  intro: "1/3 · 6/7 betyder en tredjedel av 6/7. Går täljaren att dela med 3, dela den: 6/7 blir 2/7. Annars delar du varje del i 3 mindre delar — då multipliceras nämnaren med 3.",
+  intro: "Ett stambråk är ett bråk med täljaren 1, som 1/3. 1/3 · 6/7 betyder en tredjedel av 6/7. Går täljaren att dela med 3, dela den: 6/7 blir 2/7. Annars delar du varje del i 3 mindre delar, och då multipliceras nämnaren med 3.",
   exampleSeed: 33,
   formRule: true,
   generate(rng, level) {
@@ -161,11 +162,11 @@ const stambrakGangerBrak = {
     const lhs = [fr(1, n), TIMES, fr(a, d)];
     const key = `1/${n}·${a}/${d}`;
     const divideSteps = [
-      { text: `${a} ÷ ${n} = ${a / n}: ${a} delar i ${n} lika stora grupper blir ${a / n} delar i varje grupp.`, row: [...lhs, EQ, fr(text(`${a} ÷ ${n}`), d), EQ, fr(a / n, d)] },
-      { row: [pic(strip(d, a)), op("→"), pic(strip(d, a / n))] },
+      { text: `${a} ÷ ${n} = ${a / n}: ${a} delar i ${n} lika stora grupper blir ${delar(a / n)} i varje grupp.`, row: [...lhs, EQ, fr(text(`${a} ÷ ${n}`), d), EQ, fr(a / n, d)] },
+      { text: "Bilden visar samma sak: delarna är lika stora, men det är färre av dem.", row: [pic(strip(d, a)), op("→"), pic(strip(d, a / n))] },
     ];
     const multiplyStep = {
-      text: `Dela varje 1/${d} i ${n} delar. Då blir delarna 1/${d * n}, och det är fortfarande ${a} stycken.`,
+      text: `Dela varje 1/${d} i ${n} delar. Då blir delarna 1/${d * n}, och det är fortfarande ${stycken(a)}.`,
       row: [...lhs, EQ, fr(a, text(`${d} · ${n}`)), EQ, fr(a, d * n)],
     };
     if (level === 0) {
@@ -182,7 +183,7 @@ const stambrakGangerBrak = {
       return {
         key,
         data,
-        prompt: `${a} går inte att dela med ${n}. Multiplicera i stället nämnaren med ${n}.`,
+        prompt: `Täljaren ${a} går inte att dela med ${n}. Multiplicera i stället nämnaren med ${n}.`,
         rows: [[...lhs, EQ, box("x")]],
         boxes: { x: { kind: "frac", expected: { num: a, den: d * n } } },
         steps: [multiplyStep],
@@ -231,8 +232,8 @@ const brakDelatHeltal = {
   id: "brak-delat-heltal",
   part: 3,
   title: "Bråk delat med heltal",
-  intro: "Att dela med 3 är samma sak som att ta 1/3 av talet. Går täljaren att dela med 3, dela den. Annars multiplicerar du nämnaren med 3.",
-  exampleSeed: 34,
+  intro: "Att dela med 3 är samma sak som att ta en tredjedel av talet, alltså 1/3 av det. Går täljaren att dela med 3, dela den. Då blir det färre delar av samma storlek. Annars delar du varje del i 3 mindre delar, och då multipliceras nämnaren med 3.",
+  exampleSeed: 114,
   formRule: true,
   generate(rng, level) {
     const { n, a, d } = pickUnitCase(rng, level === 0 ? true : level === 1 ? false : rng() < 0.5);
@@ -253,17 +254,17 @@ const brakDelatHeltal = {
       return {
         key,
         data,
-        prompt: `${a} går inte att dela med ${n}. Multiplicera i stället nämnaren med ${n}.`,
+        prompt: `Täljaren ${a} går inte att dela med ${n}. Multiplicera i stället nämnaren med ${n}.`,
         rows: [[...lhs, EQ, box("x")]],
         boxes: { x: { kind: "frac", expected: { num: a, den: d * n } } },
-        steps: [{ text: `Dela varje 1/${d} i ${n} delar: nämnaren blir ${d} · ${n} = ${d * n}.`, row: [...lhs, EQ, fr(a, text(`${d} · ${n}`)), EQ, fr(a, d * n)] }],
+        steps: [{ text: `Dela varje 1/${d} i ${n} delar. Då blir delarna 1/${d * n}, och det är fortfarande ${stycken(a)}.`, row: [...lhs, EQ, fr(a, text(`${d} · ${n}`)), EQ, fr(a, d * n)] }],
       };
     }
     const answer = { num: a, den: d * n };
     return {
       key,
       data,
-      prompt: "Att dela med ett tal är samma sak som att multiplicera med ett stambråk. Svara i enklaste form.",
+      prompt: "Ett stambråk är ett bråk med täljaren 1. Att dela med ett tal är samma sak som att multiplicera med ett stambråk. Svara i enklaste form.",
       rows: [[...lhs, EQ, box("x"), TIMES, fr(a, d), EQ, box("s")]],
       boxes: { x: { kind: "frac", expected: { num: 1, den: n } }, s: { kind: "enklaste", expected: answer } },
       steps: [
@@ -297,8 +298,7 @@ const brakDelatHeltal = {
           : `Rätt värde, men här ska du multiplicera nämnaren med ${q.data.n} och låta täljaren vara: ${q.data.a}/${q.data.d * q.data.n}.`,
       sample: (q) => {
         if (q.level === 0) return { x: rawFrac(q.data.a, q.data.d * q.data.n) };
-        const g = gcd(q.data.a, q.data.d * q.data.n);
-        return q.level === 1 && g > 1 ? { x: rawFrac(q.data.a / g, (q.data.d * q.data.n) / g) } : null;
+        return q.level === 1 ? { x: rawFrac(2 * q.data.a, 2 * q.data.d * q.data.n) } : null;
       },
     },
     {
@@ -326,7 +326,7 @@ const brakGangerBrak = {
   id: "brak-ganger-brak",
   part: 3,
   title: "Bråk gånger bråk",
-  intro: "Multiplicera täljare med täljare och nämnare med nämnare. Förkorta sedan svaret så långt det går.",
+  intro: "1/2 · 3/4 betyder hälften av 3/4. Dela varje fjärdedel i 2 delar, så blir det 3 stycken 1/8, alltså 3/8. Därför multiplicerar du täljare med täljare och nämnare med nämnare: 1 · 3 = 3 och 2 · 4 = 8. Förkorta sedan svaret så långt det går.",
   exampleSeed: 35,
   formRule: true,
   generate(rng, level) {
@@ -358,7 +358,7 @@ const brakGangerBrak = {
     const pairs = [[f.num, g.den], [g.num, f.den]]
       .filter(([x, y]) => gcd(x, y) > 1)
       .map(([x, y]) => `${x} och ${y} kan båda delas med ${gcd(x, y)}`);
-    if (pairs.length > 0) steps.push({ text: `Du kan också förkorta före multiplikationen: ${pairs.join(", och ")}.` });
+    if (pairs.length > 0) steps.push({ text: `Du kan också förkorta före multiplikationen, när en täljare och en nämnare går att dela med samma tal: ${pairs.join(", och ")}.` });
     return {
       key: `${f.num}/${f.den}·${g.num}/${g.den}`,
       data: { f, g, P },
@@ -401,7 +401,7 @@ const blandatGangerBlandat = {
   id: "blandat-ganger-blandat",
   part: 3,
   title: "Blandade tal gånger blandade tal",
-  intro: "Skriv först de blandade talen i bråkform. Multiplicera sedan som vanligt och skriv svaret i enklaste form.",
+  intro: "Blandade tal går inte att multiplicera direkt: hela gånger hela och delar gånger delar ger fel svar. Skriv först de blandade talen i bråkform. Multiplicera sedan täljare med täljare och nämnare med nämnare, och skriv svaret i enklaste form.",
   exampleSeed: 36,
   formRule: true,
   generate(rng, level) {

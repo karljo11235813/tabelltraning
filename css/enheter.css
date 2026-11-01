@@ -3,19 +3,6 @@
 
 .en-row-block { width: 100%; justify-content: center; }
 
-/* ---------- EXEMPELKORTET ---------- */
-#btExampleIntro { color: var(--text); }
-.en-example { display: flex; flex-direction: column; gap: 14px; text-align: left; }
-.en-example-label { margin: 0 0 6px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
-.en-example-task { padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); }
-.en-example-task .bt-prompt { margin: 0 0 8px; }
-.en-example-task .bt-rows { margin: 0; }
-.en-example-steps .bt-steps { margin-bottom: 0; }
-.en-example-answer { padding: 10px 12px; border-left: 5px solid var(--success); border-radius: 10px; background: var(--success-soft); }
-.en-example-answer .en-example-label { color: var(--text); }
-.en-example-answer .bt-rows-filled { margin: 0; }
-.bt-rows-step .en-row-block, .bt-rows-filled .en-row-block { justify-content: flex-start; }
-
 /* ---------- RUTOR ---------- */
 .en-input-wide { width: 5.2em; }
 .en-unit, .en-qty { white-space: nowrap; }

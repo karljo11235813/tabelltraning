@@ -3,7 +3,7 @@ import { gcd } from "../../representationer/rational.js";
 import { pick, randInt, range, shuffle } from "../../representationer/random.js";
 import { DEN_WORDS } from "../../representationer/words.js";
 import { fromMixed, lcmAll } from "../fractions.js";
-import { text, num, fr, frv, mixed, mixedOrFrac, val, EQ } from "../pieces.js";
+import { text, num, fr, frv, mixed, mixedOrFrac, val, EQ, PLUS } from "../pieces.js";
 
 // Provar make() tills den ger något annat än null.
 export function sample(make, tries = 2000) {
@@ -52,6 +52,18 @@ export function hela(w) {
   return w === 1 ? "1 hel" : `${w} hela`;
 }
 
+export function delar(n) {
+  return n === 1 ? "1 del" : `${n} delar`;
+}
+
+export function stycken(n) {
+  return n === 1 ? "1 styck" : `${n} stycken`;
+}
+
+export function ganger(n) {
+  return n === 1 ? "1 gång" : `${n} gånger`;
+}
+
 const WORDS = { ...DEN_WORDS, 11: ["elftedel", "elftedelar"] };
 
 // "fjärdedelar"; nämnare utan eget ord blir "24-delar".
@@ -77,21 +89,42 @@ export function simplifySteps({ num: n, den: d }) {
   const steps = [];
   const g = gcd(n, d);
   if (g > 1) {
-    steps.push({ text: `Förkorta med ${g}.`, row: [fr(n, d), EQ, d / g === 1 ? num(n / g) : fr(n / g, d / g)] });
+    steps.push({ text: `Förkorta: dela täljaren och nämnaren med ${g}.`, row: [fr(n, d), EQ, d / g === 1 ? num(n / g) : fr(n / g, d / g)] });
     n /= g;
     d /= g;
   }
   if (d > 1 && n > d) {
     const q = Math.floor(n / d);
-    steps.push({ text: `Skriv i blandad form: ${n} ÷ ${d} = ${q}, rest ${n % d}.`, row: [fr(n, d), EQ, mixed(q, n % d, d)] });
+    steps.push({ text: `${n}/${d} är större än 1, så skriv det i blandad form: ${n} ÷ ${d} = ${q} rest ${n % d}.`, row: [fr(n, d), EQ, mixed(q, n % d, d)] });
   }
   return steps;
 }
 
-// Ett blandat tal vars bråkdel kan vara för stor eller oförkortad, till enklaste form.
+// Ett blandat tal vars bråkdel kan vara för stor eller oförkortad, till enklaste form, ett steg i taget:
+// bråkdelen blir hela och en rest, resten förkortas och de nya hela läggs till de andra.
 export function finishMixed(whole, n, d) {
-  if (n < d && gcd(n, d) === 1) return [];
-  return [{ text: "Skriv i enklaste form.", row: [mixedOrFrac(whole, n, d), EQ, val(fromMixed(whole, n, d))] }];
+  const carry = Math.floor(n / d);
+  const rest = n % d;
+  const g = gcd(rest, d);
+  const steps = [];
+  if (carry > 0) {
+    steps.push(
+      rest === 0
+        ? { text: `${n}/${d} är ${hela(carry)}.`, row: [fr(n, d), EQ, num(carry)] }
+        : { text: `${n}/${d} är mer än en hel. ${carry * d}/${d} är ${hela(carry)}, och ${rest}/${d} blir kvar.`, row: [fr(n, d), EQ, mixed(carry, rest, d)] },
+    );
+  }
+  const base = carry > 0 ? carry : whole;
+  if (rest > 0 && g > 1) {
+    steps.push({ text: `Förkorta ${base > 0 ? "bråkdelen" : "bråket"}: dela täljaren och nämnaren med ${g}.`, row: [mixedOrFrac(base, rest, d), EQ, mixedOrFrac(base, rest / g, d / g)] });
+  }
+  if (carry > 0 && whole > 0) {
+    steps.push({
+      text: "Lägg ihop med de hela:",
+      row: [num(whole), PLUS, rest === 0 ? num(carry) : mixed(carry, rest / g, d / g), EQ, val(fromMixed(whole, n, d))],
+    });
+  }
+  return steps;
 }
 
 // Förläng varje bråk till nämnaren L.
@@ -107,21 +140,31 @@ export function rewriteSteps(fracs, L) {
 }
 
 // Multiplarna av den största nämnaren tills alla nämnare går jämnt upp.
-export function lcdSteps(dens, L) {
+function lcdParts(dens, L) {
   const max = Math.max(...dens);
-  const others = dens.filter((d) => d !== max);
-  const multiples = range(1, L / max).map((i) => i * max);
+  return { max, others: dens.filter((d) => d !== max), multiples: range(1, L / max).map((i) => i * max) };
+}
+
+export function lcdSteps(dens, L) {
+  const { max, others, multiples } = lcdParts(dens, L);
   return [
-    { text: `Multiplar av den största nämnaren, ${max}: ${multiples.join(", ")}.` },
+    { text: `Räkna upp multiplarna av den största nämnaren, ${max}: ${multiples.join(", ")}.` },
     { text: `${L} är den första som också går att dela med ${others.join(" och ")}. Minsta gemensamma nämnare är ${L}.` },
   ];
+}
+
+// Samma sak som ett enda steg, när nämnaren bara är ett led i en längre lösning.
+export function lcdStep(dens, L) {
+  const { max, others, multiples } = lcdParts(dens, L);
+  if (others.length === 0) return { text: `Bråken har redan samma nämnare, ${L}.` };
+  return { text: `Hitta minsta gemensamma nämnare. Multiplarna av ${max} är ${multiples.join(", ")}, och ${L} är den första som också går att dela med ${others.join(" och ")}. Minsta gemensamma nämnare är ${L}.` };
 }
 
 // 2 1/3 → 7/3.
 export function rewriteMixedStep(m) {
   const F = fromMixed(m.whole, m.num, m.den);
   return {
-    text: `${cap(hela(m.whole))} är ${m.whole * m.den}/${m.den}. Lägg till ${m.num}/${m.den}: ${m.whole * m.den} + ${m.num} = ${F.num}.`,
+    text: `En hel är ${m.den}/${m.den}${m.whole === 1 ? "" : `, så ${hela(m.whole)} är ${m.whole * m.den}/${m.den}`}. Lägg till ${m.num}/${m.den}: ${m.whole * m.den} + ${m.num} = ${F.num}.`,
     row: [mixed(m.whole, m.num, m.den), EQ, frv(F)],
   };
 }

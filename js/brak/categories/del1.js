@@ -3,7 +3,7 @@ import { equal, gcd, isReduced } from "../../representationer/rational.js";
 import { pick, randInt, range } from "../../representationer/random.js";
 import { text, num, fr, mixed, pic, box, val, EQ, DIVIDE } from "../pieces.js";
 import { rawFrac, rawInt, rawMixed } from "../check.js";
-import { sample, coprimeNums, strip, circle, cap, hela, denWord } from "./helpers.js";
+import { sample, coprimeNums, strip, circle, cap, hela, delar, ganger, denWord } from "./helpers.js";
 
 const NOUN = { cirkel: "cirkeln", remsa: "remsan" };
 const shape = (model, parts, shaded = 0) => (model === "cirkel" ? circle(parts, shaded) : strip(parts, shaded));
@@ -12,7 +12,7 @@ const lasBild = {
   id: "las-bild",
   part: 1,
   title: "Läsa bråk från bild",
-  intro: "Nämnaren är hur många lika stora delar det hela är delat i. Täljaren är hur många av delarna det gäller.",
+  intro: "Ett bråk visar en del av något. Nämnaren är talet under bråkstrecket. Den säger hur många lika stora delar det hela är delat i. Täljaren är talet över bråkstrecket. Den säger hur många av delarna det gäller.",
   exampleSeed: 11,
   formRule: false,
   generate(rng, level) {
@@ -35,14 +35,14 @@ const lasBild = {
         ],
       };
     }
+    const filled = [pic(shape(model, parts, n * scale))];
     const steps =
       scale === 1
-        ? [{ text: `${cap(NOUN[model])} har ${den} delar, så varje del är 1/${den}. Färga ${n} delar.` }]
+        ? [{ text: `Nämnaren är ${den}, och ${NOUN[model]} har ${den} delar. Täljaren är ${n}, så färga ${delar(n)}.`, row: filled }]
         : [
-            { text: `${cap(NOUN[model])} har ${parts} delar, inte ${den}. Varje 1/${den} är ${scale} av delarna.` },
-            { text: `${n}/${den} är då ${n} · ${scale} = ${n * scale} delar.` },
+            { text: `${cap(NOUN[model])} har ${parts} delar, men nämnaren är ${den}. Varje 1/${den} är därför ${scale} av delarna.` },
+            { text: `Täljaren är ${n}, så färga ${n} · ${scale} = ${n * scale} delar.`, row: filled },
           ];
-    steps.push({ row: [pic(shape(model, parts, n * scale))] });
     return {
       key: `${model}:${n}/${den}:${parts}`,
       data,
@@ -79,7 +79,7 @@ const forlanga = {
   id: "forlanga",
   part: 1,
   title: "Förlänga bråk",
-  intro: "Att förlänga ett bråk är att multiplicera både täljaren och nämnaren med samma tal. Bråket ser annorlunda ut, men värdet är detsamma.",
+  intro: "Att förlänga ett bråk är att multiplicera både täljaren och nämnaren med samma tal. Då blir delarna fler och mindre, men bråket är lika stort. Bråket ser annorlunda ut, men värdet är detsamma.",
   exampleSeed: 12,
   formRule: false,
   generate(rng, level) {
@@ -94,7 +94,7 @@ const forlanga = {
       text: `Multiplicera både täljaren och nämnaren med ${f}.`,
       row: [fr(a, b), EQ, fr(text(`${a} · ${f}`), text(`${b} · ${f}`)), EQ, fr(a * f, b * f)],
     });
-    const sameValue = b * k <= 24 ? [{ text: "Värdet är detsamma — bitarna är bara mindre.", row: [pic(strip(b, a)), pic(strip(b * k, a * k))] }] : [];
+    const sameValue = b * k <= 24 ? [{ text: "Värdet är detsamma. Delarna är bara fler och mindre.", row: [pic(strip(b, a)), pic(strip(b * k, a * k))] }] : [];
     if (level === 0) {
       return {
         key: `0:${a}/${b}·${k}`,
@@ -168,7 +168,7 @@ const forkorta = {
   id: "forkorta",
   part: 1,
   title: "Förkorta bråk",
-  intro: "Att förkorta ett bråk är att dividera både täljaren och nämnaren med samma tal. Värdet är detsamma, men talen blir mindre.",
+  intro: "Att förkorta ett bråk är att dela både täljaren och nämnaren med samma tal. Då blir delarna färre och större, men bråket är lika stort. Värdet är detsamma, men talen blir mindre.",
   exampleSeed: 13,
   formRule: false,
   generate(rng, level) {
@@ -180,7 +180,7 @@ const forkorta = {
     const [n, d] = [a * k, b * k];
     const data = { a, b, k, n, d };
     const divide = {
-      text: `Dividera både täljaren och nämnaren med ${k}.`,
+      text: `Dela både täljaren och nämnaren med ${k}.`,
       row: [fr(n, d), EQ, fr(text(`${n} ÷ ${k}`), text(`${d} ÷ ${k}`)), EQ, fr(a, b)],
     };
     if (level === 0) {
@@ -200,7 +200,7 @@ const forkorta = {
         prompt: "Fyll i så att bråken blir lika stora.",
         rows: [[fr(n, d), EQ, fr(box("x"), b)]],
         boxes: { x: { kind: "int", expected: a } },
-        steps: [{ text: `${d} ÷ ${k} = ${b}, så nämnaren har dividerats med ${k}. Gör samma sak med täljaren.` }, divide],
+        steps: [{ text: `${d} ÷ ${k} = ${b}, så nämnaren har delats med ${k}. Gör samma sak med täljaren.` }, divide],
       };
     }
     const p = k % 2 === 0 ? 2 : 3;
@@ -221,7 +221,7 @@ const forkorta = {
     {
       id: "subtracted",
       matches: (q, p) => q.level === 0 && p.x.num === q.data.n - q.data.k && p.x.den === q.data.d - q.data.k,
-      text: (q) => `Förkorta betyder att dividera, inte att subtrahera. Dividera täljaren och nämnaren med ${q.data.k}.`,
+      text: (q) => `Förkorta betyder att dela, inte att subtrahera. Dela täljaren och nämnaren med ${q.data.k}.`,
       sample: (q) => (q.level === 0 ? { x: rawFrac(q.data.n - q.data.k, q.data.d - q.data.k) } : null),
     },
     {
@@ -229,7 +229,7 @@ const forkorta = {
       matches: (q, p) =>
         q.level === 0 &&
         ((p.x.num === q.data.a && p.x.den === q.data.d) || (p.x.num === q.data.n && p.x.den === q.data.b)),
-      text: (q) => `Både täljaren och nämnaren ska divideras med ${q.data.k}.`,
+      text: (q) => `Både täljaren och nämnaren ska delas med ${q.data.k}.`,
       sample: (q) => (q.level === 0 ? { x: rawFrac(q.data.a, q.data.d) } : null),
     },
     {
@@ -249,7 +249,7 @@ const tillBlandad = {
   id: "till-blandad",
   part: 1,
   title: "Från bråkform till blandad form",
-  intro: "Ett bråk som är större än 1 kan skrivas som hela och en bråkdel. Dela täljaren med nämnaren: kvoten är antalet hela och resten är täljaren i bråkdelen.",
+  intro: "Ett bråk som är större än 1 kan skrivas som hela och en bråkdel, till exempel 7/4 = 1 3/4. Det kallas blandad form. Dela täljaren med nämnaren. Svaret på divisionen, kvoten, är antalet hela. Det som blir kvar, resten, är täljaren i bråkdelen. Nämnaren ändras inte.",
   exampleSeed: 14,
   formRule: true,
   generate(rng, level) {
@@ -269,12 +269,12 @@ const tillBlandad = {
     const q = Math.floor(N / d);
     const r = N % d;
     const pictures = level === 0 ? [[...range(1, q).map(() => pic(circle(d, d))), pic(circle(d, r))]] : [];
-    const steps = [{ text: `${d} ryms ${q} gånger i ${N}: ${q} · ${d} = ${q * d}, och det blir ${r} kvar.` }];
+    const steps = [{ text: `${d} ryms ${ganger(q)} i ${N}: ${q} · ${d} = ${q * d}, och det blir ${r} kvar.` }];
     if (r === 0) {
       steps.push({ text: `Det blir ingen rest, så ${N}/${d} är heltalet ${q}.`, row: [fr(N, d), EQ, num(q)] });
     } else {
-      steps.push({ text: `Det blir ${hela(q)} och ${r}/${d}.`, row: [fr(N, d), EQ, mixed(q, r, d)] });
-      if (gcd(r, d) > 1) steps.push({ text: `Förkorta bråkdelen med ${gcd(r, d)}.`, row: [mixed(q, r, d), EQ, val({ num: N, den: d })] });
+      steps.push({ text: `Kvoten ${q} är antalet hela, och resten ${r} blir täljaren. Det blir ${hela(q)} och ${r}/${d}.`, row: [fr(N, d), EQ, mixed(q, r, d)] });
+      if (gcd(r, d) > 1) steps.push({ text: `Förkorta bråkdelen: dela täljaren och nämnaren med ${gcd(r, d)}.`, row: [mixed(q, r, d), EQ, val({ num: N, den: d })] });
     }
     return {
       key: `${N}/${d}`,
@@ -312,7 +312,7 @@ const tillBrakform = {
   id: "till-brakform",
   part: 1,
   title: "Från blandad form till bråkform",
-  intro: "En hel är lika mycket som nämnaren delad med sig själv, till exempel 4/4. Räkna om de hela till delar och lägg till bråkdelen.",
+  intro: "Ett blandat tal, som 2 1/4, består av hela och en bråkdel. För att skriva det i bråkform räknar du om de hela till delar. Nämnaren säger hur många delar en hel är: med nämnaren 4 är en hel 4/4. Lägg sedan till bråkdelen.",
   exampleSeed: 15,
   formRule: false,
   generate(rng, level) {
