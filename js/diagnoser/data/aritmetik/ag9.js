@@ -4,8 +4,10 @@
 // Åtta textuppgifter, en skärm var. Resultatblanketten har en kolumn per uppgift (1–8). Bladet börjar med
 // ett exempel (cd-skivorna) som Diamant säger att läraren ska gå igenom först; det visas utan poäng.
 //
-// facit är facits räkning och accept facits svar utan enhet ("Svar: 21 (dagar)" blir "21", "Svar: 34 kr"
-// blir "34"). numbers är talen som räkningen ska innehålla, också de som står i ord ("sju", "sex", "fyra").
+// facit är facits räkning. Första svaret i accept står som i facit och är det som visas ("34 kr", och "21 (dagar)"
+// där det frågas efter ett mätetal), och det andra är talet: lärarsidan säger att svar med enhet ska bedömas som
+// korrekta också där enheten står inom parentes. numbers är talen som räkningen ska innehålla, också de som står i
+// ord ("sju", "sex", "fyra").
 // Utanför numbers står orden som inte är något att räkna med: "Ett kg" och "en kasse" i uppgift 3, och
 // "tre kamrater" i uppgift 6 (facit räknar 32 / 4 = 8, med tallrikarna och inte kamraterna).
 // Facit nämner att 6 · __ = 48, 4 · __ = 32 och 4 · __ = 28 också är rätta tecknanden av 5, 6 och 7.
@@ -26,7 +28,7 @@ export default {
       kind: "word",
       text: "En vecka har sju dagar. Hur många dagar går det på 3 veckor?",
       numbers: [7, 3],
-      accept: ["21"],
+      accept: ["21 (dagar)", "21"],
       facit: "3 · 7 = 21",
       wholeQuotient: false,
     },
@@ -35,7 +37,7 @@ export default {
       kind: "word",
       text: "En äggkartong innehåller 6 ägg. Hur många ägg finns det i 8 äggkartonger?",
       numbers: [6, 8],
-      accept: ["48"],
+      accept: ["48 (ägg)", "48"],
       facit: "8 · 6 = 48",
       wholeQuotient: false,
     },
@@ -44,7 +46,7 @@ export default {
       kind: "word",
       text: "Ett kg potatis kostar 8 kr. Moa köper 4 kg potatis och en kasse för 2 kr. Hur mycket ska hon betala?",
       numbers: [8, 4, 2],
-      accept: ["34"],
+      accept: ["34 kr", "34"],
       facit: "4 · 8 + 2 = 34",
       wholeQuotient: false,
     },
@@ -53,7 +55,7 @@ export default {
       kind: "word",
       text: "Markus får 90 kr i timman för att rensa ogräs. Hur mycket tjänar han om han arbetar 6 timmar?",
       numbers: [90, 6],
-      accept: ["540"],
+      accept: ["540 kr", "540"],
       facit: "6 · 90 = 540",
       wholeQuotient: false,
     },
@@ -62,7 +64,7 @@ export default {
       kind: "word",
       text: "Teresia räknar sex matteuppgifter varje dag. Efter hur många dagar har hon räknat 48 matteuppgifter?",
       numbers: [6, 48],
-      accept: ["8"],
+      accept: ["8 (dagar)", "8"],
       facit: "48 / 6 = 8",
       wholeQuotient: false,
     },
@@ -71,7 +73,7 @@ export default {
       kind: "word",
       text: "Lisa ska bjuda tre kamrater på plommon. Hon har 32 plommon och ska dela upp plommonen på 4 tallrikar. Hur många plommon blir det på varje tallrik?",
       numbers: [32, 4],
-      accept: ["8"],
+      accept: ["8 (plommon)", "8"],
       facit: "32 / 4 = 8",
       wholeQuotient: false,
     },
@@ -80,7 +82,7 @@ export default {
       kind: "word",
       text: "Under lektionen i idrott är det 28 elever närvarande. De ställer upp sig i fyra rader med lika många i varje rad. Hur många elever är det då i varje rad?",
       numbers: [28, 4],
-      accept: ["7"],
+      accept: ["7 (elever)", "7"],
       facit: "28 / 4 = 7",
       wholeQuotient: false,
     },
@@ -89,7 +91,7 @@ export default {
       kind: "word",
       text: "En bulle kostar 7 kr. Karin har 50 kr. Hur många bullar kan hon köpa?",
       numbers: [50, 7],
-      accept: ["7"],
+      accept: ["7 (bullar)", "7"],
       facit: "50 / 7 = 7 (rest 1)",
       wholeQuotient: true,
     },

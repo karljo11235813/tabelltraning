@@ -478,11 +478,23 @@ function wordAnswerValue(accept0) {
   return given.kind === "number" ? given.value : null;
 }
 
+// Ett svar på en textuppgift får vara en hel mening ("Hon är 9 år", "Efter 8 dagar"): orden före talet räknas bort, och
+// orden efter talet är enheter som i alla rutor. Står det fler tal i meningen går det inte att veta vilket som är svaret,
+// utom när facits division har rest ("7 bullar och 1 kr över"): då är det första talet kvoten.
+function sentenceAnswer(text, wholeQuotient) {
+  const numbers = [...String(text ?? "").matchAll(/\d+(?:[.,]\d+)?/g)];
+  if (numbers.length === 0 || (numbers.length > 1 && !wholeQuotient)) return null;
+  const [first] = numbers;
+  if (!/^[\p{L}\s:]*$/u.test(text.slice(0, first.index))) return null;
+  return numbers.length > 1 ? first[0] : text.slice(first.index);
+}
+
 function markWord(screen, answers) {
   const box = { accept: screen.accept };
   const answer = rawOf(answers, "answer");
   const calc = rawOf(answers, "calc");
-  const answerRight = markBox(box, answer) === "right";
+  const inSentence = sentenceAnswer(answer, screen.wholeQuotient);
+  const answerRight = markBox(box, answer) === "right" || (inSentence !== null && markBox(box, inSentence) === "right");
   const value = wordAnswerValue(screen.accept[0]);
   const calcRight = answerRight && value !== null
     && checkCalculation(calc, { numbers: screen.numbers, answer: value, wholeQuotient: screen.wholeQuotient ?? false });

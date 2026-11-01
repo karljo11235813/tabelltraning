@@ -736,6 +736,9 @@ function expectedRows(screen, variables) {
   return [...figure, ...chart, ...diagram, ...table, ...rowsOf(screen).map((markup) => drawRow(markup, boxFor, "div", variables))];
 }
 
+// Eleven ser ett rätt svar utan poäng, så raden säger varför. Exemplet är ett annat än uppgiften.
+const S_LINE = "Svaret är rätt, men räkningen godkändes inte. Räkningen ska vara en sann likhet där alla tal ur uppgiften finns med. Två steg skrivs som två likheter: 3 · 5 = 15, 15 + 2 = 17.";
+
 function wordDetail(screen, row) {
   const wrong = row.wrong[0];
   // Det eleven skrev, även när svaret blev rätt (S): facit visas bara med knappen.
@@ -743,6 +746,7 @@ function wordDetail(screen, row) {
   const nodes = [el("p", "dg-word-text", screen.text)];
   nodes.push(labelledLine("Räkning:", answerCell(row.calc ?? "", null, false)));
   nodes.push(labelledLine("Svar:", answerCell(answered, screen.accept[0], row.mark === "wrong")));
+  if (row.mark === "s") nodes.push(el("p", "dg-detail-line dg-s-note", S_LINE));
   if (screen.facit) nodes.push(el("p", "dg-expected dg-facit", `Facit: ${prettyAnswer(screen.facit)}`));
   return nodes;
 }

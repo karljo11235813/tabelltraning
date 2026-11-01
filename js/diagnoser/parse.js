@@ -389,6 +389,7 @@ function ärBråk(text) {
 // Ett ord som börjar på svar ("svaret 8") är inte utsmyckning. Hela texten kan bli tom ("Svar:", ".").
 const SVAR_FÖRE = /^svar(?!\p{L})\s*[:=]?\s*/iu;
 const SLUTTECKEN = /[\s.!?,;:]+$/;
+const KRONTECKEN = /(?<=\d)\s*:-$/; // 34:-
 // Ett ord för närmevärde först ("cirka 60 %", "ca. 9000", "c:a 30", "ungefär hälften", "omkring 25", "≈ 11,6", "~18")
 // säger bara att svaret är ungefärligt (intervallet eller facit avgör om det är rätt). Orden räknas bara bort före ett
 // tal, ett ord eller en parentes, inte före ett räknesätt: "ca + b" i en algebraruta är c · a + b.
@@ -397,7 +398,7 @@ const NÄRMEVÄRDE_FÖRE = /^(?:(?:cirka|ungefär|omkring|ca|c:a)\.?\s+|ca\.|[�
 // approx: false behåller närmevärdesordet (ett klockslag, time.js: "ungefär åtta" är inget svar på "Hur mycket är klockan?").
 export function stripDecoration(text, { approx = true } = {}) {
   const utanSvar = String(text ?? "").trim().replace(SVAR_FÖRE, "");
-  return (approx ? utanSvar.replace(NÄRMEVÄRDE_FÖRE, "") : utanSvar).replace(SLUTTECKEN, "");
+  return (approx ? utanSvar.replace(NÄRMEVÄRDE_FÖRE, "") : utanSvar).replace(SLUTTECKEN, "").replace(KRONTECKEN, "");
 }
 
 // En sak i ett mängdsvar i jämförbar form: gemener, alla streck som "-", inga mellanslag och ingen punkt sist

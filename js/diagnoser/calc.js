@@ -11,8 +11,8 @@
 // Eleven får skriva flera separata likheter efter varandra ("4·8=32, 32+2=34"): delade vid , eller ; följt av
 // mellanrum, eller vid mellanrum mellan två tal där båda delarna har ett =. Då ska varje likhet gälla (var och en
 // enligt reglerna ovan) och numbers och svaret söks i alla tillsammans. En enda kedja läses först som en kedja.
-// Ord som eleven skriver efter ett tal ("9 år", "34 kr", "9 (år)", "7 rest 1 st") och en punkt sist
-// i texten räknas bort innan något kontrolleras. Orden ändrar aldrig ett värde.
+// Ord som eleven skriver efter ett tal ("9 år", "34 kr", "8 kr/kg", "9 (år)", "7 rest 1 st"), :- efter ett tal ("34:-")
+// och en punkt sist i texten räknas bort innan något kontrolleras. Orden ändrar aldrig ett värde.
 // När svaret är ett heltal (talen i uppgiften är alltid heltal) hör inget decimaltecken till uppgiften, och en punkt
 // mellan två siffror får också läsas som gånger: "4.8 = 32" godkänns som 4 · 8 = 32. Räkningen godkänns om den
 // stämmer på något av sätten, så "2.5 · 4 = 10" är fortfarande 2,5 · 4.
@@ -26,18 +26,22 @@ const LITERAL = /\d+(?:,\d+)?/g;
 
 // Ett helt ord eller ett ord i parentes. x, r och rest är inga enheter: x är gånger och de andra
 // hör till resten ("7 r 1").
-const WORD = /\(\s*(\p{L}+)\s*\)|(?<!\p{L})(\p{L}+)(?!\p{L})/gu;
+const WORD = /\(\s*(\p{L}+)\s*\)|(?<!\p{L})(\p{L}+(?:\/\p{L}+)?)(?!\p{L})/gu;
 const NOT_UNITS = new Set(["x", "r", "rest"]);
 // Ett ord som direkt följs av en siffra ("5 kr 4") eller en exponent ("m²") lämnas kvar, så att
-// räkningen inte läses som något annat än det eleven skrev (54 respektive 3²).
+// räkningen inte läses som något annat än det eleven skrev (54 respektive 3²). Står ordet mellan två likheter
+// ("4 · 8 = 32 kr 32 + 2 = 34 kr") är siffran början på nästa likhet, och då räknas ordet bort.
 const DIGIT_NEXT = /^\)?\s*[\d⁰¹²³⁴⁵⁶⁷⁸⁹]/;
 
 // Tar bort enheter och avslutande skiljetecken ("14 − 9 = 5 kr.").
 function clean(text) {
   return String(text ?? "")
+    .replace(/(?<=\d)\s*:-/g, " ")
     .replace(WORD, (m, inParens, bare, offset, whole) => {
       const word = (inParens ?? bare).toLowerCase();
-      return NOT_UNITS.has(word) || DIGIT_NEXT.test(whole.slice(offset + m.length)) ? m : " ";
+      const after = whole.slice(offset + m.length);
+      const betweenEqualities = whole.slice(0, offset).includes("=") && after.includes("=");
+      return NOT_UNITS.has(word) || (DIGIT_NEXT.test(after) && !betweenEqualities) ? m : " ";
     })
     .replace(/[\s.,;!?]+$/, "");
 }
