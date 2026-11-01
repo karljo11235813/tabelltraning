@@ -1,7 +1,7 @@
 // Del 1 — Prefix: vad k, H, D, d, c och m betyder, och sedan mikro, Mega och Giga.
 // H och D står bara i rutnätet. I frågorna används vanliga enheter, och av hekto bara hg.
 import { pick, shuffle } from "../../representationer/random.js";
-import { d, dec, compare, equals, shift } from "../decimal.js";
+import { d, dec, compare, equals, shift, formatDecimal } from "../decimal.js";
 import { unit, unitsOf, convert } from "../units.js";
 import { gridModel, hops, SQUARES } from "../grid.js";
 import { text, num, qty, box, grid, EQ } from "../pieces.js";
@@ -28,10 +28,11 @@ const BIG_PREFIXES = [
 ];
 const INVERSE = { tusen: "en tusendel", hundra: "en hundradel", tio: "en tiondel", "en tusendel": "tusen", "en hundradel": "hundra", "en tiondel": "tio" };
 
-// Betydelsen med riktiga enheter. Deka har ingen enhet i frågorna, så där står bara ordet.
-const EXAMPLES = { 3: ["km", "m"], 2: ["hg", "g"], [-1]: ["m", "dm"], [-2]: ["m", "cm"], [-3]: ["m", "mm"] };
+// Betydelsen med riktiga enheter: enheten med prefixet till vänster och talet som prefixet betyder till höger, i enheten
+// utan prefix (1 GW = 1 000 000 000 W, 1 mm = 0,001 m). Deka har ingen enhet i frågorna, så där står bara ordet.
+const EXAMPLES = { 3: ["km", "m"], 2: ["hg", "g"], [-1]: ["dm", "m"], [-2]: ["cm", "m"], [-3]: ["mm", "m"] };
 // I kategori 2 bara med W, m och g.
-const BIG_EXAMPLES = { 3: ["kW", "W"], 6: ["MW", "W"], 9: ["GW", "MW"], [-6]: ["m", `${MU}m`] };
+const BIG_EXAMPLES = { 3: ["kW", "W"], 6: ["MW", "W"], 9: ["GW", "W"], [-6]: [`${MU}m`, "m"] };
 
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 
@@ -54,13 +55,15 @@ function exampleRow(pos, examples = EXAMPLES) {
 function meaningQuestion(rng, prefix, all, { wide }) {
   const others = shuffle(all.filter((p) => p !== prefix), rng).slice(0, 3);
   const model = gridModel({ family: null, wide, names: true });
-  const side = prefix.pos > 0 ? "till vänster om" : "till höger om";
+  const n = Math.abs(prefix.pos);
+  const [side, size] = prefix.pos > 0 ? ["vänster", "större"] : ["höger", "mindre"];
+  const total = n === 1 ? "" : `, så ${n} steg är ${formatDecimal(dec(1, n))} gånger ${size}`;
   const steps = [
-    { row: [grid(model)] },
-    { text: `${cap(prefix.name)} står ${side} enheten i rutnätet, ${Math.abs(prefix.pos)} steg bort. ${cap(prefix.name)} betyder ${prefix.word}.` },
+    { text: `Hitta ${prefix.name} i rutnätet. Rutan där det står enhet är enheten utan prefix.`, row: [grid(model)] },
+    { text: `${cap(prefix.name)} står ${n} steg till ${side} om enheten. Varje steg åt ${side} är 10 gånger ${size}${total}. ${cap(prefix.name)} betyder ${prefix.word}.` },
   ];
   const example = exampleRow(prefix.pos, wide ? BIG_EXAMPLES : EXAMPLES);
-  if (example) steps.push({ row: example });
+  if (example) steps.push({ text: "Så här ser det ut med en riktig enhet:", row: example });
   return {
     key: `meaning:${prefix.name}`,
     data: { kind: "meaning", prefix: prefix.name, word: prefix.word },
@@ -77,12 +80,11 @@ function missingQuestion(rng) {
   const model = { ...full, squares: full.squares.map((s) => (s.pos === prefix.pos ? { ...s, letter: null, name: null, isBlank: true } : s)) };
   const others = shuffle(SMALL_PREFIXES.filter((p) => p !== prefix), rng).slice(0, 3);
   const steps = [
-    { text: "Rutnätet går från kilo till milli. Varje ruta är tio gånger rutan till höger." },
-    { row: [grid(full)] },
+    { text: "Rutnätet går från kilo till milli. Varje ruta är 10 gånger rutan till höger.", row: [grid(full)] },
     { text: `Den tomma rutan är ${prefix.name} (${prefix.letter}). ${cap(prefix.name)} betyder ${prefix.word}.` },
   ];
   const example = exampleRow(prefix.pos);
-  if (example) steps.push({ row: example });
+  if (example) steps.push({ text: "Så här ser det ut med en riktig enhet:", row: example });
   return {
     key: `missing:${prefix.pos}`,
     data: { kind: "missing", pos: prefix.pos },
@@ -108,10 +110,7 @@ function whichUnitQuestion(rng) {
     prompt: "Vilken enhet ska stå i rutan?",
     rows: [[qty(amount, base), EQ, num(1), box("c")]],
     boxes: { c: { kind: "choice", options, expected: answer } },
-    steps: [
-      { text: `${fmt({ amount, unit: base })} är ${part}, och ${prefix.name} betyder ${prefix.word}.` },
-      { row: [qty(amount, base), EQ, qty(dec(1), answer)] },
-    ],
+    steps: [{ text: `${fmt({ amount, unit: base })} är ${part}, och ${prefix.name} betyder ${prefix.word}, så det är 1 ${answer}.` }],
   };
 }
 
@@ -133,8 +132,8 @@ const prefix = {
   id: "prefix",
   part: 1,
   title: "Prefixens betydelse",
-  intro: "Ett prefix framför en enhet säger hur mycket större eller mindre den är. Varje steg i rutnätet är tio gånger.",
-  exampleSeed: 11,
+  intro: "Ett prefix är en förstavelse framför en enhet, som kilo i kilometer och centi i centimeter. Prefixet säger hur stor enheten är. Kilo betyder tusen, så 1 km är 1\u00a0000 m. Centi betyder en hundradel, så 1 cm är en hundradels meter. Prefixen står i ordning i ett rutnät. Den färgade rutan är enheten utan prefix, rutorna till vänster är större enheter och rutorna till höger är mindre. Varje steg i rutnätet är 10 gånger.",
+  exampleSeed: 13,
   fadesGrid: true,
   generate(rng, level) {
     const family = pick(rng, ["m", "l", "g"]);
@@ -213,7 +212,7 @@ const storaSmaPrefix = {
   id: "stora-sma-prefix",
   part: 1,
   title: "Mikro, Mega och Giga",
-  intro: "Rutnätet fortsätter åt båda hållen. Mega är en miljon, Giga en miljard och mikro en miljondel. Mellan dem finns rutor utan namn.",
+  intro: "Rutnätet går att göra längre åt båda hållen. Till vänster finns Mega, som betyder en miljon, och Giga, som betyder en miljard. Till höger finns mikro, som betyder en miljondel och skrivs µ. Mellan dem finns tomma rutor utan namn. De räknas också som steg, så varje ruta är 10 gånger, också de tomma. Prefixen används till exempel för effekt i watt: 1 MW är 1\u00a0000\u00a0000 W.",
   exampleSeed: 12,
   fadesGrid: true,
   generate(rng, level) {

@@ -1,13 +1,13 @@
 // Del 4 — Area och volym: vad längd, area och volym betyder, sedan omvandlingar med 2 och 3 steg per ruta.
 import { pick, randInt } from "../../representationer/random.js";
 import { text, num, qty, unitLabel, box, pic, grid, EQ, PLUS, TIMES, MINUS } from "../pieces.js";
-import { rect, lShape, cubes, object, areaOf, perimeterOf, layerOf, volumeOf, DM2 } from "../pictures.js";
+import { rect, lShape, cubes, object, areaOf, perimeterOf, layerOf, volumeOf, tenByTen } from "../pictures.js";
 import { d, dec, compare, decimals, equals, formatDecimal, shift } from "../decimal.js";
 import { unit, convert } from "../units.js";
 import { gridModel, hops } from "../grid.js";
 import { rawDecimal } from "../check.js";
 import { sample } from "./helpers.js";
-import { amountFor, convertQuestion, conversionMistakes, translationMistake, pickPair, fmt } from "./convert.js";
+import { amountFor, convertQuestion, conversionMistakes, translationMistake, pickPair, fmt, stepMeaning } from "./convert.js";
 import { tilesQuestion, pickMistakes } from "./tiles.js";
 import { WORD_ITEMS, OBJECT_SETS, UNIT_ITEMS } from "./ord.js";
 
@@ -39,31 +39,33 @@ function countSteps(shape, measure) {
     const V = volumeOf(shape);
     return [
       { text: "Volym är hur många kuber på 1 cm · 1 cm · 1 cm som fyller lådan." },
-      { text: `Ett lager har ${shape.w} · ${shape.d} = ${L} kuber.`, row: [num(shape.w), TIMES, num(shape.d), EQ, num(L)] },
-      { text: `${shape.layers} lager: ${L} · ${shape.layers} = ${V} kuber, alltså ${V} cm³.`, row: [num(L), TIMES, num(shape.layers), EQ, num(V)] },
+      { text: `Räkna kuberna i ett lager: ${shape.d} rader med ${shape.w} kuber i varje rad.`, row: [num(shape.w), TIMES, num(shape.d), EQ, num(L)] },
+      { text: `Lådan har ${shape.layers} lager, så multiplicera med ${shape.layers}. Volym räknar kuber, så svaret är i cm³.`, row: [num(L), TIMES, num(shape.layers), EQ, num(V)] },
     ];
   }
   const { w, h } = shape;
+  const P = perimeterOf(shape);
+  const A = areaOf(shape);
+  const notMixedUp = { text: `Blanda inte ihop omkrets och area. Omkretsen är kanten runt figuren, ${P} cm. Arean är rutorna inne i figuren, ${A} cm².` };
   if (measure === "perimeter") {
-    const P = perimeterOf(shape);
     const steps = [{ text: "Omkretsen är hur lång kanten runt figuren är. Räkna sträckorna på 1 cm runt om." }];
     if (shape.type === "L") steps.push({ text: "Hörnet som saknas gör inte kanten kortare: kanterna inne i hörnet är lika långa som kanterna som saknas." });
-    steps.push({ text: `${w} + ${h} + ${w} + ${h} = ${P}, alltså ${P} cm.`, row: [num(w), PLUS, num(h), PLUS, num(w), PLUS, num(h), EQ, num(P)] });
+    steps.push({ text: "Lägg ihop alla sidor. Omkretsen är en längd, så svaret är i cm.", row: [num(w), PLUS, num(h), PLUS, num(w), PLUS, num(h), EQ, num(P)] }, notMixedUp);
     return steps;
   }
-  const A = areaOf(shape);
   const steps = [{ text: "Area är hur många rutor på 1 cm · 1 cm som täcker figuren." }];
   if (shape.type === "L") {
     const whole = w * h;
     const cut = shape.cutW * shape.cutH;
     steps.push(
-      { text: `Hela rektangeln är ${w} · ${h} = ${whole} rutor.`, row: [num(w), TIMES, num(h), EQ, num(whole)] },
-      { text: `Hörnet som saknas är ${shape.cutW} · ${shape.cutH} = ${cut} rutor.`, row: [num(shape.cutW), TIMES, num(shape.cutH), EQ, num(cut)] },
-      { text: `${whole} − ${cut} = ${A} rutor, alltså ${A} cm².`, row: [num(whole), MINUS, num(cut), EQ, num(A)] },
+      { text: "Räkna rutorna i hela rektangeln:", row: [num(w), TIMES, num(h), EQ, num(whole)] },
+      { text: "Räkna rutorna i hörnet som saknas:", row: [num(shape.cutW), TIMES, num(shape.cutH), EQ, num(cut)] },
+      { text: "Ta bort hörnet. Area räknar rutor, så svaret är i cm².", row: [num(whole), MINUS, num(cut), EQ, num(A)] },
     );
   } else {
-    steps.push({ text: `${h} rader med ${w} rutor: ${w} · ${h} = ${A} rutor, alltså ${A} cm².`, row: [num(w), TIMES, num(h), EQ, num(A)] });
+    steps.push({ text: `Figuren har ${h} rader med ${w} rutor i varje rad. Area räknar rutor, så svaret är i cm².`, row: [num(w), TIMES, num(h), EQ, num(A)] });
   }
+  steps.push(notMixedUp);
   return steps;
 }
 
@@ -79,7 +81,7 @@ const vadBetyder = {
   id: "vad-betyder",
   part: 4,
   title: "Vad betyder längd, area och volym?",
-  intro: "Man mäter genom att räkna enheter. Längd räknar sträckor på 1 cm, area räknar rutor på 1 cm · 1 cm och volym räknar kuber på 1 cm · 1 cm · 1 cm.",
+  intro: "Att mäta är att räkna hur många enheter något är. Längd räknar sträckor på 1 cm. Omkretsen är en längd: hur långt det är runt en figur. Area räknar rutor på 1 cm · 1 cm, som skrivs 1 cm². Volym räknar kuber på 1 cm · 1 cm · 1 cm, som skrivs 1 cm³.",
   exampleSeed: 41,
   fadesGrid: false,
   generate(rng, level) {
@@ -145,7 +147,8 @@ const LITER_UNITS = ["l", "dl", "ml"];
 function unitExplanation(item) {
   if (item === "mil") return "1 mil = 10 km. Det är en längd: hur långt något är.";
   if (item === "ha") return "ha (hektar) är en areaenhet: 1 ha = 10 000 m². Den mäter hur stor en yta är.";
-  if (LITER_UNITS.includes(item)) return `${item} är en volymenhet: 1 l = 1 dm³. Den mäter hur mycket något rymmer.`;
+  if (item === "l") return "l är en volymenhet: 1 l = 1 dm³. Den mäter hur mycket något rymmer.";
+  if (LITER_UNITS.includes(item)) return `${item} är en del av en liter, och liter är en volymenhet: 1 l = 1 dm³. Den mäter hur mycket något rymmer.`;
   if (item.endsWith("²")) return `${item} är en areaenhet. Den lilla tvåan betyder två riktningar: en ruta på 1 · 1.`;
   if (item.endsWith("³")) return `${item} är en volymenhet. Den lilla trean betyder tre riktningar: en kub på 1 · 1 · 1.`;
   return `${item} är en längdenhet. Den mäter hur långt något är, i en riktning.`;
@@ -157,11 +160,17 @@ const MEANING = {
   Volym: "Volym är hur mycket något rymmer: kuber som fyller något.",
 };
 
-const classifyQuestion = (key, data, prompt, rows, steps) => ({
+// Tänk först på vad som mäts, och se sedan varför just den här frågan gäller det.
+const classifySteps = (item) => [
+  { text: "Tänk på vad som mäts: en sträcka är längd, en yta som täcks är area och något som fylls är volym." },
+  { text: `${item.why} ${MEANING[item.answer]}` },
+];
+
+const classifyQuestion = (key, data, prompt, rows, steps, label = "Frågan gäller") => ({
   key,
   data: { kind: "classify", ...data },
   prompt,
-  rows: [...rows, [text("Frågan gäller"), box("c")]],
+  rows: [...rows, [text(label), box("c")]],
   boxes: { c: { kind: "choice", options: ANSWERS, expected: data.answer } },
   steps,
 });
@@ -170,14 +179,14 @@ const langdAreaVolym = {
   id: "langd-area-volym",
   part: 4,
   title: "Längd, area eller volym?",
-  intro: "Längd är en sträcka i en riktning, area en yta i två riktningar och volym något som fylls i tre riktningar.",
+  intro: "Längd är hur långt något är, i en riktning, och mäts till exempel i cm. Area är hur stor en yta är, i två riktningar, och mäts till exempel i cm². Volym är hur mycket något rymmer, i tre riktningar, och mäts till exempel i cm³ eller liter.",
   exampleSeed: 42,
   fadesGrid: false,
   generate(rng, level) {
     const prompt = "Gäller frågan längd, area eller volym?";
     if (level === 0) {
       const item = pick(rng, UNIT_ITEMS);
-      return classifyQuestion(`unit:${item}`, { item, answer: UNIT_ANSWER[item] }, "Vad mäter enheten: längd, area eller volym?", [[unitLabel(item)]], [{ text: unitExplanation(item) }]);
+      return classifyQuestion(`unit:${item}`, { item, answer: UNIT_ANSWER[item] }, "Vad mäter enheten: längd, area eller volym?", [[unitLabel(item)]], [{ text: unitExplanation(item) }], "Enheten mäter");
     }
     if (level === 1) {
       if (rng() < 1 / 3) {
@@ -185,16 +194,15 @@ const langdAreaVolym = {
         const item = pick(rng, set.items);
         return classifyQuestion(`object:${set.object}:${item.answer}`, { item: `${set.object}:${item.answer}`, answer: item.answer }, prompt, [[pic(object(set.object))], [text(item.text)]], [
           { text: "Bilden är densamma i alla tre frågorna om föremålet. Det är frågan som avgör." },
-          { text: MEANING[item.answer] },
+          { text: `${item.why} ${MEANING[item.answer]}` },
         ]);
       }
       const item = pick(rng, WORD_ITEMS.filter((w) => w.level === 1));
-      return classifyQuestion(`word:${item.id}`, { item: item.id, answer: item.answer, tag: item.tag }, prompt, [[text(item.text)]], [{ text: MEANING[item.answer] }]);
+      return classifyQuestion(`word:${item.id}`, { item: item.id, answer: item.answer, tag: item.tag }, prompt, [[text(item.text)]], classifySteps(item));
     }
     if (rng() < 0.5) {
       const item = pick(rng, WORD_ITEMS.filter((w) => w.level === 2));
-      const extra = item.tag === "runt" ? [{ text: "Runt något är kanten runt en yta, och kanten är en sträcka." }] : [];
-      return classifyQuestion(`word:${item.id}`, { item: item.id, answer: item.answer, tag: item.tag }, prompt, [[text(item.text)]], [...extra, { text: MEANING[item.answer] }]);
+      return classifyQuestion(`word:${item.id}`, { item: item.id, answer: item.answer, tag: item.tag }, prompt, [[text(item.text)]], classifySteps(item));
     }
     // Längder ihop: plus ger en längd, två längder gånger varandra en area, tre en volym.
     const factors = randInt(rng, 1, 3);
@@ -218,7 +226,7 @@ const langdAreaVolym = {
       explanation = `${u} · ${u} · ${u} = ${u}³: tre riktningar. Det är en volym.`;
     }
     const answer = ANSWERS[factors - 1];
-    return classifyQuestion(`expr:${expr}`, { item: expr, expr, answer }, "Blir svaret en längd, en area eller en volym?", [pieces], [{ text: explanation }]);
+    return classifyQuestion(`expr:${expr}`, { item: expr, expr, answer }, "Blir svaret en längd, en area eller en volym?", [pieces], [{ text: explanation }], "Svaret blir en");
   },
   mistakes: [
     {
@@ -289,6 +297,28 @@ function perSquareMistake(id, perSquare, tip) {
   };
 }
 
+// Förklaringen ska gälla enheterna i uppgiften: den större enheten och enheten en ruta under den.
+// km² ligger tre rutor från m², så där förklaras m².
+const ONE_SMALLER = { m: "dm", dm: "cm", cm: "mm" };
+function unitPair(start, asked) {
+  const big = (unit(start).pos >= unit(asked).pos ? start : asked).replace(/[²³]/, "");
+  const base = big === "km" ? "m" : big;
+  return [base, ONE_SMALLER[base]];
+}
+
+function areaExplain(start, asked) {
+  const [big, small] = unitPair(start, asked);
+  return {
+    text: `Varför 100? 1 ${big}² är en ruta på 1 ${big} · 1 ${big}. 1 ${big} är 10 ${small}, så rutan rymmer 10 · 10 = 100 rutor på 1 ${small}².`,
+    row: [pic(tenByTen(big, small))],
+  };
+}
+
+function volumeExplain(start, asked) {
+  const [big, small] = unitPair(start, asked);
+  return { text: `Varför 1\u00a0000? 1 ${big}³ är en kub på 1 ${big} · 1 ${big} · 1 ${big}. 1 ${big} är 10 ${small}, så kuben rymmer 10 · 10 · 10 = 1 000 kuber på 1 ${small}³.` };
+}
+
 // En omvandlingskategori för area eller volym. Bilden eller texten om 10 · 10 (· 10) läggs efter hoppen.
 function squareCategory({ id, title, intro, exampleSeed, units, contexts, special, explain, mistakes, bounds = BOUNDS }) {
   return {
@@ -314,8 +344,9 @@ function squareCategory({ id, title, intro, exampleSeed, units, contexts, specia
         if (format === "context" && !context) format = "write";
         question = convertQuestion({ level, given, asked: to, format, context });
       }
-      const at = question.steps.findIndex((s) => s.text?.startsWith("Från"));
-      question.steps.splice(at + 1, 0, explain);
+      const at = question.steps.findIndex((s) => s.text?.startsWith("Räkna stegen"));
+      const start = question.data.via ?? question.data.given;
+      question.steps.splice(at + 1, 0, explain(start.unit, question.data.asked));
       return question;
     },
     mistakes,
@@ -325,12 +356,12 @@ function squareCategory({ id, title, intro, exampleSeed, units, contexts, specia
 const areaEnheter = squareCategory({
   id: "area-enheter",
   title: "Areaenheter",
-  intro: "1 m² är en ruta på 1 m · 1 m. Den rymmer 10 · 10 = 100 rutor på 1 dm · 1 dm. Därför är ett steg i rutnätet · 100 för area: kommat flyttas två steg.",
+  intro: "Area mäts i enheter som m² och dm². 1 m² är en ruta på 1 m · 1 m. 1 m är 10 dm, så rutan rymmer 10 · 10 = 100 rutor på 1 dm². Därför är varje steg i rutnätet 100 gånger för area, inte 10 gånger. Kommat flyttas alltså två steg för varje ruta. Hektar (ha) står inte i rutnätet. 1 ha är 10\u00a0000 m², så gör först om ha till m².",
   exampleSeed: 43,
   units: ["km²", "m²", "dm²", "cm²", "mm²"],
   contexts: AREA_CONTEXTS,
   special: { unit: "ha", min: "0,5", max: "50", targets: { 1: ["dm²"], 2: ["km²", "dm²"] } },
-  explain: { text: "1 dm² är en ruta på 1 dm · 1 dm. Den rymmer 10 · 10 = 100 rutor på 1 cm².", row: [pic(DM2)] },
+  explain: areaExplain,
   mistakes: [
     perSquareMistake("one-step-per-square", 1, "För area är varje steg i rutnätet · 100, alltså två steg för kommat."),
     translationMistake({ id: "ha-wrong", unitId: "ha", wrongExps: [2, 3], tip: "1 ha är 10 000 m². Gör om hektaren till m² först." }),
@@ -341,14 +372,14 @@ const areaEnheter = squareCategory({
 const volymEnheter = squareCategory({
   id: "volym-enheter",
   title: "Volymenheter i m³",
-  intro: "1 dm³ är en kub på 1 dm · 1 dm · 1 dm. Den rymmer 10 · 10 · 10 = 1 000 kuber på 1 cm³. Därför är ett steg i rutnätet · 1 000 för volym: kommat flyttas tre steg.",
+  intro: "Volym kan mätas i enheter som m³ och dm³. 1 dm³ är en kub på 1 dm · 1 dm · 1 dm. 1 dm är 10 cm, så kuben rymmer 10 · 10 · 10 = 1\u00a0000 kuber på 1 cm³. Därför är varje steg i rutnätet 1\u00a0000 gånger för volym. Kommat flyttas alltså tre steg för varje ruta.",
   exampleSeed: 44,
   units: ["m³", "dm³", "cm³", "mm³"],
   // Högst två rutor: m³ ↔ mm³ är en miljard och ger inga rimliga tal.
   bounds: { 0: [1, 1], 1: [1, 2], 2: [1, 2] },
   contexts: VOLUME_CONTEXTS,
   special: null,
-  explain: { text: "1 dm³ är en kub på 1 dm · 1 dm · 1 dm. Den rymmer 10 · 10 · 10 = 1 000 kuber på 1 cm³." },
+  explain: volumeExplain,
   mistakes: [
     perSquareMistake("one-step-per-square", 1, "För volym är varje steg i rutnätet · 1 000, alltså tre steg för kommat."),
     perSquareMistake("two-steps-per-square", 2, "Två steg per ruta gäller för area. För volym är varje steg i rutnätet · 1 000, alltså tre steg."),
@@ -375,12 +406,10 @@ function routeUnits(from, to) {
 const legsOf = (units) => units.slice(1).filter((u, i) => !isSwitch(units[i], u)).length;
 
 function legStep(prev, cur) {
-  if (isSwitch(prev.unit, cur.unit)) return { text: "1 dm³ = 1 l, så talet är detsamma.", row: [qty(prev.amount, prev.unit), EQ, qty(cur.amount, cur.unit)] };
+  if (isSwitch(prev.unit, cur.unit)) return { text: "1 dm³ = 1 l, så talet är detsamma. Bara enheten byts.", row: [qty(prev.amount, prev.unit), EQ, qty(cur.amount, cur.unit)] };
   const h = hops(prev.unit, cur.unit);
-  const each = `${h.direction === "höger" ? "·" : "/"}\u00a0${formatDecimal(dec(1, h.cells))}`;
-  const steps = Array(h.squares).fill(each).join(" ");
   return {
-    text: `Från ${prev.unit} till ${cur.unit} är ${h.squares} steg åt ${h.direction}: ${steps}.`,
+    text: `Från ${prev.unit} till ${cur.unit} är det ${h.squares} steg åt ${h.direction}. ${stepMeaning(h)}`,
     row: [qty(prev.amount, prev.unit), EQ, qty(cur.amount, cur.unit)],
   };
 }
@@ -389,7 +418,7 @@ const m3Liter = {
   id: "m3-liter",
   part: 4,
   title: "m³ och liter",
-  intro: "Gå alltid via 1 dm³ = 1 l. Gör först om till dm³ eller l, byt namn, och gör sedan om till den enhet som frågan vill ha.",
+  intro: "Volym kan skrivas både i m³ och i liter. Bron mellan dem är 1 dm³ = 1 l: en kub på 1 dm · 1 dm · 1 dm rymmer precis 1 liter. Gör därför först om till dm³ eller l, byt enhet, och gör sedan om till den enhet som frågan vill ha. I rutnätet står liter under dm³.",
   exampleSeed: 45,
   fadesGrid: true,
   generate(rng, level) {
@@ -430,10 +459,8 @@ const m3Liter = {
       rows,
       boxes,
       steps: [
-        { text: `Gå alltid via 1 dm³ = 1 l: ${units.join(" → ")}.` },
-        { row: [grid(gridModel({ family: "m3", literRow: true, from, to, showHops: true }))] },
+        { text: `I rutnätet står liter under dm³, eftersom 1 dm³ = 1 l. Gå alltid den vägen: ${units.join(" → ")}.`, row: [grid(gridModel({ family: "m3", literRow: true, from, to, showHops: true }))] },
         ...path.slice(1).map((cur, i) => legStep(path[i], cur)),
-        { row: [qty(given.amount, from), EQ, qty(answer, to)] },
       ],
     };
   },
@@ -460,7 +487,7 @@ const likaStora2 = {
   id: "lika-stora-2",
   part: 4,
   title: "Vilka är lika stora? (area, volym, liter)",
-  intro: "Gör om alla mått till samma enhet. För area är varje steg i rutnätet två steg för kommat, för volym tre. 1 dm³ = 1 l.",
+  intro: "Samma siffror kan betyda helt olika mått, så gör först om alla mått till samma enhet. Kom ihåg att varje steg i rutnätet är 100 gånger för area och 1\u00a0000 gånger för volym. Mellan volym och liter gäller 1 dm³ = 1 l, och därför är 1 cm³ = 1 ml.",
   exampleSeed: 46,
   fadesGrid: false,
   generate(rng, level) {

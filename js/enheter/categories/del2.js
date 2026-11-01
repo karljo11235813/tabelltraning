@@ -112,10 +112,7 @@ function sumQuestion(rng, units) {
     return { terms, asked, parts, answer };
   });
   const { terms, asked, parts, answer } = q;
-  const rewrite = terms
-    .map((t, i) => ({ t, i }))
-    .filter(({ t }) => t.unit !== asked)
-    .map(({ t, i }) => ({ row: [qty(t.amount, t.unit), EQ, qty(parts[i], asked)] }));
+  const other = terms.findIndex((t) => t.unit !== asked);
   return {
     key: `sum:${fmt(terms[0])}+${fmt(terms[1])}>${asked}`,
     data: { kind: "sum", format: "sum", terms, asked, answer },
@@ -123,9 +120,11 @@ function sumQuestion(rng, units) {
     rows: [[qty(terms[0].amount, terms[0].unit), PLUS, qty(terms[1].amount, terms[1].unit), EQ, box("a"), unitLabel(asked)]],
     boxes: { a: { kind: "decimal", expected: answer, unit: asked } },
     steps: [
-      { text: `Skriv båda måtten i ${asked} först. Sedan går de att lägga ihop.` },
-      ...rewrite,
-      { row: [qty(parts[0], asked), PLUS, qty(parts[1], asked), EQ, qty(answer, asked)] },
+      {
+        text: `Båda måtten måste stå i ${asked} innan de går att lägga ihop. Gör om ${fmt(terms[other])}.`,
+        rows: [[qty(terms[other].amount, terms[other].unit), EQ, qty(parts[other], asked)]],
+      },
+      { text: "Lägg ihop:", row: [qty(parts[0], asked), PLUS, qty(parts[1], asked), EQ, qty(answer, asked)] },
     ],
   };
 }
@@ -174,7 +173,7 @@ function unitCategory({ id, title, intro, exampleSeed, units, special = null, ra
 const langd = unitCategory({
   id: "langd",
   title: "Längd",
-  intro: "Gör om mellan km, m, dm, cm och mm med rutnätet: varje steg är tio gånger. 1 mil är 10 km, så mil görs om till km först.",
+  intro: "Längd mäts i meter (m). Med prefix får du km, dm, cm och mm. För att göra om mellan dem använder du rutnätet: varje ruta är en enhet, och varje steg är 10 gånger. Mil står inte i rutnätet. 1 mil är 10 km, så gör först om mil till km.",
   exampleSeed: 31,
   units: ["km", "m", "dm", "cm", "mm"],
   special: { unit: "mil", share: 0.28, range: { min: "0,5", max: "100" }, targets: { 0: ["m"], 1: ["m", "dm"], 2: ["m", "dm", "cm", "mm"] } },
@@ -205,7 +204,7 @@ const clDl = {
 const liter = unitCategory({
   id: "liter",
   title: "Volym i liter",
-  intro: "Liter har samma prefix som meter: 1 l = 10 dl = 100 cl = 1 000 ml. Varje steg i rutnätet är tio gånger.",
+  intro: "Volym mäts ofta i liter (l). Liter har samma prefix som meter, så du gör om på samma sätt i rutnätet: varje ruta är en enhet, och varje steg är 10 gånger. 1 l är 10 dl, 100 cl eller 1\u00a0000 ml.",
   exampleSeed: 32,
   units: ["l", "dl", "cl", "ml"],
   rare: { unit: "kl", share: 0.25 },
@@ -216,7 +215,7 @@ const liter = unitCategory({
 const vikt = unitCategory({
   id: "vikt",
   title: "Vikt",
-  intro: "Gram har samma prefix: 1 kg = 10 hg = 1 000 g. 1 ton är 1 000 kg, så ton görs om till kg först.",
+  intro: "Vikt mäts i gram (g). Ett prefix framför g säger hur många gram det är: 1 hg är 100 g och 1 kg är 1\u00a0000 g. Du gör om i rutnätet, där varje steg är 10 gånger. Ton står inte i rutnätet. 1 ton är 1\u00a0000 kg, så gör först om ton till kg.",
   exampleSeed: 33,
   units: ["kg", "hg", "g", "mg"],
   special: { unit: "ton", share: 0.28, range: { min: "0,1", max: "50" }, targets: { 0: ["hg", "g"], 1: ["hg", "g"], 2: ["hg", "g"] } },
@@ -231,7 +230,7 @@ const likaStora1 = {
   id: "lika-stora-1",
   part: 2,
   title: "Vilka är lika stora? (längd, liter, vikt)",
-  intro: "Gör om alla mått till samma enhet. Då syns vilka som är lika stora, fast siffrorna ser likadana ut.",
+  intro: "Samma siffror kan betyda helt olika mått: 2 m och 2 cm är inte lika långa, men 2 m och 200 cm är det. Därför går det inte att jämföra talen direkt. Gör först om alla mått till samma enhet. Då ser du vilka mått som är lika stora.",
   exampleSeed: 36,
   fadesGrid: false,
   generate(rng, level) {

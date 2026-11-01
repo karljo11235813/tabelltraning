@@ -56,37 +56,42 @@ function directionWords(start, asked) {
   return { smaller, bigger: smaller ? "större" : "mindre" };
 }
 
-// Lösningen: översättning, rutnätet med hopp, hoppen som räkning, betydelsen, kedjan och svaret.
-export function convertSteps(given, asked, { wide = false, names = false } = {}) {
+// Enheter som inte står i rutnätet: de görs först om till en enhet som gör det.
+const NOT_IN_GRID = { mil: "Mil", ton: "Ton", ha: "Hektar (ha)" };
+
+const verbOf = (h) => (h.direction === "höger" ? "multiplicera" : "dela");
+
+// Vad stegen i rutnätet betyder med ord, samma mening i alla omvandlingar.
+export function stepMeaning(h) {
+  const verb = verbOf(h);
+  const one = `Varje steg åt ${h.direction} betyder ${verb} med ${formatDecimal(dec(1, h.cells))}.`;
+  return h.squares === 1 ? one : `${one} ${h.squares} steg betyder ${verb} med ${formatDecimal(dec(1, h.squares * h.cells))}.`;
+}
+
+// Lösningen: översättning, rutnätet med hopp, hoppen med ord, betydelsen och kedjan. conclude: false när svaret
+// står direkt efter (en hel fråga), true när omvandlingen är ett steg i en längre lösning.
+export function convertSteps(given, asked, { wide = false, names = false, conclude = true } = {}) {
   const steps = [];
   const tr = translation(given.unit);
   const start = startOf(given);
   if (tr) {
-    const rule = `1 ${given.unit} = ${formatDecimal(tr.factor)} ${tr.to}`;
     steps.push({
-      text: equals(given.amount, dec(1)) ? `${rule}.` : `${rule}, så ${fmt(given)} = ${fmt(start)}.`,
+      text: `${NOT_IN_GRID[given.unit]} står inte i rutnätet, så gör först om till ${tr.to}: 1 ${given.unit} = ${formatDecimal(tr.factor)} ${tr.to}.`,
       row: [qty(given.amount, given.unit), EQ, qty(start.amount, start.unit)],
     });
   }
   const family = unit(start.unit).family;
   const h = hops(start.unit, asked);
-  steps.push({ row: [grid(gridModel({ family, from: start.unit, to: asked, showHops: true, wide, names }))] });
+  steps.push({
+    text: `Hitta enheterna i rutnätet. Du börjar i rutan för ${start.unit} (pennan) och ska till rutan för ${asked} (den streckade rutan).`,
+    row: [grid(gridModel({ family, from: start.unit, to: asked, showHops: true, wide, names }))],
+  });
 
-  // Hårt mellanslag mellan tecknet och talet, så att "· 10" aldrig bryts.
-  const sign = h.direction === "höger" ? "·" : "/";
-  const each = `${sign}\u00a0${formatDecimal(dec(1, h.cells))}`;
-  const total = `${sign}\u00a0${formatDecimal(dec(1, h.squares * h.cells))}`;
-  const chainOps = Array(h.squares).fill(each).join(" ");
-  const steg = `${h.squares} steg åt ${h.direction}`;
-  if (h.cells === 1) {
-    steps.push({ text: `Från ${start.unit} till ${asked} är ${steg}: ${h.squares === 1 ? each : `${chainOps} = ${total}`}.` });
-  } else {
-    steps.push({ text: `Från ${start.unit} till ${asked} är ${steg}. Varje steg är ${each}${h.squares === 1 ? "" : `: ${chainOps} = ${total}`}.` });
-  }
+  steps.push({ text: `Räkna stegen. Från ${start.unit} till ${asked} är det ${h.squares} steg åt ${h.direction}. ${stepMeaning(h)}` });
 
   const { smaller, bigger } = directionWords(start.unit, asked);
   steps.push({
-    text: `${cap(article(asked))} ${asked} är ${smaller ? "mindre" : "större"} än ${article(start.unit)} ${start.unit}, så det går ${smaller ? "fler" : "färre"} ${asked} på samma ${NOUN[unit(asked).quantity]}. Talet blir ${bigger}.`,
+    text: `Kontrollera riktningen. ${cap(article(asked))} ${asked} är ${smaller ? "mindre" : "större"} än ${article(start.unit)} ${start.unit}, så det går ${smaller ? "fler" : "färre"} ${asked} på samma ${NOUN[unit(asked).quantity]}. Talet ska bli ${bigger}.`,
   });
 
   const chain = [num(start.amount)];
@@ -95,14 +100,17 @@ export function convertSteps(given, asked, { wide = false, names = false } = {})
     v = shift(v, Math.sign(h.factorExp) * h.cells);
     chain.push(ARROW, num(v));
   }
-  steps.push({ row: chain });
+  steps.push({ text: `${cap(verbOf(h))} med ${formatDecimal(dec(1, h.cells))}${h.squares === 1 ? "." : ", ett steg i taget."}`, row: chain });
 
-  const answer = convert(start.amount, start.unit, asked);
-  steps.push({
-    row: tr
-      ? [qty(given.amount, given.unit), EQ, qty(start.amount, start.unit), EQ, qty(answer, asked)]
-      : [qty(start.amount, start.unit), EQ, qty(answer, asked)],
-  });
+  if (conclude) {
+    const answer = convert(start.amount, start.unit, asked);
+    steps.push({
+      text: "Då är omvandlingen klar:",
+      row: tr
+        ? [qty(given.amount, given.unit), EQ, qty(start.amount, start.unit), EQ, qty(answer, asked)]
+        : [qty(start.amount, start.unit), EQ, qty(answer, asked)],
+    });
+  }
   return steps;
 }
 
@@ -145,7 +153,7 @@ export function convertQuestion({ level, given, asked, format = "plain", context
     prompt: format === "context" ? `${context} Svara i ${asked}.` : PROMPTS[format](given, asked),
     rows,
     boxes,
-    steps: convertSteps(given, asked, { wide, names }),
+    steps: convertSteps(given, asked, { wide, names, conclude: false }),
   };
 }
 

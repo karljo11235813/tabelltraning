@@ -2,6 +2,18 @@
    kartan, frågekortet och återkopplingen från brak.css (bt-klasserna). */
 
 .en-row-block { width: 100%; justify-content: center; }
+
+/* ---------- EXEMPELKORTET ---------- */
+#btExampleIntro { color: var(--text); }
+.en-example { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.en-example-label { margin: 0 0 6px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+.en-example-task { padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); }
+.en-example-task .bt-prompt { margin: 0 0 8px; }
+.en-example-task .bt-rows { margin: 0; }
+.en-example-steps .bt-steps { margin-bottom: 0; }
+.en-example-answer { padding: 10px 12px; border-left: 5px solid var(--success); border-radius: 10px; background: var(--success-soft); }
+.en-example-answer .en-example-label { color: var(--text); }
+.en-example-answer .bt-rows-filled { margin: 0; }
 .bt-rows-step .en-row-block, .bt-rows-filled .en-row-block { justify-content: flex-start; }
 
 /* ---------- RUTOR ---------- */
@@ -68,6 +80,8 @@ button.en-tile:focus-visible { outline: 3px solid var(--accent-strong); outline-
 .en-letter { font-weight: 800; font-size: 1.15em; }
 .en-letter.is-word { font-size: 0.7em; }
 /* Tätt rutnät (16 rutor på en telefon): bara bokstäverna, mindre, och "enhet" ännu mindre. */
+.en-grid.is-long .en-letter.is-word { font-size: 0.56em; letter-spacing: -0.02em; }
+.en-grid.is-long .en-name { font-size: 0.56em; }
 .en-grid.is-tight .en-name { display: none; }
 .en-grid.is-tight .en-square { min-height: 2.4em; }
 .en-grid.is-tight .en-letter { font-size: 0.9em; }

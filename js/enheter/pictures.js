@@ -5,7 +5,8 @@ export const rect = (w, h) => ({ type: "rect", w, h });
 export const lShape = (w, h, cutW, cutH) => ({ type: "L", w, h, cutW, cutH });
 export const cubes = (w, d, layers) => ({ type: "cubes", w, d, layers });
 export const object = (name) => ({ type: "object", object: name });
-export const DM2 = { type: "dm2" };
+// En ruta med sidan 1 big, delad i 10 · 10 rutor med sidan 1 small.
+export const tenByTen = (big, small) => ({ type: "dm2", big, small });
 
 // Antal rutor på 1 cm · 1 cm. L-formen är en rektangel där ett hörn saknas.
 export function areaOf(s) {

@@ -1,7 +1,7 @@
 // Ritar byggstenarna från pieces.js: rader, rutor att fylla i, prefixrutnätet, skaltabellen,
 // arbetsbladstabellen, brickorna och bilderna (SVG).
 import { dec, formatDecimal } from "./decimal.js";
-import { fill } from "./pieces.js";
+import { fill, boxIds } from "./pieces.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const NBSP = " ";
@@ -103,6 +103,7 @@ function renderGrid(model, { useWindow = false } = {}) {
   const cols = squares.length * 2 * cells;
   const node = el("div", `en-grid en-cells-${cells}`);
   node.style.setProperty("--en-cols", cols);
+  if (squares.length > 7) node.classList.add("is-long"); // Mikro, Mega och Giga: 16 smala rutor
   node._model = model;
   if (useWindow) node.dataset.windowed = "true";
 
@@ -336,16 +337,16 @@ function objectFigure(name) {
   return root;
 }
 
-function dm2Figure() {
+function dm2Figure({ big, small }) {
   const s = 14;
   const pad = 24;
   const root = svg("svg", { viewBox: `0 0 ${10 * s + 2 * pad} ${10 * s + 2 * pad}`, class: "en-pic en-pic-dm2", role: "img" });
   for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) root.append(svg("rect", { x: pad + i * s, y: pad + j * s, width: s, height: s, class: i === 0 && j === 0 ? "en-fill-strong" : "en-fill" }));
   root.append(svg("rect", { x: pad, y: pad, width: 10 * s, height: 10 * s, class: "en-outline" }));
   const top = svg("text", { x: pad + 5 * s, y: pad - 8, class: "en-pic-label", "text-anchor": "middle" });
-  top.textContent = "1 dm = 10 cm";
+  top.textContent = `1 ${big} = 10 ${small}`;
   const corner = svg("text", { x: pad + s + 4, y: pad + s - 3, class: "en-pic-label en-pic-small" });
-  corner.textContent = "1 cm²";
+  corner.textContent = `1 ${small}²`;
   root.append(top, corner);
   return root;
 }
@@ -363,7 +364,7 @@ function renderPicture(p) {
     holder.append(squaredFigure(cellsIn));
   } else if (p.type === "cubes") holder.append(cubesFigure(p));
   else if (p.type === "object") holder.append(objectFigure(p.object));
-  else if (p.type === "dm2") holder.append(dm2Figure());
+  else if (p.type === "dm2") holder.append(dm2Figure(p));
   else throw new Error(`Okänd bild: ${p.type}`);
   return holder;
 }
@@ -470,19 +471,47 @@ export function renderQuestion(question) {
   return renderRows(question.rows, question.boxes, "bt-rows");
 }
 
-// Stegen och sedan frågan med de rätta svaren ifyllda.
-export function renderSolution(question) {
-  const node = el("div", "bt-solution-body");
+function renderSteps(question) {
   const list = el("ol", "bt-steps");
   for (const step of question.steps) {
     const item = el("li", "bt-step");
-    if (step.text) item.append(el("p", "bt-step-text", step.text));
-    if (step.row) item.append(renderRows([step.row], {}, "bt-rows bt-rows-step").el);
+    item.append(el("p", "bt-step-text", step.text));
+    const rows = step.rows ?? (step.row ? [step.row] : []);
+    if (rows.length > 0) item.append(renderRows(rows, {}, "bt-rows bt-rows-step").el);
     list.append(item);
   }
-  // Svaret utan rutnätet: det står redan med hoppen i lösningen.
-  const answerRows = fill(question.rows, question.boxes).filter((row) => !(row.length === 1 && row[0].t === "grid"));
-  const filled = renderRows(answerRows, question.boxes, "bt-rows bt-rows-filled").el;
-  node.append(list, el("div", "bt-answer-label", "Svar"), filled);
+  return list;
+}
+
+// Frågan med de rätta svaren ifyllda, utan rader som inte har någon ruta: de står redan i frågan.
+// Ordet "Svar:" i raden tas bort, eftersom rubriken ovanför redan säger det.
+function renderAnswer(question) {
+  const isLabel = (p) => p.t === "text" && p.s === "Svar:";
+  const rows = fill(question.rows.filter((row) => boxIds([row]).length > 0), question.boxes).map((row) => row.filter((p) => !isLabel(p)));
+  return renderRows(rows, question.boxes, "bt-rows bt-rows-filled").el;
+}
+
+// Stegen och sedan svaret, under frågan efter ett fel svar.
+export function renderSolution(question) {
+  const node = el("div", "bt-solution-body");
+  node.append(renderSteps(question), el("div", "bt-answer-label", "Svar"), renderAnswer(question));
+  return node;
+}
+
+// Exempelkortet: uppgiften som eleven möter den, med rutor som inte går att fylla i, stegen och svaret en gång.
+export function renderExample(question) {
+  const block = (label, className, ...content) => {
+    const node = el("section", className);
+    node.append(el("h3", "en-example-label", label), ...content);
+    return node;
+  };
+  const task = renderQuestion(question).el;
+  task.inert = true;
+  const node = el("div", "en-example");
+  node.append(
+    block("Uppgiften", "en-example-task", el("p", "bt-prompt", question.prompt), task),
+    block("Så gör du", "en-example-steps", renderSteps(question)),
+    block("Svar", "en-example-answer", renderAnswer(question)),
+  );
   return node;
 }

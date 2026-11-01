@@ -102,9 +102,11 @@ export function tilesQuestion(rng, level, { families, groupSize }) {
     rows: [[box("p")]],
     boxes: { p: { kind: "pick", tiles, expected: group } },
     steps: [
-      { text: `Skriv alla mått i ${common}.` },
-      ...tiles.map((t) => ({ row: [qty(t.amount, t.unit), EQ, qty(conv(t).amount, common)] })),
-      { text: `Lika stora: ${equal.slice(0, -1).join(", ")} och ${equal[equal.length - 1]}.` },
+      {
+        text: `Måtten har olika enheter, så talen går inte att jämföra direkt. Skriv om alla mått i samma enhet, ${common}.`,
+        rows: tiles.map((t) => (t.unit === common ? [qty(t.amount, t.unit)] : [qty(t.amount, t.unit), EQ, qty(conv(t).amount, common)])),
+      },
+      { text: `Jämför talen. ${equal.slice(0, -1).join(", ")} och ${equal[equal.length - 1]} är ${equal.length === 2 ? "båda" : "alla"} ${fmt(conv(tiles[group[0]]))}, så de är lika stora.` },
     ],
   };
 }

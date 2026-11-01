@@ -7,6 +7,7 @@ export const REDUCTIONS = [2, 4, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 20
 export const ENLARGEMENTS = [2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000];
 
 export const NO_UNIT_LINE = "Skalan har ingen enhet. Den gäller bara när båda längderna har samma enhet.";
+export const TABLE_LINE = "Pilarna visar hur du räknar åt varje håll: · är multiplicera och / är dela.";
 
 const int = (n) => formatDecimal(dec(n));
 
@@ -42,7 +43,7 @@ export function scaleTableModel({ scale, known = null, answer = null, unit = nul
 export function directionSentence(scale, from) {
   const n = int(scaleFactor(scale));
   const multiply = (from === "bild") === isReduction(scale);
-  return from === "bild"
-    ? `Från bild till verklighet: ${multiply ? "multiplicera" : "dela"} med ${n}.`
-    : `Från verklighet till bild: ${multiply ? "multiplicera" : "dela"} med ${n}.`;
+  const [start, goal] = from === "bild" ? ["bilden", "verkligheten"] : ["verkligheten", "bilden"];
+  const route = from === "bild" ? "Från bild till verklighet" : "Från verklighet till bild";
+  return `${route}: ${multiply ? "multiplicera" : "dela"} med ${n}, eftersom ${goal} är ${multiply ? "större" : "mindre"} än ${start}.`;
 }

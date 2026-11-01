@@ -4,7 +4,7 @@
 import { CATEGORIES, PARTS, getCategory, generateQuestion, exampleQuestion } from "./categories/index.js";
 import { check, tipFor } from "./check.js";
 import { createProgress, STREAK_TO_MASTER } from "../brak/progress.js";
-import { renderQuestion, renderSolution, firstField, nextFocus, fitGrids } from "./render.js";
+import { renderQuestion, renderSolution, renderExample, firstField, nextFocus, fitGrids } from "./render.js";
 import { exampleHidden, enterSubmits, STORAGE_KEY } from "./flow.js";
 import { createStore } from "../sant-falskt/storage.js";
 
@@ -87,8 +87,7 @@ function showExample() {
   $("btExampleOf").textContent = `Steg ${stepNumber(category)} av ${CATEGORIES.length}${review ? " · repetition" : ""}`;
   $("btExampleTitle").textContent = category.title;
   $("btExampleIntro").textContent = category.intro;
-  const example = exampleQuestion(category);
-  $("btExampleBody").replaceChildren(el("p", "bt-prompt", example.prompt), renderSolution(example));
+  $("btExampleBody").replaceChildren(renderExample(exampleQuestion(category)));
   $("btReady").textContent = run.question ? "Tillbaka till uppgiften" : "Jag är redo";
   showScreen("btExample");
   $("btReady").focus();
