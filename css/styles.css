@@ -1002,3 +1002,56 @@
     .timer-bar-fill, .problem-box, .choice-row button, .start-btn, .again-btn, .landing-card { transition: none; }
     #testScreen.counting .problem-text.countdown-pop { animation: none; }
   }
+
+  /* ---------- PROGRESS PANEL (1-minute test; js/progress-panel.js) ---------- */
+  .progress-panel { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); text-align: left; }
+  .progress-panel[hidden] { display: none; }
+  .progress-panel h2 { margin: 0 0 10px; font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+  .pp-verdict { margin: 0; font-weight: 800; font-size: 1.02rem; line-height: 1.35; }
+  .pp-arrow { margin-right: 6px; color: var(--text-muted); }
+  .pp-arrow-up { color: var(--success); }
+  .pp-note { margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted); line-height: 1.35; }
+  .pp-level { margin: 10px 0 0; font-weight: 700; font-size: 0.95rem; }
+  .pp-chart-title { margin: 16px 0 2px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+  .pp-chart { display: block; width: 100%; height: auto; }
+  .pp-chart text { font-family: "Nunito Sans", "Segoe UI", "Arial", sans-serif; }
+  .pp-band { fill: var(--accent-soft); }
+  .pp-base { stroke: var(--border); stroke-width: 1; }
+  .pp-goal { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 4 4; }
+  .pp-axis { font-size: 11px; fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .pp-goal-name {
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--text-muted);
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 3px;
+  }
+  .pp-hit { fill: transparent; }
+  .pp-dot { fill: var(--text-muted); stroke: var(--surface); stroke-width: 1.5; }
+  .pp-dot-best { fill: var(--success); }
+  .pp-line { fill: none; stroke: var(--accent-strong); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .pp-best {
+    font-size: 12px;
+    font-weight: 800;
+    fill: var(--text);
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 3px;
+  }
+  .pp-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 0.76rem; color: var(--text-muted); }
+  .pp-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .pp-key { display: inline-block; }
+  .pp-key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+  .pp-key-line { width: 16px; height: 3px; border-radius: 2px; background: var(--accent-strong); }
+  .pp-key-band { width: 16px; height: 10px; border-radius: 2px; background: var(--accent-soft); }
+  .pp-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+  .pp-tile { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .pp-tile b { font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
+  .pp-tile span { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); line-height: 1.2; margin-top: 2px; }
+  .pp-table { margin-top: 14px; font-size: 0.85rem; }
+  .pp-table summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+  .pp-table-scroll { max-height: 15rem; overflow-y: auto; margin-top: 6px; }
+  .pp-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .pp-table th { position: sticky; top: 0; background: var(--surface); text-align: left; color: var(--text-muted); font-weight: 700; }
+  .pp-table th, .pp-table td { padding: 4px 6px; border-bottom: 1px solid var(--border); }

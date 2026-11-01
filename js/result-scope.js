@@ -5,11 +5,18 @@
 
 const MAX_TABLE = 12;
 
-export function describeScope({ origin, operation, tables, mode }, s) {
+function tableStrip(tables) {
   const chosen = new Set(tables);
-  const strip = Array.from({ length: MAX_TABLE }, (_, i) => ({ n: i + 1, included: chosen.has(i + 1) }));
-  const fullCoverage = strip.every((t) => t.included) && operation === 'mix';
-  const isTest = origin === 'test' && fullCoverage;
+  return Array.from({ length: MAX_TABLE }, (_, i) => ({ n: i + 1, included: chosen.has(i + 1) }));
+}
+
+export function isFullTest({ origin, operation, tables }) {
+  return origin === 'test' && operation === 'mix' && tableStrip(tables).every((t) => t.included);
+}
+
+export function describeScope({ origin, operation, tables, mode }, s) {
+  const strip = tableStrip(tables);
+  const isTest = isFullTest({ origin, operation, tables });
 
   const operationText = operation === 'mul' ? s.scopeOpMul : operation === 'div' ? s.scopeOpDiv : s.scopeOpMix;
 

@@ -16,7 +16,7 @@ export function assessLevels({ correct, wrong }) {
   return { correct, wrong, reached, highest };
 }
 
-function fill(template, values) {
+export function fill(template, values) {
   return template.replace(/\{(\w+)\}/g, (_, k) => String(values[k]));
 }
 

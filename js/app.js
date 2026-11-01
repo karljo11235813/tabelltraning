@@ -6,6 +6,9 @@ import { getFactStats, logAttempt, clearFactStats } from './stats-store.js';
 import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
 import { describeScope, roundPoints, formatPoints } from './result-scope.js';
 import { LEVELS, assessLevels, levelHint, levelRequirement } from './levels.js';
+import { createStore } from './sant-falskt/storage.js';
+import { isProgressRun, loadRuns, saveRun } from './run-history.js';
+import { renderProgress } from './progress-panel.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
@@ -59,6 +62,8 @@ const statsResetBtn = document.getElementById('statsResetBtn');
 const testModeButtons = document.querySelectorAll('#testModeChoice button');
 const testStartBtn = document.getElementById('testStartBtn');
 const testStartHint = document.getElementById('testStartHint');
+const testProgress = document.getElementById('testProgress');
+const runStore = createStore(() => window.localStorage);
 
 const tableGrid = document.getElementById('tableGrid');
 const modeButtons = document.querySelectorAll('#modeChoice button');
@@ -93,6 +98,7 @@ const statSpeed = document.getElementById('statSpeed');
 const penaltyNote = document.getElementById('penaltyNote');
 const rankLadder = document.getElementById('rankLadder');
 const againBtn = document.getElementById('againBtn');
+const resultProgress = document.getElementById('resultProgress');
 const restartBtn = document.getElementById('restartBtn');
 
 let mode = 'time';
@@ -147,6 +153,21 @@ function showScreen(el) {
     s.style.display = 'none';
   });
   el.style.display = el === testScreen ? 'flex' : 'block';
+  if (el === testSetupScreen) renderTestProgress(); // now that the screen has a width to measure
+}
+
+// The panel is about the 1-minute test, so it only shows while that format is chosen.
+function renderTestProgress() {
+  testProgress.hidden = mode !== 'time';
+  if (mode === 'time') renderProgress(testProgress, loadRuns(runStore), t());
+}
+
+// On the result screen it follows the run just finished: only a real 1-minute test
+// gets it, since Öva and the 100-question test aren't what the panel measures.
+function renderResultProgress() {
+  const show = isProgressRun(lastRun, { correct: correctCount, wrong: wrongCount });
+  resultProgress.hidden = !show;
+  if (show) renderProgress(resultProgress, loadRuns(runStore), t());
 }
 
 chooseTestBtn.addEventListener('click', () => {
@@ -201,6 +222,7 @@ function syncModeUI() {
   startHint.textContent = mode === 'time' ? s.hintTime : s.hintCount;
   testStartBtn.textContent = mode === 'time' ? s.startTime : s.startCount;
   testStartHint.textContent = mode === 'time' ? s.hintTime : s.hintCount;
+  renderTestProgress();
 }
 
 function setOperation(op) {
@@ -341,6 +363,8 @@ function renderResultText() {
   } else {
     document.body.style.backgroundColor = '';
   }
+
+  renderResultProgress();
 }
 
 function applyLanguage() {
@@ -821,6 +845,9 @@ function endRound() {
     : (performance.now() - roundStartTime) / 1000;
   hasResult = true;
   lastRun = { origin: originScreen, operation, tables: new Set(selectedTables), mode };
+  if (isProgressRun(lastRun, { correct: correctCount, wrong: wrongCount })) {
+    saveRun(runStore, { ts: Date.now(), correct: correctCount, wrong: wrongCount });
+  }
 
   renderResultText();
 }
