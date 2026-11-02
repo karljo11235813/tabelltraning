@@ -877,3 +877,92 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
   .dg-practice-stage .dg-symbol-btn { min-width: 2.4em; }
   .dg-practice-start, .dg-practice-end { padding: 16px; }
 }
+
+/* ---------- TANKEVERKTYG ---------- */
+
+/* Knappen i rubrikraden står på accentfärgen, och panelen under rubriken står kvar när sidan rullar. Under Öva är rubriken dold och
+   vyn har en egen knapp och panel, som i helskärm är det enda som syns. */
+.dg-tools-button {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.dg-tools-icon { display: block; margin-inline: auto; width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dg-tools-button:hover, .dg-tools-button[aria-expanded="true"] { background: rgba(255, 255, 255, 0.18); }
+.dg-tools-button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.bt-header-sub { margin-left: auto; }
+.dg-toolbox {
+  position: sticky;
+  top: var(--dg-header-h);
+  z-index: 15;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 10px;
+  box-sizing: border-box;
+  width: 100%; /* body centrerar sina barn: utan bredd blir panelen lika bred som tallinjen */
+  padding: 6px clamp(8px, 2vw, 20px) 4px;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface);
+}
+.dg-toolbox[hidden] { display: none; }
+.dg-practice .dg-toolbox { top: 0; margin-bottom: 8px; border: 1.5px solid var(--border); border-radius: 10px; }
+body:has(.dg-practice:not([hidden])) > .dg-toolbox { display: none; }
+html { scroll-padding-top: calc(var(--dg-header-h) + var(--dg-tools-h, 0px) + 8px); }
+.dg-filter { top: calc(var(--dg-header-h) + var(--dg-tools-h, 0px)); }
+/* Flikarna, verktygets knappar och Stäng delar översta raden, så att panelen tar så lite höjd som möjligt från uppgiften. */
+.dg-tool-top, .dg-tool-stage, .dg-tool { display: contents; }
+.dg-tool-tabs { grid-area: 1 / 1; display: flex; flex-wrap: wrap; gap: 6px; }
+.dg-tool-tab[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.dg-tool-close { grid-area: 1 / 3; }
+
+/* Tallinjen ritas i bildpunkter efter panelens bredd (layoutFor), rullar aldrig och står alltid på en rad. Fingret drar längs linjen utan
+   att sidan rullar. En båge åt vänster är streckad, så att riktningen inte bara syns på pilen. */
+.dg-nl-controls { grid-area: 1 / 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.dg-nl-box { grid-column: 1 / -1; }
+/* Telefon: Stäng delar rad med knapparna, och är fliken ensam behövs den inte. Då går så lite som möjligt av höjden åt till panelen. */
+@media (max-width: 760px) {
+  .dg-toolbox { grid-template-columns: minmax(0, 1fr) auto; }
+  .dg-tool-tabs { grid-area: auto / 1; }
+  .dg-tool-tabs:has(> :only-child) { display: none; }
+  .dg-tool-close { grid-area: 1 / 2; }
+  .dg-nl-controls { grid-area: auto / 1; }
+  .dg-nl-status { flex-basis: 100%; font-size: 0.85rem; }
+}
+@media (max-width: 760px), (max-height: 500px) {
+  .dg-typing { --dg-tools-h: 0px !important; }
+  .dg-typing .dg-toolbox { position: static; }
+}
+/* Den minsta telefonen: rubrikraden ryms med tecknet bara om marginalerna krymper. */
+@media (max-width: 340px) {
+  header { gap: 6px; padding-left: 10px; padding-right: 10px; }
+  .header-title { font-size: 1.05rem; }
+  .bt-header-sub { font-size: 0.9rem; }
+}
+.dg-nl-step { min-height: 2.4rem; border-color: var(--accent); color: var(--text); }
+/* Snabba tryck på en telefon är steg, inte en dubbeltryckning som zoomar in sidan. */
+.dg-nl-controls button { touch-action: manipulation; }
+.dg-nl-controls .bt-small-btn:disabled { opacity: 0.45; cursor: default; }
+.dg-nl-status { font-weight: 700; font-size: 0.95rem; }
+.dg-nl { display: block; width: 100%; height: auto; cursor: pointer; touch-action: none; outline-offset: -3px; }
+.dg-nl:focus { outline: none; }
+.dg-nl:focus-visible { outline: 3px solid var(--accent-strong); border-radius: 6px; }
+.dg-nl-axis { stroke: var(--text); stroke-width: 2; }
+.dg-nl-tick { stroke: var(--text); stroke-width: 1.5; }
+.dg-nl-number { fill: var(--text); font-family: "Nunito Sans", sans-serif; font-weight: 700; pointer-events: none; }
+.dg-nl-number.is-zero { font-weight: 800; }
+.dg-nl-number.is-off { display: none; }
+.dg-nl-number.is-here { fill: var(--surface); }
+.dg-nl-dot { fill: none; stroke: none; }
+.dg-nl-dot.is-here { fill: var(--accent-strong); }
+.dg-nl-dot.is-start { stroke: var(--accent-strong); stroke-width: 2.5; }
+.dg-nl-hop { fill: none; stroke: var(--accent-strong); stroke-width: 2; pointer-events: none; }
+.dg-nl-hop.is-left { stroke-dasharray: 4 3; }
+.dg-nl-arrow { fill: var(--accent-strong); pointer-events: none; }

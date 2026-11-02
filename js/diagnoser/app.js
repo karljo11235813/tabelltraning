@@ -15,6 +15,7 @@ import { createStore } from "../sant-falskt/storage.js";
 import { hasPractice, loadBank } from "./ova/banks.js";
 import { missedLabels, partsForLabels } from "./ova/pool.js";
 import { openPractice } from "./ova/view.js";
+import { createToolbox } from "./verktyg/toolbox.js";
 
 const SECTIONS = ["dgList", "dgRun", "dgResult", "dgPractice"];
 const CLOCK_TICK_MS = 500; // tätare än en sekund, så att visningen aldrig släpar efter
@@ -496,5 +497,10 @@ $("dgHome").addEventListener("click", (e) => {
   if (run?.session) return askCancel();
   showList();
 });
+
+// Tankeverktygen i rubrikraden. Öva har egna (ova/view.js), eftersom rubrikraden är dold där.
+const toolbox = createToolbox("dg-tools-button");
+$("dgHome").after(toolbox.button);
+document.querySelector("header").after(toolbox.panel);
 
 showList();

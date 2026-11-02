@@ -60,7 +60,7 @@ function keyBlock(diagnosis, task) {
   } else {
     const fill = answerFill(task);
     const variables = diagnosis.variables ?? "";
-    if (task.table) key.append(renderFilledTable(task.table, fill, variables));
+    if (task.table?.rows.flat().some((cell) => cell.includes("["))) key.append(renderFilledTable(task.table, fill, variables));
     for (const row of task.rows ?? []) if (row.includes("[")) key.append(renderFilledRow(withoutLabel(row), fill, variables));
   }
   return key;

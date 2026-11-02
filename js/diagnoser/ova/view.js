@@ -12,6 +12,7 @@
 // en uppgift visas.
 
 import { el } from "../dom.js";
+import { createToolbox } from "../verktyg/toolbox.js";
 import { renderScreen } from "../render.js";
 import { loadBank } from "./banks.js";
 import { BATCH_SIZE, createPool } from "./pool.js";
@@ -55,6 +56,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
   active?.close();
   host.replaceChildren();
   let closed = false;
+  const toolbox = createToolbox("bt-small-btn dg-practice-tool"); // rubrikraden är dold här, och en helskärm visar bara vyn
   let bank = null;
   let symbolSource = null;
   let pool = null;
@@ -90,6 +92,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
   // Capture på `document`: ett nedhållet Enter ska stoppas innan svarsrutans egen hantering ser det.
   function onKeydown(e) {
     if (e.altKey || e.ctrlKey || e.metaKey) return; // Alt + pil är webbläsarens egen
+    if (e.target.closest?.(".dg-toolbox")) return; // pilarna i ett tankeverktyg hör till verktyget
     const action = routeKey({ key: e.key, repeat: e.repeat, target: keyTarget(e.target, mainButton) });
     if (action === "native") return;
     e.preventDefault();
@@ -102,7 +105,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
   // ger annars ett klick på startskärmen, och ett dubbelklick på Föregående går två uppgifter tillbaka. Det andra tryckets
   // mousedown har då redan tagit fokus från huvudknappen, så den får det tillbaka.
   const ignoreDoubleClick = (e) => {
-    if (e.detail < 2) return;
+    if (e.detail < 2 || e.target.closest(".dg-toolbox")) return; // i ett tankeverktyg klickar man fort, ett steg i taget
     e.preventDefault();
     e.stopPropagation();
     if (running) mainButton.focus({ preventScroll: true });
@@ -242,6 +245,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     const tools = el("div", "dg-practice-tools");
     counter = el("span", "dg-practice-count");
     counter.setAttribute("aria-live", "polite"); // en skärmläsare säger "Uppgift 4 av 20" för varje ny uppgift
+    tools.append(toolbox.button);
     fullscreenButton = null;
     if (document.fullscreenEnabled) {
       fullscreenButton = button("bt-small-btn dg-practice-tool", "Helskärm", toggleFullscreen);
@@ -258,7 +262,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     prevButton = button("bt-secondary-btn dg-practice-step", "← Föregående", goBack);
     mainButton = button("start-btn dg-practice-main", "Visa svar", () => activate());
     nav.append(prevButton, mainButton, button("bt-secondary-btn dg-practice-step", "Nästa →", skip));
-    host.replaceChildren(top, stage, nav);
+    host.replaceChildren(top, toolbox.panel, stage, nav);
     startKeys();
     showTask();
   }
