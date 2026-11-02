@@ -14,7 +14,7 @@ import { storageWorks, formatStamp, timeAgo, savedList, safeScore, ignoresEnter,
 import { createStore } from "../sant-falskt/storage.js";
 import { hasPractice, loadBank } from "./ova/banks.js";
 import { missedLabels, partsForLabels } from "./ova/pool.js";
-import { openPractice, closePractice } from "./ova/view.js";
+import { openPractice } from "./ova/view.js";
 
 const SECTIONS = ["dgList", "dgRun", "dgResult", "dgPractice"];
 const CLOCK_TICK_MS = 500; // tätare än en sekund, så att visningen aldrig släpar efter
@@ -371,7 +371,7 @@ function finish() {
 
 function showScoreError(diagnosis) {
   const root = el("section", "dg-result");
-  const back = el("button", "start-btn dg-back", "Till listan");
+  const back = el("button", "start-btn dg-back", "Tillbaka till listan");
   back.type = "button";
   back.addEventListener("click", showList);
   root.append(el("h2", "dg-res-title", `${diagnosis.code} · ${diagnosis.title}`), el("p", "bt-intro", "Resultatet gick inte att rätta. Säg till läraren."), back);
@@ -412,8 +412,8 @@ function keepGoing() {
 
 function showResult(diagnosis, scored, { saved }) {
   $("dgSaveNote").hidden = saved;
-  $("dgResultHost").replaceChildren(renderResult(diagnosis, scored, { onBack: showList }));
-  if (hasPractice(scored.code) && missedLabels(scored).length > 0) $("dgResultHost").append(missedPracticeButton(scored));
+  const practice = hasPractice(scored.code) && missedLabels(scored).length > 0 ? missedPracticeButton(scored) : null;
+  $("dgResultHost").replaceChildren(renderResult(diagnosis, scored, { onBack: showList, practice }));
   showSection("dgResult");
   resultShownAt = performance.now();
 }
@@ -453,7 +453,7 @@ $("dgActions").addEventListener("keydown", (e) => {
   e.stopPropagation();
 }, true);
 // Ett dubbelklick på sista "Nästa" ger ett andra klick som träffar resultatskärmen, där "Dölj rätt svar" eller
-// "Till listan" kan ligga på samma plats. Knapparna där ignoreras en stund (före deras egen hantering, capture).
+// "Tillbaka till listan" kan ligga på samma plats. Knapparna där ignoreras en stund (före deras egen hantering, capture).
 $("dgResultHost").addEventListener("click", (e) => {
   if (!e.target.closest(".dg-reveal, .dg-back, .dg-practice-missed")) return;
   if (ignoresResultTap({ shownAt: resultShownAt, now: performance.now() })) {
@@ -489,12 +489,11 @@ $("dgCancelYes").addEventListener("click", showList);
 // Tillbaka till listan med ett klick, både under diagnosen och på resultatskärmen. Som "Ja, avbryt": inget sparas.
 $("dgRunBack").addEventListener("click", showList);
 $("dgResultBack").addEventListener("click", showList);
-// Rubriken uppe till höger går tillbaka till listan från varje skärm. Den laddar inte om sidan, så att öppna delområden står
-// kvar. En påbörjad diagnos frågar först, eftersom svaren inte sparas, och Övas tangentlyssnare stängs med vyn.
+// Rubriken uppe till höger går tillbaka till listan (under Öva är rubriken dold). Den laddar inte om sidan, så att öppna
+// delområden står kvar. En påbörjad diagnos frågar först, eftersom svaren inte sparas.
 $("dgHome").addEventListener("click", (e) => {
   e.preventDefault();
   if (run?.session) return askCancel();
-  closePractice();
   showList();
 });
 

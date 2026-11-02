@@ -116,7 +116,7 @@ export function ignoresHeldEnter({ key, repeat }) {
 }
 
 // Dubbelklicket på sista "Nästa" ger ett andra klick med några hundra millisekunder emellan. Det träffar den nya
-// resultatskärmen, och där ligger "Dölj rätt svar" eller "Till listan" på samma plats som "Nästa". Knapparna där
+// resultatskärmen, och där kan "Dölj rätt svar" eller "Tillbaka till listan" ligga på samma plats som "Nästa". Knapparna där
 // ignoreras därför en stund efter att skärmen visades. Längre än sessionens dubbeltryck (300 ms): ett dubbelklick
 // är ofta nära 400 ms, och att vänta lite längre kostar ingenting eftersom läraren ändå läser först.
 export const RESULT_GUARD_MS = 400;

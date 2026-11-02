@@ -863,8 +863,9 @@ function markCell(row) {
   return cell;
 }
 
-// Resultatskärmen som läraren läser från en armlängds håll. onBack (valfri) ger knappen "Till listan".
-export function renderResult(diagnosis, scored, { onBack } = {}) {
+// Resultatskärmen som läraren läser från en armlängds håll. onBack (valfri) ger knappen "Tillbaka till listan", och practice
+// (valfri) är knappen "Öva på det du missade". De står först, efter Tid-raden, så att eleven inte behöver rulla förbi svaren.
+export function renderResult(diagnosis, scored, { onBack, practice } = {}) {
   const root = el("section", "dg-result");
 
   // En div, inte <header>: styles.css ger alla header-element sidans lila band.
@@ -909,12 +910,16 @@ export function renderResult(diagnosis, scored, { onBack } = {}) {
   showAnswers(true);
   toggle.addEventListener("click", () => showAnswers(!root.classList.contains("dg-show-answers")));
 
-  root.append(head, score, ...(showTeacher ? [showTeacher] : []), time, list, toggle);
+  const buttons = practice ? [practice] : [];
   if (onBack) {
-    const back = el("button", "start-btn dg-back", "Till listan");
+    const back = el("button", "bt-secondary-btn dg-back", "Tillbaka till listan");
     back.type = "button";
     back.addEventListener("click", onBack);
-    root.append(back);
+    buttons.push(back);
   }
+  const actions = el("div", "dg-res-actions");
+  actions.append(...buttons);
+
+  root.append(head, score, ...(showTeacher ? [showTeacher] : []), time, ...(buttons.length > 0 ? [actions] : []), list, toggle);
   return root;
 }
