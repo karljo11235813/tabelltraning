@@ -13,6 +13,15 @@
     --warning: #b8860b;
     --border: #d8cfe0;
     --shadow: 0 2px 14px rgba(45, 24, 58, 0.10);
+    /* The retrieval scale, weak to strong: warm, neutral, cool. Blue instead of green so that it reads with red-green colour blindness. */
+    --heat-1: #8e1226;
+    --heat-2: #d9583f;
+    --heat-3: #f59a72;
+    --heat-4: #ece8ee;
+    --heat-5: #7db8e4;
+    --heat-6: #2f7abb;
+    --heat-7: #123f7a;
+    --heat-ring: rgba(34, 27, 40, 0.16);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -30,6 +39,14 @@
       --warning: #e0b84f;
       --border: #453a4f;
       --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+      --heat-1: #ff8090;
+      --heat-2: #e84020;
+      --heat-3: #963a32;
+      --heat-4: #433a4a;
+      --heat-5: #2f6a9c;
+      --heat-6: #4fa6e4;
+      --heat-7: #aee0fc;
+      --heat-ring: rgba(240, 233, 245, 0.2);
     }
   }
   :root[data-theme="dark"] {
@@ -47,6 +64,14 @@
     --warning: #e0b84f;
     --border: #453a4f;
     --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+    --heat-1: #ff8090;
+    --heat-2: #e84020;
+    --heat-3: #963a32;
+    --heat-4: #433a4a;
+    --heat-5: #2f6a9c;
+    --heat-6: #4fa6e4;
+    --heat-7: #aee0fc;
+    --heat-ring: rgba(240, 233, 245, 0.2);
   }
 
   * { box-sizing: border-box; }
@@ -843,13 +868,73 @@
     color: var(--danger);
   }
 
-  .heatmap-wrap { overflow-x: auto; }
+  .heat-caption {
+    margin: 0 0 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+  .heat-scale-ends {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .heat-steps {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+  .heat-step { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .heat-swatch {
+    display: block;
+    width: 100%;
+    height: 14px;
+    border-radius: 4px;
+    background: var(--heat);
+    box-shadow: inset 0 0 0 1px var(--heat-ring);
+  }
+  .heat-count {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .heat-keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin: 10px 0 12px;
+    font-size: 0.74rem;
+    color: var(--text-muted);
+  }
+  .heat-keys span { display: inline-flex; align-items: center; gap: 6px; }
+  .heat-key {
+    position: relative;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    background: var(--heat);
+    box-shadow: inset 0 0 0 1px var(--heat-ring);
+  }
+
+  .heat-0 { --heat: transparent; }
+  .heat-1 { --heat: var(--heat-1); }
+  .heat-2 { --heat: var(--heat-2); }
+  .heat-3 { --heat: var(--heat-3); }
+  .heat-4 { --heat: var(--heat-4); }
+  .heat-5 { --heat: var(--heat-5); }
+  .heat-6 { --heat: var(--heat-6); }
+  .heat-7 { --heat: var(--heat-7); }
+
   .heatmap-grid {
     display: grid;
-    grid-template-columns: 28px repeat(12, 26px);
+    grid-template-columns: 24px repeat(12, minmax(0, 1fr));
     gap: 3px;
     margin: 4px 0 16px;
-    width: max-content;
   }
   .heatmap-grid .heatmap-label {
     font-family: "Nunito Sans", sans-serif;
@@ -860,21 +945,44 @@
     justify-content: center;
   }
   .heatmap-cell {
-    width: 26px;
-    height: 26px;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
     border-radius: 5px;
     border: none;
     cursor: pointer;
     padding: 0;
-    background: var(--border);
+    background: var(--heat);
+    box-shadow: inset 0 0 0 1px var(--heat-ring);
   }
-  .heatmap-cell.mastery-green { background: var(--success); }
-  .heatmap-cell.mastery-yellow { background: var(--warning); }
-  .heatmap-cell.mastery-red { background: var(--danger); }
-  .heatmap-cell.mastery-gray { background: var(--border); }
+  :is(.heatmap-cell, .heat-key).heat-0 {
+    box-shadow: none;
+    outline: 1.5px dashed var(--border);
+    outline-offset: -1.5px;
+  }
+  /* Too few answers to trust: the colour is there, but only as stripes. */
+  :is(.heatmap-cell, .heat-key).is-thin {
+    background: repeating-linear-gradient(135deg, var(--heat) 0 3px, transparent 3px 6px);
+  }
+  :is(.heatmap-cell, .heat-key).has-wrong::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text);
+    box-shadow: 0 0 0 1.5px var(--surface);
+  }
   .heatmap-cell.selected {
     outline: 3px solid var(--accent-strong);
     outline-offset: 1px;
+  }
+  @media (max-width: 480px) {
+    .heatmap-grid { grid-template-columns: 18px repeat(12, minmax(0, 1fr)); gap: 2px; }
+    .heatmap-cell { border-radius: 4px; }
+    .heatmap-cell.has-wrong::after { top: 2px; right: 2px; width: 5px; height: 5px; }
   }
 
   .fact-detail {
@@ -893,6 +1001,50 @@
     color: var(--accent-strong);
     margin-bottom: 6px;
   }
+
+  .fact-diagnosis {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .fact-diagnosis .heat-swatch { flex: none; width: 16px; height: 16px; margin-top: 2px; }
+
+  .answer-strip { display: flex; gap: 4px; margin-top: 12px; }
+  .strip-slot {
+    flex: 1 1 0;
+    max-width: 34px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .strip-track {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    height: 56px;
+    border-bottom: 1px solid var(--text-muted);
+  }
+  .strip-bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent); }
+  .strip-slot.is-wrong .strip-bar {
+    background: repeating-linear-gradient(135deg, var(--danger) 0 3px, transparent 3px 6px);
+    box-shadow: inset 0 0 0 1px var(--danger);
+  }
+  .strip-mark {
+    height: 15px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--danger);
+    line-height: 15px;
+  }
+  .strip-time {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .strip-caption { margin-top: 6px; font-size: 0.74rem; color: var(--text-muted); }
 
   .stats-empty {
     text-align: center;

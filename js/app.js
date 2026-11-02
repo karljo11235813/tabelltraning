@@ -1,14 +1,15 @@
 import { randInt, shuffled } from './utils.js';
 import { getLang, setLang, t } from './i18n.js';
 import * as Audio from './audio.js';
-import { MASTERY_MIN_ATTEMPTS, factKey, getMastery } from './mastery.js';
-import { getFactStats, logAttempt, clearFactStats } from './stats-store.js';
+import { factKey, getRetrieval, mostCommonWrongAnswer } from './mastery.js';
+import { getAttemptsByFact, getFactStats, logAttempt, clearFactStats } from './stats-store.js';
 import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
 import { describeScope, roundPoints, formatPoints } from './result-scope.js';
 import { LEVELS, assessLevels, levelHint, levelRequirement } from './levels.js';
 import { createStore } from './sant-falskt/storage.js';
 import { isProgressRun, loadRuns, saveRun } from './run-history.js';
 import { renderProgress } from './progress-panel.js';
+import { clearHeatmapSelection, renderHeatmap } from './heatmap-panel.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
@@ -565,35 +566,15 @@ function masteryLabel(bucket) {
   return s.masteryGray;
 }
 
-function mostCommonWrongAnswer(wrongAnswerCounts) {
-  let best = null;
-  let bestCount = 0;
-  for (const key in wrongAnswerCounts) {
-    if (wrongAnswerCounts[key] > bestCount) {
-      best = key;
-      bestCount = wrongAnswerCounts[key];
-    }
-  }
-  return best;
-}
-
 function renderWeakList() {
   const s = t();
   const factStats = getFactStats();
+  const answers = getAttemptsByFact();
   const candidates = Object.keys(factStats)
-    .map(fact => ({ fact, stats: factStats[fact], bucket: getMastery(factStats[fact]) }))
-    .filter(f => f.stats.attempts >= MASTERY_MIN_ATTEMPTS && (f.bucket === 'red' || f.bucket === 'yellow'));
+    .map(fact => ({ fact, stats: factStats[fact], retrieval: getRetrieval(factStats[fact], answers[fact]) }))
+    .filter(f => f.retrieval.bucket === 'red' || f.retrieval.bucket === 'yellow');
 
-  candidates.sort((x, y) => {
-    const rank = { red: 0, yellow: 1 };
-    if (rank[x.bucket] !== rank[y.bucket]) return rank[x.bucket] - rank[y.bucket];
-    const accX = x.stats.correct / x.stats.attempts;
-    const accY = y.stats.correct / y.stats.attempts;
-    if (accX !== accY) return accX - accY;
-    const speedX = x.stats.speedCount > 0 ? x.stats.speedSum / x.stats.speedCount : 0;
-    const speedY = y.stats.speedCount > 0 ? y.stats.speedSum / y.stats.speedCount : 0;
-    return speedY - speedX;
-  });
+  candidates.sort((x, y) => x.retrieval.score - y.retrieval.score);
 
   const top = candidates.slice(0, 8);
 
@@ -602,16 +583,16 @@ function renderWeakList() {
     return;
   }
 
-  statsWeakView.innerHTML = '<div class="weak-list">' + top.map(({ fact, stats, bucket }) => {
+  statsWeakView.innerHTML = '<div class="weak-list">' + top.map(({ fact, stats, retrieval }) => {
     const [a, b] = fact.split('x');
-    const avgSpeed = stats.speedCount > 0 ? (stats.speedSum / stats.speedCount).toFixed(1) : null;
+    const { bucket, typicalSeconds } = retrieval;
     const mistake = mostCommonWrongAnswer(stats.wrongAnswerCounts);
     let html = '<div class="weak-row">';
     html += '<span class="weak-fact">' + a + ' × ' + b + '</span>';
     html += '<span class="mastery-pill mastery-' + bucket + '">' + masteryLabel(bucket) + '</span>';
     html += '<span class="weak-detail">';
     html += s.weakOutOf.replace('{wrong}', stats.wrong).replace('{attempts}', stats.attempts);
-    if (avgSpeed !== null) html += ' · ' + s.weakSpeed.replace('{speed}', avgSpeed.replace('.', ','));
+    if (typicalSeconds !== null) html += ' · ' + s.weakSpeed.replace('{speed}', typicalSeconds.toFixed(1).replace('.', ','));
     html += '</span>';
     if (mistake !== null) {
       html += '<span class="weak-mistake">' + s.weakMistake.replace('{answer}', mistake) + '</span>';
@@ -619,59 +600,6 @@ function renderWeakList() {
     html += '</div>';
     return html;
   }).join('') + '</div>';
-}
-let selectedHeatmapFact = null;
-
-function renderFactDetail(fact) {
-  const s = t();
-  const container = document.getElementById('statsFactDetail');
-  if (!container) return;
-  const stats = getFactStats()[fact];
-  const [a, b] = fact.split('x');
-  if (!stats || stats.attempts === 0) {
-    container.innerHTML = '<div class="fact-detail-title">' + a + ' × ' + b + ' = ' + (a * b) + '</div>' + s.factDetailNone;
-    return;
-  }
-  const avgSpeed = stats.speedCount > 0 ? (stats.speedSum / stats.speedCount).toFixed(1).replace('.', ',') : null;
-  const mistake = mostCommonWrongAnswer(stats.wrongAnswerCounts);
-  let html = '<div class="fact-detail-title">' + a + ' × ' + b + ' = ' + (a * b) + '</div>';
-  html += '<div>' + s.factDetailStats.replace('{correct}', stats.correct).replace('{wrong}', stats.wrong).replace('{attempts}', stats.attempts) + '</div>';
-  html += '<div>' + (avgSpeed !== null ? s.factDetailSpeed.replace('{speed}', avgSpeed) : s.factDetailNoSpeed) + '</div>';
-  if (mistake !== null) html += '<div>' + s.weakMistake.replace('{answer}', mistake) + '</div>';
-  html += '<div>' + s.factDetailLastSeen.replace('{date}', new Date(stats.lastSeen).toLocaleDateString(getLang() === 'sv' ? 'sv-SE' : 'en-US')) + '</div>';
-  container.innerHTML = html;
-}
-
-function renderHeatmap() {
-  const s = t();
-  const factStats = getFactStats();
-  let html = '<div class="heatmap-wrap"><div class="heatmap-grid">';
-  html += '<div class="heatmap-label"></div>';
-  for (let col = 1; col <= MAX_TABLE; col++) html += '<div class="heatmap-label">' + col + '</div>';
-  for (let row = 1; row <= 12; row++) {
-    html += '<div class="heatmap-label">' + row + '</div>';
-    for (let col = 1; col <= MAX_TABLE; col++) {
-      const fact = factKey(row, col);
-      const bucket = getMastery(factStats[fact]);
-      const isSelected = fact === selectedHeatmapFact;
-      html += '<button type="button" class="heatmap-cell mastery-' + bucket + (isSelected ? ' selected' : '')
-        + '" data-fact="' + fact + '" aria-label="' + row + ' × ' + col + '"></button>';
-    }
-  }
-  html += '</div></div>';
-  html += '<div class="fact-detail" id="statsFactDetail">' + s.factDetailPrompt + '</div>';
-  statsGridView.innerHTML = html;
-
-  statsGridView.querySelectorAll('.heatmap-cell').forEach(cell => {
-    cell.addEventListener('click', () => {
-      selectedHeatmapFact = cell.dataset.fact;
-      statsGridView.querySelectorAll('.heatmap-cell').forEach(c => c.classList.remove('selected'));
-      cell.classList.add('selected');
-      renderFactDetail(selectedHeatmapFact);
-    });
-  });
-
-  if (selectedHeatmapFact) renderFactDetail(selectedHeatmapFact);
 }
 
 function buildMulProblem(a, b) {
@@ -979,7 +907,7 @@ function renderStatsScreen() {
   statsGridView.style.display = statsActiveTab === 'grid' ? 'block' : 'none';
 
   renderWeakList();
-  renderHeatmap();
+  renderHeatmap(statsGridView, getFactStats(), getAttemptsByFact(), t());
 }
 
 statsTabWeak.addEventListener('click', () => { statsActiveTab = 'weak'; renderStatsScreen(); });
@@ -988,7 +916,7 @@ statsTabGrid.addEventListener('click', () => { statsActiveTab = 'grid'; renderSt
 statsResetBtn.addEventListener('click', () => {
   if (!window.confirm(t().statsResetConfirm)) return;
   clearFactStats();
-  selectedHeatmapFact = null;
+  clearHeatmapSelection();
   renderStatsScreen();
 });
 

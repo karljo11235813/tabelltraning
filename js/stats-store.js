@@ -33,6 +33,16 @@ export function getFactStats() {
   return factStats;
 }
 
+// The logged answers per fact, oldest first.
+export function getAttemptsByFact() {
+  const byFact = {};
+  attemptsLog.forEach(attempt => {
+    if (!byFact[attempt.fact]) byFact[attempt.fact] = [];
+    byFact[attempt.fact].push(attempt);
+  });
+  return byFact;
+}
+
 export function logAttempt(fact, given, correctAnswer, isCorrect, elapsedMs, mode) {
   if (!factStats[fact]) {
     factStats[fact] = { attempts: 0, correct: 0, wrong: 0, speedSum: 0, speedCount: 0, wrongAnswerCounts: {}, lastSeen: 0 };
