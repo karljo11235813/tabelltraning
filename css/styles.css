@@ -807,6 +807,12 @@
     font-size: 0.8rem;
     color: var(--text-muted);
   }
+  .weak-subheading {
+    margin: 16px 0 2px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
   .weak-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -847,6 +853,7 @@
     font-size: 0.74rem;
     color: var(--text-muted);
   }
+  .weak-detail strong { color: var(--text); }
   /* The list's own width and not the screen's: what has to fit is the tile. */
   @container (max-width: 470px) {
     .weak-tile { grid-template-columns: minmax(0, 1fr); padding: 2px 8px 5px; }

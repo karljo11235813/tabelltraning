@@ -17,7 +17,7 @@ const STEP_FLOORS = [0.2, 0.36, 0.5, 0.64, 0.78, 0.89]; // lowest score of steps
 const GREEN_FROM_STEP = 6;
 const YELLOW_FROM_STEP = 3;
 
-const NOT_PRACTISED = { score: null, step: 0, bucket: 'gray', thin: false, recentWrong: 0, typicalSeconds: null, diagnosis: null };
+const NOT_PRACTISED = { score: null, step: 0, bucket: 'gray', thin: false, recentWrong: 0, typicalSeconds: null, rightAnswers: 0, diagnosis: null };
 
 export function factKey(a, b) {
   return Math.min(a, b) + 'x' + Math.max(a, b);
@@ -119,6 +119,7 @@ export function getRetrieval(stats, answers = []) {
     thin,
     recentWrong,
     typicalSeconds,
+    rightAnswers: rightSeconds.length > 0 ? rightSeconds.length : stats.speedCount, // how many answers the time rests on
     diagnosis: diagnose(thin, recentWrong, typicalSeconds),
   };
 }
