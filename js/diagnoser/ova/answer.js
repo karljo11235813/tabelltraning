@@ -33,7 +33,9 @@ const pointsLine = (points) => points.map(([x, y]) => `(${pointText(x)}; ${point
 // men synliga här). Ett rutnät som inte går att sätta ut punkter i; vyn byter ut det som eleven använde mot det här.
 export function renderPlotReveal(task, answers) {
   const given = parsePoints(answers?.points).map(({ x, y }) => [decimalText(x, { raw: true }), decimalText(y, { raw: true })]);
-  const stage = chartStage(task.chart, { points: given, ghost: task.points, label: "Dina punkter (fyllda) och de rätta (streckade ringar)" });
+  const stage = task.kind === "line"
+    ? chartStage(task.chart, { points: given, mode: "line", ghostLine: task.through, label: "Din linje och den rätta (streckad)" })
+    : chartStage(task.chart, { points: given, ghost: task.points, label: "Dina punkter (fyllda) och de rätta (streckade ringar)" });
   stage.classList.add("dg-plot-revealed");
   return stage;
 }
@@ -51,6 +53,7 @@ function keyBlock(diagnosis, task) {
   if (task.kind === "place") key.append(renderLineMarks(task.line, task.letters), el("p", null, lineValuesText(task.letters)));
   else if (task.kind === "read") key.append(el("p", null, lineValuesText(task.marks)));
   else if (task.kind === "plot") key.append(el("p", null, pointsLine(task.points)));
+  else if (task.kind === "line") key.append(el("p", null, `Linjen genom ${task.through.map((point) => pointsLine([point])).join(" och ")}`));
   else if (task.kind === "shade") key.append(figureStage(task.figure, { shaded: shadeFacit(task), label: "Rätt skuggning" }));
   else if (task.kind === "pick") {
     // Uppgiftens text står redan ovanför: bara alternativen med Ja och Nej.

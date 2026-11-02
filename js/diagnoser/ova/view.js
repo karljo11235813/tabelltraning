@@ -164,13 +164,14 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     view.el.style.setProperty("--dg-prompt-scale", String(promptScale(task))); // en textuppgift har större text än en rad som "Beräkna"
     // En graf är högst en viss andel av skärmens höjd (33 %, och 36 % för ett nästan kvadratiskt rutnät): CSS räknar bredden ur ritningens
     // bredd / höjd (--dg-chart-ratio), som är olika för ett lågt och ett kvadratiskt rutnät. Samma värden gäller rutnätet som byter plats
-    // med det interaktiva efter svaret (renderPlotReveal), så uppgiften flyttar sig inte.
+    // med det interaktiva efter svaret (renderPlotReveal), så uppgiften flyttar sig inte. Ett koordinatsystem med fyra kvadranter (TAg) är
+    // själva uppgiften och får skärmens hela höjd: allt annat står bredvid grafen (diagnoser.css).
     const chart = view.el.querySelector("svg.dg-chart");
     if (chart) {
       const { width, height } = chart.viewBox.baseVal;
       if (height > 0) {
         view.el.style.setProperty("--dg-chart-ratio", String(width / height));
-        view.el.style.setProperty("--dg-chart-h", width / height < 1.3 ? "36vh" : "33vh");
+        view.el.style.setProperty("--dg-chart-h", chart.classList.contains("is-crossed") ? "calc(100vh - 2rem)" : width / height < 1.3 ? "36vh" : "33vh");
       }
     }
     // En uttrycksruta (RP6 5–6) rymmer "30 000 · 1,04 · 1,03" medan eleven skriver.
@@ -209,7 +210,7 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     // elevens punkter står kvar och facits är streckade ringar; ett tryck på det gör ingenting (CONTROLS).
     for (const input of entry.view.el.querySelectorAll("input")) input.readOnly = true;
     for (const control of entry.view.el.querySelectorAll("button")) control.disabled = true;
-    if (entry.task.kind === "plot") entry.view.el.querySelector(".dg-chart-stage")?.replaceWith(renderPlotReveal(entry.task, answers));
+    if (entry.task.kind === "plot" || entry.task.kind === "line") entry.view.el.querySelector(".dg-chart-stage")?.replaceWith(renderPlotReveal(entry.task, answers));
     if (entry.task.kind === "shade") entry.view.el.querySelector(".dg-fig-stage")?.replaceWith(renderShadeReveal(entry.task, answers));
     entry.view.el.classList.add("is-revealed");
     refresh();

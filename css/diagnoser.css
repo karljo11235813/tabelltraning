@@ -648,6 +648,12 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
 .dg-practice-stage .dg-screen { width: 100%; text-align: center; }
 .dg-practice-stage .dg-prompt { margin: 0 0 6px; font-size: calc(var(--dg-practice-size) * var(--dg-prompt-scale, 0.55)); line-height: 1.3; }
 .dg-practice-stage .dg-rows { column-count: 1; column-width: auto; margin: 2px 0 4px; font-size: var(--dg-practice-size); }
+/* Fyra kvadranter (TAg) på en smal skärm: grafen står över raderna och får så mycket av höjden att raderna ändå syns över knapparna. */
+@media (max-width: 899px) {
+  .dg-practice-stage .dg-screen:has(.dg-chart.is-crossed) > .dg-chart-stage { max-width: min(100%, calc(46vh * var(--dg-chart-ratio))); }
+}
+/* Två lösningar (TAg4 5) är sju rader: i en kolumn hamnar svaret under skärmens kant. */
+.dg-practice-stage .dg-rows:has(> .dg-row:nth-child(7)) { column-count: 2; }
 .dg-practice-stage .dg-row { margin: 0; line-height: 1.4; }
 .dg-practice-stage .dg-input { line-height: 1.25; }
 .dg-practice-stage .dg-symbols { margin: 4px 0 0; }
@@ -784,6 +790,45 @@ body:has(.dg-practice:not([hidden])) > header { display: none; }
   .dg-practice-stage .dg-screen:has(> .dg-chart-stage) > .dg-prompt { grid-row: 2; text-align: left; }
   .dg-practice-stage .dg-screen:has(> .dg-chart-stage) > .dg-rows { grid-row: 3; }
   .dg-practice-stage .dg-screen:has(> .dg-chart-stage) > .dg-chart-stage { grid-column: 2; grid-row: 1 / 6; width: 100%; max-width: min(100%, calc(var(--dg-chart-h, 33vh) * var(--dg-chart-ratio, 1.6))); margin: 4px auto 8px; }
+
+  /* Fyra kvadranter (TAg): grafen är själva uppgiften och får skärmens hela höjd till höger. Allt annat står i en kolumn till vänster:
+     överraden, texten, raderna, svaret och knapparna. Hela vyn är då ett rutnät, och uppgiftsytan och .dg-screen försvinner ur det
+     (display: contents). RP2:s grafer i första kvadranten berörs inte. */
+  .bt-main:has(.dg-chart.is-crossed) { max-width: none; }
+  .dg-practice:has(.dg-chart.is-crossed) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto auto auto auto 1fr auto;
+    column-gap: 24px;
+    min-height: calc(100vh - 16px);
+  }
+  .dg-practice:has(.dg-chart.is-crossed) > * { grid-column: 1; max-width: none; margin-inline: 0; }
+  .dg-practice:has(.dg-chart.is-crossed) > .dg-practice-top { grid-row: 1; }
+  .dg-practice:has(.dg-chart.is-crossed) > .dg-toolbox { grid-row: 2; }
+  .dg-practice:has(.dg-chart.is-crossed) > .dg-practice-nav { grid-row: 8; align-self: end; }
+  .dg-practice-stage:has(.dg-chart.is-crossed),
+  .dg-practice-stage .dg-screen:has(.dg-chart.is-crossed) { display: contents; }
+  .dg-practice-stage .dg-screen:has(.dg-chart.is-crossed) > * { grid-row: 5; }
+  .dg-practice-stage .dg-screen:has(.dg-chart.is-crossed) > .dg-prompt { grid-row: 3; }
+  .dg-practice-stage .dg-screen:has(.dg-chart.is-crossed) > .dg-rows { grid-row: 4; }
+  .dg-practice-stage .dg-screen:has(.dg-chart.is-crossed) > .dg-chart-stage {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    width: min(calc(var(--dg-chart-h) * var(--dg-chart-ratio)), 60vw);
+    max-width: none;
+    margin: 0;
+  }
+  .dg-practice-stage:has(.dg-chart.is-crossed) > .dg-practice-answer { grid-column: 1; grid-row: 6; min-height: 0; }
+  /* Kolumnen till vänster är smalare än hela ytan, så texten är mindre: grafen bär uppgiften. */
+  .dg-practice-stage:has(.dg-chart.is-crossed) .dg-prompt,
+  .dg-practice-stage:has(.dg-chart.is-crossed) .dg-rows { font-size: calc(var(--dg-practice-size) * 0.72); }
+  .dg-practice-stage:has(.dg-chart.is-crossed) .dg-practice-answer-body { font-size: calc(var(--dg-practice-size) * 0.56); }
+  .dg-practice-stage:has(.dg-chart.is-crossed) .dg-rows:has(> .dg-row:nth-child(7)) .dg-input { width: 4.5em; min-width: 0; }
+  @media (max-width: 1100px) {
+    .dg-practice-stage:has(.dg-chart.is-crossed) .dg-rows { font-size: calc(var(--dg-practice-size) * 0.62); }
+    .dg-practice-stage:has(.dg-chart.is-crossed) .dg-practice-answer-body { font-size: calc(var(--dg-practice-size) * 0.5); }
+  }
 
   /* En tabell att fylla i (RP2) står på samma sätt bredvid texten: fem rader och rubriken tar annars mer än halva höjden, och svaret med
      sin egen tabell skulle hamna under skärmens kant. */

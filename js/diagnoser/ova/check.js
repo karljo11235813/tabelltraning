@@ -2,8 +2,8 @@
 // Allt rättas av markScreen och markBox i mark.js, samma rättning som diagnosen; här läggs bara anteckningarna till.
 //
 // En uppgift är en diagnosskärm av något av slagen: rader med rutor (också en textuppgift med raden "Svar: [a] kr" och en
-// tabell med rutor i cellerna), en tallinje (place, read), punkter att sätta ut (plot), ett flerval (pick) eller en figur att
-// skugga (shade). Inget skrivet ger inget domslut för något av dem: inga rutor ifyllda, inga punkter utsatta, inget alternativ
+// tabell med rutor i cellerna), en tallinje (place, read), punkter att sätta ut (plot), en linje att rita (line), ett flerval (pick)
+// eller en figur att skugga (shade). Inget skrivet ger inget domslut för något av dem: inga rutor ifyllda, inga punkter utsatta, inget alternativ
 // markerat, inget skuggat.
 //
 // checkTask    { verdict: "right" | "wrong" | null, note, right, total }.
@@ -12,7 +12,7 @@
 // lineValuesText  bokstävernas värden på en tallinje som text.
 
 import { markScreen, markBox } from "../mark.js";
-import { parsePoints, pointsText, pairKey } from "../graph.js";
+import { isOnLine, parsePoints, pointsText, pairKey } from "../graph.js";
 import { prettyAnswer } from "../render.js";
 import { parsePieces } from "../figures.js";
 
@@ -56,6 +56,15 @@ function noteFor(part, task, answers, wrong) {
   if (task.kind === "plot") {
     const given = pointSet(answers?.points);
     return (task.mistakes ?? []).find((m) => sameSet(pointSet(m.answers.points), given))?.text ?? null;
+  }
+  // En linje: ett vanligt fel är en annan linje, { points: "0,1;2,5" }, och det gäller vilka två punkter på den eleven än valde.
+  if (task.kind === "line") {
+    const given = parsePoints(answers?.points);
+    const isThatLine = (m) => {
+      const [a, b] = parsePoints(m.answers.points);
+      return given.length === 2 && given.every((p) => isOnLine(a, b, p));
+    };
+    return (task.mistakes ?? []).find(isThatLine)?.text ?? null;
   }
   // En skuggning: ett vanligt fel gäller antalet skuggade delar, vilka delar det än är (delarna är lika stora i en uppgift med fel).
   if (task.kind === "shade") {
@@ -110,6 +119,9 @@ export function verdictText(task, result, answers) {
     const { hit, extra } = plotCounts(task, answers?.points);
     const over = extra === 0 ? "" : extra === 1 ? " (en punkt för mycket)" : ` (${extra} punkter för mycket)`;
     return `✗ Inte rätt. ${hit} av ${task.points.length} punkter stämmer${over}.`;
+  }
+  if (task.kind === "line") {
+    return parsePoints(answers?.points).length === 2 ? "✗ Inte rätt. Linjen är inte den som söks." : "✗ Inte rätt. En linje behöver två punkter.";
   }
   if (task.kind === "shade") {
     const count = parsePieces(answers?.pieces, task.figure.pieces.length).length;
