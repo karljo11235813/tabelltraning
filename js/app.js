@@ -1,7 +1,7 @@
 import { randInt, shuffled } from './utils.js';
 import { getLang, setLang, t } from './i18n.js';
 import * as Audio from './audio.js';
-import { factKey, getRetrieval, mostCommonWrongAnswer } from './mastery.js';
+import { factKey } from './mastery.js';
 import { getAttemptsByFact, getFactStats, logAttempt, clearFactStats } from './stats-store.js';
 import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
 import { describeScope, roundPoints, formatPoints } from './result-scope.js';
@@ -10,6 +10,7 @@ import { createStore } from './sant-falskt/storage.js';
 import { isProgressRun, loadRuns, saveRun } from './run-history.js';
 import { renderProgress } from './progress-panel.js';
 import { clearHeatmapSelection, renderHeatmap } from './heatmap-panel.js';
+import { weakFactsHtml } from './weak-panel.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
@@ -54,10 +55,9 @@ const statsScreen = document.getElementById('statsScreen');
 const backFromStats = document.getElementById('backFromStats');
 const statsEmpty = document.getElementById('statsEmpty');
 const statsContent = document.getElementById('statsContent');
-const statsTabWeak = document.getElementById('statsTabWeak');
-const statsTabGrid = document.getElementById('statsTabGrid');
 const statsWeakView = document.getElementById('statsWeakView');
 const statsGridView = document.getElementById('statsGridView');
+const statsProgress = document.getElementById('statsProgress');
 const statsResetBtn = document.getElementById('statsResetBtn');
 
 const testModeButtons = document.querySelectorAll('#testModeChoice button');
@@ -186,8 +186,8 @@ chooseBuildBtn.addEventListener('click', () => {
   showScreen(buildOverviewScreen);
 });
 chooseStatsBtn.addEventListener('click', () => {
+  showScreen(statsScreen); // first, since the graph is drawn at its real width
   renderStatsScreen();
-  showScreen(statsScreen);
 });
 backFromStats.addEventListener('click', goHome);
 function goHome() {
@@ -558,50 +558,6 @@ function makeProblem() {
 
 let problemGenerator = makeProblem; // swapped to a build-step generator while in Bygg upp
 
-function masteryLabel(bucket) {
-  const s = t();
-  if (bucket === 'green') return s.masteryGreen;
-  if (bucket === 'yellow') return s.masteryYellow;
-  if (bucket === 'red') return s.masteryRed;
-  return s.masteryGray;
-}
-
-function renderWeakList() {
-  const s = t();
-  const factStats = getFactStats();
-  const answers = getAttemptsByFact();
-  const candidates = Object.keys(factStats)
-    .map(fact => ({ fact, stats: factStats[fact], retrieval: getRetrieval(factStats[fact], answers[fact]) }))
-    .filter(f => f.retrieval.bucket === 'red' || f.retrieval.bucket === 'yellow');
-
-  candidates.sort((x, y) => x.retrieval.score - y.retrieval.score);
-
-  const top = candidates.slice(0, 8);
-
-  if (top.length === 0) {
-    statsWeakView.innerHTML = '<div class="stats-empty">' + s.weakAllStrong + '</div>';
-    return;
-  }
-
-  statsWeakView.innerHTML = '<div class="weak-list">' + top.map(({ fact, stats, retrieval }) => {
-    const [a, b] = fact.split('x');
-    const { bucket, typicalSeconds } = retrieval;
-    const mistake = mostCommonWrongAnswer(stats.wrongAnswerCounts);
-    let html = '<div class="weak-row">';
-    html += '<span class="weak-fact">' + a + ' × ' + b + '</span>';
-    html += '<span class="mastery-pill mastery-' + bucket + '">' + masteryLabel(bucket) + '</span>';
-    html += '<span class="weak-detail">';
-    html += s.weakOutOf.replace('{wrong}', stats.wrong).replace('{attempts}', stats.attempts);
-    if (typicalSeconds !== null) html += ' · ' + s.weakSpeed.replace('{speed}', typicalSeconds.toFixed(1).replace('.', ','));
-    html += '</span>';
-    if (mistake !== null) {
-      html += '<span class="weak-mistake">' + s.weakMistake.replace('{answer}', mistake) + '</span>';
-    }
-    html += '</div>';
-    return html;
-  }).join('') + '</div>';
-}
-
 function buildMulProblem(a, b) {
   const flip = Math.random() < 0.5;
   const x = flip ? a : b;
@@ -880,38 +836,34 @@ function openBuildStepIntro(index) {
 
 buildStartBtn.addEventListener('click', () => startBuildPhase('order'));
 
-function statsTabLabels() {
+function statsLabels() {
   const s = t();
-  statsTabWeak.textContent = s.statsTabWeak;
-  statsTabGrid.textContent = s.statsTabGrid;
+  document.getElementById('statsGridHeading').textContent = s.statsGridHeading;
+  document.getElementById('statsWeakHeading').textContent = s.statsWeakHeading;
   backFromStats.textContent = s.back;
   document.getElementById('statsHeading').textContent = s.statsHeading;
   statsResetBtn.textContent = s.statsReset;
 }
 
-let statsActiveTab = 'weak';
-
 function renderStatsScreen() {
   const s = t();
-  statsTabLabels();
+  statsLabels();
 
-  const hasAnyData = Object.keys(getFactStats()).length > 0;
-  statsEmpty.style.display = hasAnyData ? 'none' : 'block';
-  statsContent.style.display = hasAnyData ? 'block' : 'none';
+  // The 1-minute tests are saved apart from the facts and outlive Rensa min
+  // statistik, so the graph can be the only thing on the page.
+  const hasFacts = Object.keys(getFactStats()).length > 0;
+  const runs = loadRuns(runStore);
+  const hasNothing = !hasFacts && runs.length === 0;
+  statsEmpty.style.display = hasNothing ? 'block' : 'none';
   statsEmpty.textContent = s.statsEmptyMessage;
-  if (!hasAnyData) return;
+  statsContent.style.display = hasFacts ? 'block' : 'none';
+  statsProgress.hidden = hasNothing;
+  if (!hasNothing) renderProgress(statsProgress, runs, s);
+  if (!hasFacts) return;
 
-  statsTabWeak.classList.toggle('active', statsActiveTab === 'weak');
-  statsTabGrid.classList.toggle('active', statsActiveTab === 'grid');
-  statsWeakView.style.display = statsActiveTab === 'weak' ? 'block' : 'none';
-  statsGridView.style.display = statsActiveTab === 'grid' ? 'block' : 'none';
-
-  renderWeakList();
-  renderHeatmap(statsGridView, getFactStats(), getAttemptsByFact(), t());
+  renderHeatmap(statsGridView, getFactStats(), getAttemptsByFact(), s);
+  statsWeakView.innerHTML = weakFactsHtml(getFactStats(), getAttemptsByFact(), s);
 }
-
-statsTabWeak.addEventListener('click', () => { statsActiveTab = 'weak'; renderStatsScreen(); });
-statsTabGrid.addEventListener('click', () => { statsActiveTab = 'grid'; renderStatsScreen(); });
 
 statsResetBtn.addEventListener('click', () => {
   if (!window.confirm(t().statsResetConfirm)) return;

@@ -802,70 +802,62 @@
   .rank-tier .step-badge.done { color: #fff; background: var(--success); }
   .rank-tier .step-badge.next { color: #fff; background: var(--accent); }
 
-  .mastery-pill {
-    display: inline-block;
-    font-family: "Nunito Sans", sans-serif;
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.4px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    color: #fff;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .mastery-pill.mastery-green { background: var(--success); }
-  .mastery-pill.mastery-yellow { background: var(--warning); color: #221b28; }
-  .mastery-pill.mastery-red { background: var(--danger); }
-  .mastery-pill.mastery-gray { background: var(--text-muted); }
-
-  .stats-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .stats-tabs button {
-    flex: 1;
-    padding: 10px 6px;
-    border: 2px solid var(--accent);
-    background: var(--surface);
-    color: var(--accent);
-    border-radius: 9px;
-    font-family: "Nunito Sans", sans-serif;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .stats-tabs button.active { background: var(--accent); color: #fff; }
-
-  .weak-list { display: flex; flex-direction: column; gap: 8px; }
-  .weak-row {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    padding: 10px 12px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    background: var(--surface);
-    flex-wrap: wrap;
-  }
-  .weak-row .weak-fact {
-    font-family: "Baloo 2", sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--text);
-    min-width: 60px;
-  }
-  .weak-row .weak-detail {
-    flex: 1;
-    min-width: 140px;
-    font-size: 0.78rem;
+  .weak-caption {
+    margin: 0 0 10px;
+    font-size: 0.8rem;
     color: var(--text-muted);
   }
-  .weak-row .weak-mistake {
-    width: 100%;
+  .weak-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    container-type: inline-size;
+  }
+  .weak-tile {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 8px;
+    padding: 4px 10px 6px;
+    border: 1.5px solid var(--border);
+    border-left: 8px solid var(--heat);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .weak-times {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .weak-divisions {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: right;
+    white-space: nowrap;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .weak-divisions span { display: block; }
+  .weak-detail {
+    grid-column: 1 / -1;
     font-size: 0.74rem;
-    color: var(--danger);
+    color: var(--text-muted);
+  }
+  /* The list's own width and not the screen's: what has to fit is the tile. */
+  @container (max-width: 470px) {
+    .weak-tile { grid-template-columns: minmax(0, 1fr); padding: 2px 8px 5px; }
+    .weak-times { font-size: 1.9rem; }
+    .weak-divisions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 8px;
+      font-size: 0.8rem;
+      text-align: left;
+    }
   }
 
   .heat-caption {
@@ -1156,9 +1148,10 @@
   }
 
   /* ---------- PROGRESS PANEL (1-minute test; js/progress-panel.js) ---------- */
-  .progress-panel { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); text-align: left; }
+  .progress-panel, .stats-section { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); text-align: left; }
   .progress-panel[hidden] { display: none; }
-  .progress-panel h2 { margin: 0 0 10px; font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+  :is(.progress-panel, .stats-section) h2 { margin: 0 0 10px; font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+  .stats-section:first-child { margin-top: 0; padding-top: 0; border-top: none; }
   .pp-verdict { margin: 0; font-weight: 800; font-size: 1.02rem; line-height: 1.35; }
   .pp-arrow { margin-right: 6px; color: var(--text-muted); }
   .pp-arrow-up { color: var(--success); }

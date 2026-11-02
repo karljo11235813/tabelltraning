@@ -23,6 +23,14 @@ export function factKey(a, b) {
   return Math.min(a, b) + 'x' + Math.max(a, b);
 }
 
+// A multiplication and its divisions are one fact: every answer to 56 ÷ 7 and
+// 56 ÷ 8 counts towards 7 × 8.
+export function factDivisions(fact) {
+  const [a, b] = fact.split('x').map(Number);
+  const divisors = a === b ? [a] : [a, b];
+  return divisors.map(divisor => a * b + ' ÷ ' + divisor);
+}
+
 export function mostCommonWrongAnswer(wrongAnswerCounts) {
   let best = null;
   let bestCount = 0;

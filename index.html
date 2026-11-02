@@ -133,14 +133,18 @@
     <div id="statsEmpty" class="stats-empty" style="display:none;"></div>
 
     <div id="statsContent" style="display:none;">
-      <div class="stats-tabs" id="statsTabs">
-        <button type="button" id="statsTabWeak" class="active"></button>
-        <button type="button" id="statsTabGrid"></button>
-      </div>
-      <div id="statsWeakView"></div>
-      <div id="statsGridView" style="display:none;"></div>
+      <section class="stats-section">
+        <h2 id="statsGridHeading"></h2>
+        <div id="statsGridView"></div>
+      </section>
+      <section class="stats-section">
+        <h2 id="statsWeakHeading"></h2>
+        <div id="statsWeakView"></div>
+      </section>
       <button type="button" class="stats-reset-link" id="statsResetBtn"></button>
     </div>
+
+    <section class="progress-panel" id="statsProgress" hidden></section>
   </div>
 
   <!-- BUILD UP: step complete -->
