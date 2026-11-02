@@ -6,6 +6,8 @@
 //               direkt med de delarna. Avsluta (och ← Tillbaka) stänger vyn och anropar onExit; close() stänger bara.
 //               En ny vy stänger den som är öppen, så att inga lyssnare blir kvar. Köerna med uppgifter (pools) ligger kvar
 //               medan sidan är öppen, så att en avslutad och återupptagen övning inte upprepar uppgifter.
+// closePractice stänger vyn som är öppen, om någon är det, för den som lämnar Öva utan Avsluta. Den gäller också medan
+//               banken laddas, eftersom openPractice är asynkron och dess { close() } inte har kommit än.
 //
 // Uppgiften är en vanlig diagnosskärm (renderScreen) och svaret ritas av renderAnswer. Båda sparas per plats i omgången,
 // så att Föregående visar uppgiften precis som den lämnades. Tangentlyssnaren på `document` (capture) finns bara medan
@@ -50,6 +52,8 @@ function keyTarget(node, mainButton) {
   if (node === mainButton) return "main";
   return node.matches("button, a, label, select") ? "control" : "other";
 }
+
+export const closePractice = () => active?.close();
 
 export async function openPractice({ host, diagnosis, partIds = null, onExit }) {
   active?.close();

@@ -397,7 +397,7 @@ function drawCrossedGrid(svg, g, chart) {
 }
 
 // Koordinatsystemet som SVG, med det som chart ritar (line, lines, curves, points). points (och ghost: facits punkter,
-// dolda tills "Visa rätt svar") är [x, y] med exakta värden som tal eller text; ghostLine är facits linje
+// syns i läget med rätt svar) är [x, y] med exakta värden som tal eller text; ghostLine är facits linje
 // ([[x1, y1], [x2, y2]]), streckad bland ghost. Med interactive sätter eleven ut och tar bort punkter på rutnätets
 // skärningar med klick eller tryck. Med mode "line" är det högst två punkter (en tredje ersätter den äldsta) och linjen
 // genom dem dras över hela rutnätet; det gäller också punkterna i points. Ger { el, read } där read() är punkterna som
@@ -547,7 +547,7 @@ export function buildLine(screen, root) {
 const textLine = (screen) => (screen.text ? [el("p", "dg-word-text", screen.text)] : []);
 const givenPoints = (row) => parsePoints(row.answers?.points).map(({ x, y }) => [answerText(x), answerText(y)]);
 
-// Det eleven satte ut som punkter i koordinatsystemet; facits punkter är ringar som syns först med "Visa rätt svar".
+// Det eleven satte ut som punkter i koordinatsystemet; facits punkter är ringar som syns i läget med rätt svar.
 export function plotDetail(screen, row) {
   const given = givenPoints(row);
   const shown = chartStage(screen.chart, { points: given, ghost: screen.points, label: "Elevens punkter" });
@@ -559,7 +559,7 @@ export function plotSkipped(screen) {
   return [...textLine(screen), detailLine("Rätt:", chartStage(screen.chart, { points: screen.points, label: "Rätta punkter" }))];
 }
 
-// Elevens linje genom de två punkterna; facits linje är streckad och syns först med "Visa rätt svar".
+// Elevens linje genom de två punkterna; facits linje är streckad och syns i läget med rätt svar.
 export function drawnLineDetail(screen, row) {
   const given = givenPoints(row);
   const shown = chartStage(screen.chart, { points: given, mode: "line", ghostLine: screen.through, label: "Elevens linje" });

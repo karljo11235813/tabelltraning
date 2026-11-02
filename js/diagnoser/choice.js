@@ -6,9 +6,12 @@
 //               (med den skuggning figuren själv har).
 // buildChoice   skärmens bricka; ger { read, focusFirst, keepBlank }. Brickorna har aria-pressed och skärmen säger
 //               aldrig hur många som ska väljas. Svaren: choose { choice: id | "" }, pick { <id>: "1" | "" }.
-// choiceDetail  det som står under raden på resultatskärmen: elevens val, med rätt svar bara i .dg-expected (syns
-//               först med knappen "Visa rätt svar"). Rätt och fel visas med symboler (✓ och ✗), aldrig bara med färg.
-// choiceFacit   facit som rader, för en skärm som hoppades över.
+// choiceDetail  det som står under raden på resultatskärmen: elevens val, med rätt svar bara i .dg-expected (visas
+//               från början, och knappen på resultatskärmen döljer dem). Ett pick är en tabell med en kolumn för
+//               varje, se pickTable.
+// choiceFacit   facit som rader, för Övas svar.
+// choiceSkipped facit för en skärm som hoppades över på resultatskärmen.
+// setTable      ett mängdsvar (flera svar i en ruta) i samma tabell som ett pick.
 
 import { drawFigure } from "./figures.js";
 import { el } from "./dom.js";
@@ -85,20 +88,69 @@ const expectedSpan = (...nodes) => {
 // "Ja" eller "Nej" för ett alternativ i pick.
 const yesNo = (on) => (on ? "Ja" : "Nej");
 
-// Ett alternativ i pick: symbolen, innehållet och elevens Ja eller Nej. Rätt svar står i .dg-expected.
-function pickLine(item, index, selected, shouldBe, draw) {
-  const right = selected === shouldBe;
-  const p = el("p", "dg-pick-line");
-  const mark = el("span", "dg-pick-mark", right ? "✓" : "✗");
-  mark.setAttribute("aria-label", right ? "Rätt" : "Fel");
-  p.append(mark, " ", chosenCell(item, draw, !right, index), el("span", "dg-pick-answer", ` ${yesNo(selected)}`));
-  if (!right) p.append(expectedSpan(yesNo(shouldBe)));
-  return p;
+// En kryssruta i tabellen: ikryssad eller tom, med Ja eller Nej för skärmläsare under kolumnens rubrik.
+function pickBox(on) {
+  const box = el("span", `dg-pick-box${on ? " is-on" : ""}`);
+  box.setAttribute("role", "img");
+  box.setAttribute("aria-label", yesNo(on));
+  return box;
 }
 
-export function choiceDetail(screen, row, draw) {
-  const nodes = [];
-  if (screen.text) nodes.push(el("p", "dg-word-text", screen.text));
+function pickCell(on, className) {
+  const cell = el("td", className);
+  cell.append(pickBox(on));
+  return cell;
+}
+
+function pickHead(text, className) {
+  const head = el("th", `dg-pick-head${className ? ` ${className}` : ""}`, text);
+  head.setAttribute("scope", "col");
+  return head;
+}
+
+// Tabellen på resultatskärmen: en kolumn för det eleven svarade och en för facit. En rad är rätt (grön) när kolumnerna
+// stämmer, också för ett alternativ som rätteligen inte valdes, och annars fel (röd, med ram så att färgen inte bär ensam),
+// precis som i markPick. Färgerna syns bara tillsammans med facit. Alternativen får inget ✓ eller ✗: det läses som ett
+// omdöme om alternativet, så att det enda rätta uttrycket får ett ✗ om eleven inte valde det.
+// rows är [{ content, mine, shouldBe, secret }]. Utan mineHead (en skärm som hoppades över) finns ingen kolumn för eleven
+// och inget att rätta. secret: raden avslöjar facit och syns bara tillsammans med det.
+function gradedTable(firstHead, mineHead, rows) {
+  const table = el("table", "dg-pick-table");
+  const headRow = el("tr");
+  headRow.append(pickHead(firstHead), ...(mineHead ? [pickHead(mineHead)] : []), pickHead("Rätt svar", "dg-expected"));
+  const thead = el("thead");
+  thead.append(headRow);
+  const tbody = el("tbody");
+  for (const { content, mine, shouldBe, secret } of rows) {
+    const graded = mineHead ? (mine === shouldBe ? " dg-pick-right" : " dg-pick-wrong") : "";
+    const row = el("tr", `dg-pick-row${graded}${secret ? " dg-expected" : ""}`);
+    const first = el("td");
+    first.append(content);
+    row.append(first, ...(mineHead ? [pickCell(mine)] : []), pickCell(shouldBe, "dg-expected"));
+    tbody.append(row);
+  }
+  table.append(thead, tbody);
+  return table;
+}
+
+// selectedOf(id) saknas för en skärm som hoppades över.
+function pickTable(screen, draw, selectedOf) {
+  const accepted = new Set(screen.accept);
+  const rows = screen.items.map((item, i) => ({ content: chosenCell(item, draw, false, i), mine: selectedOf?.(item.id), shouldBe: accepted.has(item.id) }));
+  return gradedTable("Alternativ", selectedOf ? "Du valde" : null, rows);
+}
+
+// parts är setBreakdown i mark.js. En sak som eleven missade är facit, så den raden döljs med facit.
+export function setTable(parts) {
+  const rows = parts.map(({ text, given, expected }) => ({ content: el("span", "dg-answer dg-choice-cell", text), mine: given, shouldBe: expected, secret: expected && !given }));
+  return gradedTable("Svar", "Du skrev", rows);
+}
+
+// images är bladets bilder, ritade av render.js: alternativen är ofta bara bokstäver i bilden (GFo5 1, GVi1 1a).
+const taskNodes = (screen, images) => [...(screen.text ? [el("p", "dg-word-text", screen.text)] : []), ...images];
+
+export function choiceDetail(screen, row, draw, images = []) {
+  const nodes = taskNodes(screen, images);
   if (screen.kind === "choose") {
     const chosen = screen.options.find((o) => o.id === row.answers?.choice);
     const wrong = row.mark !== "right";
@@ -108,8 +160,7 @@ export function choiceDetail(screen, row, draw) {
     if (wrong) shown.append(expectedSpan(chosenCell(facit, draw, false, indexOf(facit))));
     nodes.push(shown);
   } else {
-    const accepted = new Set(screen.accept);
-    screen.items.forEach((item, i) => nodes.push(pickLine(item, i, row.answers?.[item.id] === "1", accepted.has(item.id), draw)));
+    nodes.push(pickTable(screen, draw, (id) => row.answers?.[id] === "1"));
   }
   return nodes;
 }
@@ -129,4 +180,9 @@ export function choiceFacit(screen, draw) {
     }
   }
   return nodes;
+}
+
+export function choiceSkipped(screen, draw, images = []) {
+  const answer = screen.kind === "pick" ? [pickTable(screen, draw)] : choiceFacit({ ...screen, text: undefined }, draw);
+  return [...taskNodes(screen, images), ...answer];
 }

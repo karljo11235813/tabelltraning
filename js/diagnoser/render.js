@@ -30,7 +30,8 @@
 
 import { parseMarkup, layoutRow, splitVariables, KATEX_OPTIONS } from "./markup.js";
 import { formatTime } from "./session.js";
-import { buildChoice, choiceDetail, choiceFacit } from "./choice.js";
+import { buildChoice, choiceDetail, choiceSkipped, setTable } from "./choice.js";
+import { setBreakdown } from "./mark.js";
 import { parseNumber } from "./parse.js";
 import { rat, add, sub, mul, div, compare, isInteger } from "./value.js";
 import { figureStage, buildShade, shadeDetail, shadeSkipped } from "./figures.js";
@@ -303,7 +304,7 @@ const idsIn = (tokens) =>
 const TEXT_ROW = "Svar: [a]";
 // En skärm med tabell och utan rows har bara tabellens rutor.
 export const rowsOf = (screen) => screen.rows ?? (screen.table ? [] : [TEXT_ROW]);
-const taskText = (screen) => (screen.rows === undefined ? [el("p", "dg-word-text", screen.text)] : []);
+const taskText = (screen) => (screen.text ? [el("p", "dg-word-text", screen.text)] : []);
 
 // ---------- SKÄRMEN ----------
 
@@ -384,6 +385,8 @@ function imagesStage(images) {
   }
   return stage;
 }
+
+const screenImages = (screen) => (screen.images ? [imagesStage(screen.images)] : []);
 
 export function renderScreen(diagnosis, screen, { onSubmit = () => {} } = {}) {
   const kind = screen.kind ?? "rows";
@@ -712,10 +715,11 @@ export function guideText(time) {
   return time.stop == null ? `Diamant: ${span} min` : `Diamant: ${span} min, avbryt efter ca ${time.stop} min`;
 }
 
-// Elevens svar som det stod, "–" när rutan var tom, och facits svar bredvid som visas först med knappen.
-function answerCell(given, expected, wrong) {
+// Elevens svar som det stod, "–" när rutan var tom, och facits svar bredvid i läget med rätt svar.
+function answerCell(given, expected, wrong, right = false) {
   const cell = el("span", "dg-cell");
-  cell.append(el("span", `dg-answer${wrong ? " is-wrong" : ""}`, given === "" || given == null ? "–" : String(given)));
+  const blank = given === "" || given == null;
+  cell.append(el("span", `dg-answer${wrong ? " is-wrong" : right && !blank ? " is-right" : ""}`, blank ? "–" : String(given)));
   if (wrong && expected != null) cell.append(el("span", "dg-expected", ` (rätt: ${prettyAnswer(expected)})`));
   return cell;
 }
@@ -741,7 +745,7 @@ const S_LINE = "Svaret är rätt, men räkningen godkändes inte. Räkningen ska
 
 function wordDetail(screen, row) {
   const wrong = row.wrong[0];
-  // Det eleven skrev, även när svaret blev rätt (S): facit visas bara med knappen.
+  // Det eleven skrev, även när svaret blev rätt (S): facit står bara i läget med rätt svar.
   const answered = row.mark === "s" ? row.answers?.answer ?? "" : wrong?.given ?? "";
   const nodes = [el("p", "dg-word-text", screen.text)];
   nodes.push(labelledLine("Räkning:", answerCell(row.calc ?? "", null, false)));
@@ -769,24 +773,31 @@ function lineDetail(screen, row) {
 
 function rowsDetail(screen, row, variables) {
   const wrongBy = new Map(row.wrong.map((w) => [w.id, w]));
-  const nodes = taskText(screen);
-  const hasWrong = (markup) => idsIn(parseMarkup(markup)).some((id) => wrongBy.has(id));
+  const nodes = [...taskText(screen), ...screenImages(screen)];
+  const idsOf = (markup) => idsIn(parseMarkup(markup));
+  const hasWrong = (markup) => idsOf(markup).some((id) => wrongBy.has(id));
   const boxFor = (id) => {
     const w = wrongBy.get(id);
-    // En ruta som blev rätt visar också det eleven skrev (0,04 för 1/25), inte facit.
-    return w ? answerCell(w.given, w.expected, true) : answerCell(row.answers?.[id] ?? "", null, false);
+    // En ruta som blev rätt visar också det eleven skrev (0,04 för 1/25), inte facit. Ett mängdsvar har facit i tabellen.
+    if (!w) return answerCell(row.answers?.[id] ?? "", null, false, true);
+    return answerCell(w.given, screen.boxes?.[id]?.set ? null : w.expected, true);
   };
   // Figuren som skulle läsas av (screen.figure) ritas om bredvid raderna, så att läraren ser bilden.
   if (screen.figure && row.wrong.length > 0) nodes.push(figureStage(screen.figure));
   // En tabell med en felaktig ruta visas hel, så att läraren ser vad som stod bredvid.
   if (screen.table && cellsOf(screen.table).some(hasWrong)) nodes.push(drawTable(screen.table, (markup) => drawRow(markup, boxFor, "span", variables)));
-  for (const markup of rowsOf(screen)) {
-    if (!hasWrong(markup)) continue;
+  // En rad utan ruta (ekvationen i TAe6, TAe7, TAg4) är en del av frågan: då visas alla rader, också det som blev rätt.
+  const rows = rowsOf(screen);
+  const whole = rows.some((markup) => idsOf(markup).length === 0);
+  for (const markup of rows) {
+    if (!whole && !hasWrong(markup)) continue;
     const drawn = drawRow(markup, boxFor, "div", variables);
-    for (const w of row.wrong) if (w.note && idsIn(parseMarkup(markup)).includes(w.id)) drawn.append(el("span", "dg-note", w.note));
+    const inRow = row.wrong.filter((w) => idsOf(markup).includes(w.id));
+    for (const w of inRow) if (w.note) drawn.append(el("span", "dg-note", w.note));
     nodes.push(drawn);
+    for (const w of inRow) if (screen.boxes?.[w.id]?.set) nodes.push(setTable(setBreakdown(screen.boxes[w.id], w.given)));
   }
-  // Grafen som skulle läsas av syns igen först med "Visa rätt svar".
+  // Grafen som skulle läsas av syns igen i läget med rätt svar.
   if (screen.chart && row.wrong.length > 0) nodes.push(chartBlock(screen.chart));
   if (screen.diagram && row.wrong.length > 0) nodes.push(diagramBlock(screen.diagram));
   return nodes;
@@ -814,7 +825,7 @@ function detailFor(screen, row, variables) {
     if (screen.kind === "paper") return nodes; // ingen rättning, inget facit att dölja
     const hidden = el("div", "dg-expected dg-expected-block");
     if (screen.kind === "word") hidden.append(el("p", "dg-facit", `Facit: ${prettyAnswer(screen.facit ?? screen.accept[0])}`));
-    else if (screen.kind === "choose" || screen.kind === "pick") hidden.append(...choiceFacit(screen, drawMarkup));
+    else if (screen.kind === "choose" || screen.kind === "pick") hidden.append(...choiceSkipped(screen, drawMarkup, screenImages(screen)));
     else if (screen.kind === "shade") hidden.append(...shadeSkipped(screen));
     else if (screen.kind === "plot") hidden.append(...plotSkipped(screen));
     else if (screen.kind === "line") hidden.append(...drawnLineSkipped(screen));
@@ -823,12 +834,12 @@ function detailFor(screen, row, variables) {
     else if (screen.kind === "place" || screen.kind === "read") {
       const values = screen.kind === "place" ? screen.letters : screen.marks;
       for (const [id, value] of Object.entries(values)) hidden.append(labelledLine(`${id} =`, el("span", "dg-t", prettyAnswer(value))));
-    } else hidden.append(...taskText(screen), ...expectedRows(screen, variables));
+    } else hidden.append(...taskText(screen), ...screenImages(screen), ...expectedRows(screen, variables));
     return [...nodes, hidden];
   }
 
   if (screen.kind === "word") return wordDetail(screen, row);
-  if (screen.kind === "choose" || screen.kind === "pick") return choiceDetail(screen, row, drawMarkup);
+  if (screen.kind === "choose" || screen.kind === "pick") return choiceDetail(screen, row, drawMarkup, screenImages(screen));
   if (screen.kind === "shade") return shadeDetail(screen, row);
   if (screen.kind === "plot") return plotDetail(screen, row);
   if (screen.kind === "line") return drawnLineDetail(screen, row);
@@ -887,15 +898,16 @@ export function renderResult(diagnosis, scored, { onBack } = {}) {
     list.append(item);
   }
 
-  const toggle = el("button", "dg-reveal", "Visa rätt svar");
+  // Rätt svar visas från början. De finns bara under det som blev fel eller hoppades över, och knappen döljer dem.
+  const toggle = el("button", "dg-reveal");
   toggle.type = "button";
-  toggle.setAttribute("aria-pressed", "false");
-  toggle.addEventListener("click", () => {
-    const on = !root.classList.contains("dg-show-answers");
+  const showAnswers = (on) => {
     root.classList.toggle("dg-show-answers", on);
     toggle.setAttribute("aria-pressed", String(on));
     toggle.textContent = on ? "Dölj rätt svar" : "Visa rätt svar";
-  });
+  };
+  showAnswers(true);
+  toggle.addEventListener("click", () => showAnswers(!root.classList.contains("dg-show-answers")));
 
   root.append(head, score, ...(showTeacher ? [showTeacher] : []), time, list, toggle);
   if (onBack) {

@@ -22,7 +22,7 @@
 // Allt räknas med exakta värden från value.js, aldrig flyttal.
 
 import { rat, mul, equals, compare, isInteger, Unsupported } from "./value.js";
-import { normalize, normalizeAlgebra, parseNumber, parseExpr, parseFractionWord, parseFractionParts, parseAnswer, stripDecoration, parseSetItems, normalizeItem } from "./parse.js";
+import { normalize, normalizeAlgebra, parseNumber, parseExpr, parseFractionWord, parseFractionParts, parseAnswer, stripDecoration, parseSetItems, splitSetItems, normalizeItem } from "./parse.js";
 import { parseAlgebra, parseAlgebraReadings, variablesOf, isEquivalent, canonicalKey } from "./algebra.js";
 import { parseRoots, sameRoots, parseInequality, sameSet } from "./solutions.js";
 import { markupToExpr } from "./markup.js";
@@ -180,9 +180,15 @@ function markContains(box, raw) {
 function markSet(box, raw) {
   if (!Array.isArray(box.set) || !box.set.every(Array.isArray)) return "wrong";
   const items = parseSetItems(raw);
-  const spellings = box.set.map((entry) => new Set(entry.map(normalizeItem)));
+  const spellings = spellingsOf(box);
   if (items.length === 0 || items.length !== spellings.length) return "wrong";
-  // Parning med utökande vägar: owner[e] är delen som har fått sak e.
+  return pairItems(items, spellings).every((i) => i !== -1) ? "right" : "wrong";
+}
+
+const spellingsOf = (box) => box.set.map((entry) => new Set(entry.map(normalizeItem)));
+
+// Parning med utökande vägar: owner[e] är delen som har fått sak e, −1 om ingen har fått den.
+function pairItems(items, spellings) {
   const owner = spellings.map(() => -1);
   const place = (i, seen) =>
     spellings.some((names, e) => {
@@ -192,7 +198,17 @@ function markSet(box, raw) {
       owner[e] = i;
       return true;
     });
-  return items.every((_, i) => place(i, new Set())) ? "right" : "wrong";
+  items.forEach((_, i) => place(i, new Set()));
+  return owner;
+}
+
+// Ett mängdsvar uppdelat för resultatskärmen, med samma parning som rättningen: facits saker i ordning med om eleven hade
+// dem, och sist det eleven skrev utöver dem, som det skrevs. [{ text, given, expected }].
+export function setBreakdown(box, raw) {
+  const parts = splitSetItems(raw);
+  const owner = pairItems(parts.map(normalizeItem), spellingsOf(box));
+  const extra = parts.filter((_, i) => !owner.includes(i)).map((text) => ({ text, given: true, expected: false }));
+  return [...box.set.map((entry, e) => ({ text: entry[0], given: owner[e] !== -1, expected: true })), ...extra];
 }
 
 // Algebra (algebra.js). "equivalent" (Skriv ett uttryck, Teckna): rätt när uttrycket är lika med något av facits för
@@ -583,8 +599,40 @@ function markRootBoxes(screen, answers) {
     const expected = parseRoots(parts.filter((p) => p !== "").join(" och "));
     return expected !== null && sameRoots(given, expected);
   });
-  const wrong = right ? [] : ids.map((id) => ({ id, given: answers?.[id] ?? "", expected: screen.boxes[id].accept[0], note: null }));
+  const wrong = right ? [] : combos.map((parts) => rootMistakes(ids, answers, parts)).reduce((best, m) => (m.length < best.length ? m : best));
   return { mark: right ? "right" : "wrong", right: Number(right), wrong };
+}
+
+// Rutorna som är fel när rötterna inte stämmer. Rötterna är en mängd, så en rot som eleven har skrivit är rätt i vilken
+// ruta den än står, och en ruta som är fel får en rot som saknas: −2 och 5 för x² = 4 ger 5 (rätt: 2), inte −2 (rätt: 2).
+// En tom ruta och en rot som upprepas är fel bara när en rot saknas, och ett tal för mycket ska bort (rätt: tom ruta).
+// parts är en kombination av rutornas accept; markRootBoxes tar den som ger minst fel.
+function rootMistakes(ids, answers, parts) {
+  const expected = parts.filter((p) => p !== "").map((text) => ({ text, roots: parseRoots(text) ?? [] }));
+  const same = (a, b) => sameRoots([a], [b]);
+  const isRoot = (value) => expected.some((e) => e.roots.some((r) => same(r, value)));
+  let missing = expected;
+  const stray = []; // fel tal eller oläsligt
+  const idle = []; // tom, eller bara rötter som redan står i en annan ruta
+  for (const id of ids) {
+    const text = String(answers?.[id] ?? "").trim();
+    const values = text === "" ? [] : parseRoots(text);
+    if (values === null || !values.every(isRoot)) {
+      stray.push(id);
+      continue;
+    }
+    const left = missing.filter((e) => !e.roots.some((r) => values.some((v) => same(r, v))));
+    if (left.length === missing.length) idle.push(id);
+    missing = left;
+  }
+  const facit = new Map();
+  for (const id of [...stray, ...idle]) {
+    if (missing.length > 0) {
+      facit.set(id, missing[0].text);
+      missing = missing.slice(1);
+    } else if (stray.includes(id)) facit.set(id, "tom ruta");
+  }
+  return ids.filter((id) => facit.has(id)).map((id) => ({ id, given: answers?.[id] ?? "", expected: facit.get(id), note: null }));
 }
 
 export function markScreen(diagnosis, screen, entry) {

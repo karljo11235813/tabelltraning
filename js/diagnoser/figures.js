@@ -364,7 +364,7 @@ const textLine = (screen) => (screen.text ? [el("p", "dg-word-text", screen.text
 
 const facitLine = (screen) => detailLine("Rätt:", figureStage(screen.figure, { shaded: shadeFacit(screen), label: "Rätt skuggning" }));
 
-// Det eleven skuggade, och facit bakom "Visa rätt svar". Rätt och fel syns på radens symbol, inte på figuren.
+// Det eleven skuggade, och facit i läget med rätt svar. Rätt och fel syns på radens symbol, inte på figuren.
 export function shadeDetail(screen, row) {
   const given = parsePieces(row.answers?.pieces, (screen.figure.pieces ?? []).length);
   const shown = given.length === 0 ? el("span", "dg-t", "inget skuggat") : figureStage(screen.figure, { shaded: given, label: "Elevens skuggning" });

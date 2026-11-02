@@ -418,10 +418,15 @@ const MÄNGDDELARE = /\s*(?:[,;&+/\n]|(?<!\p{L})(?:och|samt)(?!\p{L}))\s*/iu;
 // Delarna i ett svar med flera saker (STd1 3c "Tess och Emma", 4d "Dag 1, 3 och 9"), var och en som normalizeItem
 // ger. "Svar:" först och skiljetecken sist räknas bort (stripDecoration), och tomma delar ("Tess, och Emma") räknas inte.
 export function parseSetItems(text) {
+  return splitSetItems(text).map(normalizeItem);
+}
+
+// Samma delar som eleven skrev dem, för resultatskärmen.
+export function splitSetItems(text) {
   return stripDecoration(text)
     .split(MÄNGDDELARE)
-    .map(normalizeItem)
-    .filter((item) => item !== "");
+    .map((part) => part.trim())
+    .filter((part) => normalizeItem(part) !== "");
 }
 
 // Vad eleven svarade: tomt, "saknar lösning", "alla x", rest, ett tal eller annat. Ett tal ger value, text (talet

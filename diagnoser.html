@@ -18,7 +18,7 @@
 
 <header>
   <a class="header-title" href="index.html">Tabellträning</a>
-  <span class="bt-header-sub">Diamantdiagnoser</span>
+  <a class="bt-header-sub" id="dgHome" href="diagnoser.html">Diamantdiagnoser</a>
 </header>
 
 <main class="bt-main">
@@ -36,6 +36,7 @@
       <span id="dgFilterText" role="status"></span>
       <button type="button" class="dg-filter-reset" id="dgFilterReset">Visa alla</button>
     </div>
+    <button type="button" class="dg-fold-all" id="dgFoldAll" aria-controls="dgAreas" hidden></button>
     <p class="bt-intro dg-search-empty" id="dgSearchEmpty" role="status" hidden>Ingen diagnos passar sökningen.</p>
     <div id="dgAreas"></div>
     <details class="dg-saved-box">

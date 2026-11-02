@@ -41,8 +41,8 @@
 //   barLayout, unitsLayout, pyramidLayout, pieLayout, lineLayout, boxLayout: allt som ritas, i ritningens koordinater.
 //   sectorPath    en cirkelsektor som SVG-stig, vinklar i radianer medurs från klockan tolv.
 //
-// Ritande funktioner: drawDiagram (SVG), diagramStage (på en skärm) och diagramBlock (igen på resultatskärmen, bakom
-// "Visa rätt svar").
+// Ritande funktioner: drawDiagram (SVG), diagramStage (på en skärm) och diagramBlock (igen på resultatskärmen, i läget
+// med rätt svar).
 
 import { parseNumber } from "./parse.js";
 import { axisTicks } from "./graph.js";

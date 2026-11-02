@@ -204,7 +204,7 @@ function drawHand(dial, hand, className) {
 
 
 // Visartavlan som en SVG-grupp: urtavlan eller bågen, strecken, texterna och visarna. ghost är visare som ritas
-// streckade i en grupp som syns först med "Visa rätt svar" (dg-ghost). Ger { el, hands } där hands är gruppen med
+// streckade i en grupp som syns i läget med rätt svar (dg-ghost). Ger { el, hands } där hands är gruppen med
 // visarna (buildClock ritar om dem där).
 export function drawDial(dial, { ghost = [] } = {}) {
   const g = svgEl("g", { class: "dg-dial" });
@@ -369,7 +369,7 @@ export function buildClock(screen, root) {
 
 const textLine = (screen) => (screen.text ? [el("p", "dg-word-text", screen.text)] : []);
 
-// Elevens visare; facits visare (på exakt rätt ställe) är streckade och syns först med "Visa rätt svar".
+// Elevens visare; facits visare (på exakt rätt ställe) är streckade och syns i läget med rätt svar.
 export function clockDetail(screen, row) {
   const hands = handsOfAnswer(row.answers);
   const { svg } = clockSvg({ hands, ghost: exactHands(screen.time), label: "Elevens visare" });

@@ -10,11 +10,11 @@ import { NCM_LINKS } from "./data/links.js";
 import { createSession, formatTime } from "./session.js";
 import { loadResults, saveResult } from "./results.js";
 import { renderScreen, renderResult, prettyAnswer } from "./render.js";
-import { storageWorks, formatStamp, timeAgo, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, latestByCode, scoreLevel } from "./page.js";
+import { storageWorks, formatStamp, timeAgo, savedList, safeScore, ignoresEnter, ignoresHeldEnter, ignoresResultTap, searchDiagnoses, filterText, foldableSubs, PREVIEW_ROWS, latestByCode, scoreLevel } from "./page.js";
 import { createStore } from "../sant-falskt/storage.js";
 import { hasPractice, loadBank } from "./ova/banks.js";
 import { missedLabels, partsForLabels } from "./ova/pool.js";
-import { openPractice } from "./ova/view.js";
+import { openPractice, closePractice } from "./ova/view.js";
 
 const SECTIONS = ["dgList", "dgRun", "dgResult", "dgPractice"];
 const CLOCK_TICK_MS = 500; // tätare än en sekund, så att visningen aldrig släpar efter
@@ -55,7 +55,6 @@ function stairIcon(code) {
 // Bara diagnoserna som passar sökrutan. Ett delområde eller område utan någon av dem visas inte.
 // Alla delområden syns alltid. Ett delområde visar från början tre rader: två hela och en som tonar bort, så att det syns att det
 // finns mer. Det som öppnats står öppet medan sidan är öppen, och en sökning visar alltid alla sina träffar.
-const PREVIEW_ROWS = 3;
 const openSubs = new Set();
 
 // Färgen är aldrig ensam: talen står alltid i märket.
@@ -119,6 +118,20 @@ function renderAreas() {
   // kvar högst upp medan man rullar (sticky), så att knappen går att nå också långt ned i listan på en mobil.
   $("dgFilter").hidden = filtered === null;
   $("dgFilterText").textContent = filtered ?? "";
+  // En sökning visar alltid alla sina träffar, så det finns inget att öppna.
+  $("dgFoldAll").hidden = filtered !== null;
+  paintFoldAll();
+}
+
+const allSubsOpen = () => foldableSubs(AREAS).every((sub) => openSubs.has(sub));
+
+// Knappen för hela listan säger samma sak som knappen under ett delområde. Den följer openSubs, så att den stämmer också
+// när delområdena öppnas och stängs ett i taget. Delområden som inte fälls ihop räknas inte.
+function paintFoldAll() {
+  const open = allSubsOpen();
+  const button = $("dgFoldAll");
+  button.textContent = open ? "▴ Visa färre" : `▾ Visa alla ${DIAGNOSES.length} diagnoser`;
+  button.setAttribute("aria-expanded", String(open));
 }
 
 // Rubriken och knappen under gör samma sak. Knappen ligger över raden som tonar bort, så ett tryck där öppnar delområdet i
@@ -140,6 +153,7 @@ function foldToggle(box, head, fading, sub, count) {
     const open = box.classList.contains("is-preview");
     setOpen(open);
     if (!open) head.scrollIntoView({ block: "nearest" }); // listan blir kortare, så att rubriken inte hamnar ovanför skärmen
+    paintFoldAll();
   };
   head.addEventListener("click", toggle);
   more.addEventListener("click", toggle);
@@ -438,7 +452,7 @@ $("dgActions").addEventListener("keydown", (e) => {
   e.preventDefault();
   e.stopPropagation();
 }, true);
-// Ett dubbelklick på sista "Nästa" ger ett andra klick som träffar resultatskärmen, där "Visa rätt svar" eller
+// Ett dubbelklick på sista "Nästa" ger ett andra klick som träffar resultatskärmen, där "Dölj rätt svar" eller
 // "Till listan" kan ligga på samma plats. Knapparna där ignoreras en stund (före deras egen hantering, capture).
 $("dgResultHost").addEventListener("click", (e) => {
   if (!e.target.closest(".dg-reveal, .dg-back, .dg-practice-missed")) return;
@@ -452,6 +466,13 @@ $("dgSearch").addEventListener("input", (e) => {
     facitUnlocked = true;
     e.target.value = "";
   }
+  renderAreas();
+});
+// Öppnar alla delområden, eller stänger alla när alla redan är öppna. renderAreas ritar listan ur openSubs.
+$("dgFoldAll").addEventListener("click", () => {
+  const open = allSubsOpen();
+  openSubs.clear();
+  if (!open) for (const sub of foldableSubs(AREAS)) openSubs.add(sub);
   renderAreas();
 });
 $("dgFilterReset").addEventListener("click", () => {
@@ -468,5 +489,13 @@ $("dgCancelYes").addEventListener("click", showList);
 // Tillbaka till listan med ett klick, både under diagnosen och på resultatskärmen. Som "Ja, avbryt": inget sparas.
 $("dgRunBack").addEventListener("click", showList);
 $("dgResultBack").addEventListener("click", showList);
+// Rubriken uppe till höger går tillbaka till listan från varje skärm. Den laddar inte om sidan, så att öppna delområden står
+// kvar. En påbörjad diagnos frågar först, eftersom svaren inte sparas, och Övas tangentlyssnare stängs med vyn.
+$("dgHome").addEventListener("click", (e) => {
+  e.preventDefault();
+  if (run?.session) return askCancel();
+  closePractice();
+  showList();
+});
 
 showList();

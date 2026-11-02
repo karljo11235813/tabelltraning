@@ -10,11 +10,15 @@
 // ignoresResultTap  ska ett klick på resultatskärmens knappar ignoreras? Ja strax efter att skärmen visades.
 // searchDiagnoses  koderna som passar listans sökruta, i listans ordning.
 // filterText    raden som visar att listan är filtrerad ("Filtrerat på ”rd”: 6 av 108 diagnoser"), eller null utan sökning.
+// foldableSubs  delområdena i listan som går att fälla ihop: de med fler diagnoser än PREVIEW_ROWS.
 
 import { scoreRun } from "./mark.js";
 
 // En egen nyckel, så att provet aldrig rör sparade resultat.
 export const PROBE_KEY = "diamant.probe";
+
+// Så många rader visar ett hopfällt delområde: två hela och en som tonar bort.
+export const PREVIEW_ROWS = 3;
 
 const MONTHS = ["jan", "feb", "mars", "apr", "maj", "juni", "juli", "aug", "sep", "okt", "nov", "dec"];
 
@@ -112,7 +116,7 @@ export function ignoresHeldEnter({ key, repeat }) {
 }
 
 // Dubbelklicket på sista "Nästa" ger ett andra klick med några hundra millisekunder emellan. Det träffar den nya
-// resultatskärmen, och där ligger "Visa rätt svar" eller "Till listan" på samma plats som "Nästa". Knapparna där
+// resultatskärmen, och där ligger "Dölj rätt svar" eller "Till listan" på samma plats som "Nästa". Knapparna där
 // ignoreras därför en stund efter att skärmen visades. Längre än sessionens dubbeltryck (300 ms): ett dubbelklick
 // är ofta nära 400 ms, och att vänta lite längre kostar ingenting eftersom läraren ändå läser först.
 export const RESULT_GUARD_MS = 400;
@@ -145,6 +149,10 @@ export function searchDiagnoses(diagnoses, query) {
 }
 
 // Listan är filtrerad när sökrutan har något annat än mellanslag. Sökordet står som eleven skrev det.
+export function foldableSubs(areas) {
+  return areas.flatMap(({ subs }) => subs).filter(({ codes }) => codes.length > PREVIEW_ROWS).map(({ sub }) => sub);
+}
+
 export function filterText(query, count, total) {
   const q = String(query ?? "").trim();
   if (q === "") return null;

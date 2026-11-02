@@ -23,7 +23,7 @@
 //   barsGeometry   mått för ritningen; columnAt och heightIndexAt ger kolumnen och y-axelns streck för en pekposition.
 //
 // Ritande funktioner: barsStage (diagrammet med givna staplar), buildBars (skärmen) och barsDetail/barsSkipped
-// (resultatskärmen: elevens staplar, och facits streckade bakom "Visa rätt svar").
+// (resultatskärmen: elevens staplar, och facits streckade i läget med rätt svar).
 
 import { parseNumber } from "./parse.js";
 import { equals } from "./value.js";
@@ -167,7 +167,7 @@ function drawFrame(svg, g, screen) {
 }
 
 // Diagrammet som SVG med staplarna values (exakta tal eller null, i kategoriernas ordning) och facits staplar ghost
-// (streckade, i en grupp som syns först med "Visa rätt svar"). Ger { el, g, show } där show(values) ritar om elevens
+// (streckade, i en grupp som syns i läget med rätt svar). Ger { el, g, show } där show(values) ritar om elevens
 // staplar.
 function drawBars(screen, { values = [], ghost = null, interactive = false, label = "Stapeldiagram" } = {}) {
   const g = barsGeometry(screen);
@@ -303,7 +303,7 @@ export function buildBars(screen, root) {
 
 const textLine = (screen) => (screen.text ? [el("p", "dg-word-text", screen.text)] : []);
 
-// Elevens staplar; facits är streckade och syns först med "Visa rätt svar". Ett trasigt svar ritas så långt det går.
+// Elevens staplar; facits är streckade och syns i läget med rätt svar. Ett trasigt svar ritas så långt det går.
 export function barsDetail(screen, row) {
   const given = parseHeights(row.answers?.heights);
   const sticks = isSticks(screen);
