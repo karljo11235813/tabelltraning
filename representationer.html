@@ -27,8 +27,23 @@
       <h1 class="rp-title">Bråk, decimal &amp; procent</h1>
     </div>
     <p class="rp-intro">Samma tal kan skrivas på många sätt. Översätt mellan bråk, decimaltal, procent, ord och bilder.</p>
+    <!-- Ett exempel så att den som kommer hit förstår sidan på en gång: en fråga, svaret och samma tal i alla former. -->
+    <figure class="rp-example">
+      <figcaption class="rp-example-label">Exempel</figcaption>
+      <div class="rp-example-task">
+        <div class="rp-example-question">
+          <div class="rp-source" id="rpExampleSource"></div>
+          <p class="rp-example-prompt" id="rpExamplePrompt"></p>
+        </div>
+        <span class="rp-example-arrow" aria-hidden="true">→</span>
+        <p class="rp-example-answer">Svar: <span id="rpExampleAnswer"></span></p>
+      </div>
+      <p class="rp-example-label">Samma tal i alla fem former</p>
+      <div class="rp-translation" id="rpExampleForms"></div>
+    </figure>
     <h2>Välj läge</h2>
     <div class="landing-choices" id="rpModes"></div>
+    <section class="progress-panel" id="rpStartProgress" hidden></section>
   </section>
 
   <!-- FRÅGA -->
@@ -40,7 +55,14 @@
     </div>
     <div class="timer-bar-track" id="rpTimerTrack"><div class="timer-bar-fill" id="rpTimerBar"></div></div>
 
-    <div class="rp-scoreboard">
+    <!-- Rätt i rad: sviten, hur långt det är till nästa nivå och nivåerna, läsbara på håll. -->
+    <div class="rp-streak" id="rpStreak" hidden>
+      <div class="rp-streak-count"><span class="rp-streak-val" id="rpStreakVal">0</span><span class="rp-streak-unit">i rad</span></div>
+      <div class="rp-streak-next" id="rpStreakNext"></div>
+      <div class="rp-levels" id="rpStreakLevels"></div>
+    </div>
+
+    <div class="rp-scoreboard" id="rpScoreboard">
       <div class="rp-tile"><div class="rp-tile-val" id="rpLiveScore">0</div><div class="rp-tile-lbl">Poäng</div></div>
       <div class="rp-tile rp-tile-correct"><div class="rp-tile-val" id="rpLiveCorrect">0</div><div class="rp-tile-lbl">Rätt</div></div>
       <div class="rp-tile rp-tile-wrong"><div class="rp-tile-val" id="rpLiveWrong">0</div><div class="rp-tile-lbl">Fel</div></div>
@@ -65,7 +87,13 @@
   <section id="rpResult" hidden>
     <div class="result-card">
       <h2 id="rpResultTitle"></h2>
-      <div class="result-stats">
+      <div class="rp-streak-result" id="rpStreakResult" hidden>
+        <div class="rp-streak-count"><span class="rp-streak-val" id="rpFinalStreak">0</span><span class="rp-streak-unit">i rad</span></div>
+        <div class="rp-final-level" id="rpFinalLevel"></div>
+        <div class="rp-levels rp-levels-big" id="rpFinalLevels"></div>
+        <p class="rp-final-hint" id="rpFinalHint"></p>
+      </div>
+      <div class="result-stats" id="rpResultStats">
         <div class="result-stat"><div class="val" id="rpStatScore">0</div><div class="lbl">Poäng</div></div>
         <div class="result-stat"><div class="val rp-val-correct" id="rpStatCorrect">0</div><div class="lbl">Rätt</div></div>
         <div class="result-stat"><div class="val rp-val-wrong" id="rpStatWrong">0</div><div class="lbl">Fel</div></div>
@@ -77,6 +105,7 @@
         <button type="button" class="again-btn" id="rpAgain">Kör igen</button>
         <button type="button" class="rp-secondary-btn" id="rpChangeMode">Byt läge</button>
       </div>
+      <section class="progress-panel" id="rpResultProgress" hidden></section>
     </div>
   </section>
 

@@ -1,4 +1,6 @@
 // Alla lägen. Startskärmen visar ett kort per läge i den här ordningen.
+import { STREAK_LEVELS } from "./streak.js";
+
 export const MODES = [
   {
     id: "sprint",
@@ -21,6 +23,20 @@ export const MODES = [
     score: (s) => s.correct - s.wrong,
     isOver: () => false,
     trackRecord: false,
+  },
+  {
+    id: "streak",
+    name: "Rätt i rad",
+    description: "Ingen tid. Ett fel och sviten är slut. Hur långt kommer du?",
+    timeLimitSec: null,
+    retryWrong: false,
+    feedback: "flash", // ett rätt svar blinkar och nästa fråga kommer direkt
+    wrongFeedback: "card", // felet visar rätt svar i alla former innan resultatet
+    // Omgången tar slut vid första felet, så alla rätt svar är i rad.
+    score: (s) => s.correct,
+    isOver: (s) => s.wrong > 0,
+    trackRecord: false, // rekordet är bästa omgången i streak.js, inte sprintens rekord
+    levels: STREAK_LEVELS,
   },
 ];
 

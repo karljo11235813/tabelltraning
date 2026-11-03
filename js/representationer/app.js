@@ -2,7 +2,7 @@
 // Logiken som kan testas utan webbläsare ligger i generator.js, check.js, session.js m.fl.
 import { MODES } from "./modes.js";
 import { createSession } from "./session.js";
-import { createGenerator } from "./generator.js";
+import { createGenerator, buildQuestion } from "./generator.js";
 import { renderPicture } from "./pictures.js";
 import { cardPicture } from "./models.js";
 import { formatDecimal, formatPercent } from "./rational.js";
@@ -10,6 +10,8 @@ import { fractionWords } from "./words.js";
 import { correctAnswerText, givenAnswerText, hintFor } from "./feedback.js";
 import { formatClock, formatScore, scoreTiles } from "../sant-falskt/format.js";
 import { createStore, readRecord, updateRecord } from "../sant-falskt/storage.js";
+import { STREAK_LEVELS, plainName, reachedLevel, nextLevelText, resultHint, loadStreaks, saveStreak, summarizeStreaks } from "./streak.js";
+import { renderStreakProgress } from "./streak-panel.js";
 
 const FLASH_RIGHT_MS = 600;
 const FLASH_WRONG_MS = 1500;
@@ -18,11 +20,13 @@ const AGAIN_GUARD_MS = 1000; // ett Enter precis vid 0:00 ska inte starta en ny 
 const RECORD_KEY = "representationer.sprintRecord";
 const SCREENS = ["rpStart", "rpRun", "rpResult"];
 const TARGET_LABELS = { brak: "Bråk", decimal: "Decimal", procent: "Procent", bild: "Bild" };
+// Exemplet på startskärmen: 0,75 som bråk, svaret 3/4 och sedan 3/4 i alla former.
+const EXAMPLE = { value: { num: 3, den: 4 }, direction: { source: "decimal", target: "brak" } };
 
 const $ = (id) => document.getElementById(id);
 const store = createStore(() => window.localStorage);
 
-let run = null; // { mode, session, question, inputs, picture, locked, lockedAt, finished, endAt, tick, flashTimer, ellipsisShown }
+let run = null; // { mode, session, question, inputs, picture, locked, lockedAt, finished, endAt, tick, flashTimer, ellipsisShown, shownLevel }
 
 const isTimed = (mode) => mode.timeLimitSec != null;
 
@@ -45,7 +49,47 @@ function stackedFraction(num, den) {
   return frac;
 }
 
+// ---------- NIVÅER (Rätt i rad) ----------
+
+// Rutorna byggs en gång per skärm, och markLevels tänder dem som sviten har nått: fylld ruta med ✓, så att det syns
+// på håll och utan att färgen bär ensam.
+function buildLevels(box) {
+  box.textContent = "";
+  for (const level of STREAK_LEVELS) {
+    const tile = el("div", "rp-level");
+    tile.append(el("span", "rp-level-check"), el("span", "rp-level-name", level.name), el("span", "rp-level-req", `${level.min} i rad`));
+    box.append(tile);
+  }
+}
+
+// yours: resultatskärmen märker den högsta nivån med DIN NIVÅ. pop: nivån som just nåddes studsar till.
+function markLevels(box, streak, { yours = false, pop = -1 } = {}) {
+  const highest = reachedLevel(streak);
+  [...box.children].forEach((tile, i) => {
+    tile.classList.toggle("is-reached", i <= highest);
+    tile.classList.toggle("is-yours", yours && i === highest);
+    tile.classList.toggle("is-new", i === pop);
+    tile.querySelector(".rp-level-check").textContent = i <= highest ? "✓" : "";
+    tile.querySelector(".rp-level-yours")?.remove();
+    if (yours && i === highest) tile.append(el("span", "rp-level-yours", "DIN NIVÅ"));
+  });
+}
+
 // ---------- START ----------
+
+// Exemplet ritas med samma kod som frågan och kortet efter svaret, så att det alltid ser ut som det eleven möter.
+function renderExample() {
+  const question = buildQuestion(Math.random, EXAMPLE.value, EXAMPLE.direction);
+  fillSource($("rpExampleSource"), question);
+  $("rpExamplePrompt").textContent = question.prompt;
+  $("rpExampleAnswer").replaceChildren(stackedFraction(question.value.num, question.value.den));
+  fillTranslation($("rpExampleForms"), question);
+}
+
+function showStart() {
+  showScreen("rpStart");
+  renderStart(); // efter showScreen: framstegsrutan ritas i sin verkliga bredd
+}
 
 function renderStart() {
   const modes = $("rpModes");
@@ -56,11 +100,16 @@ function renderStart() {
     card.append(el("span", "landing-card-title", mode.name), el("span", "landing-card-desc", mode.description));
     if (mode.trackRecord) {
       const record = readRecord(store, RECORD_KEY);
-      if (record !== null) card.append(el("span", "rp-record-badge", `Rekord: ${formatScore(record)}`));
+      if (record !== null) card.append(el("span", "rp-record-badge", `Rekord: ${formatScore(record.score)}`));
+    }
+    if (mode.levels) {
+      const { best } = summarizeStreaks(loadStreaks(store));
+      if (best) card.append(el("span", "rp-record-badge", `Rekord: ${best} i rad`));
     }
     card.addEventListener("click", () => startRun(mode));
     modes.appendChild(card);
   }
+  renderStreakProgress($("rpStartProgress"), loadStreaks(store));
 }
 
 // ---------- OMGÅNG ----------
@@ -80,7 +129,11 @@ function startRun(mode) {
     tick: null,
     flashTimer: null,
     ellipsisShown: false,
+    shownLevel: -1,
   };
+  $("rpStreak").hidden = !mode.levels;
+  $("rpScoreboard").hidden = Boolean(mode.levels);
+  if (mode.levels) buildLevels($("rpStreakLevels"));
   $("rpQuit").hidden = isTimed(mode);
   $("rpRestart").hidden = !isTimed(mode);
   $("rpTimer").hidden = !isTimed(mode);
@@ -116,6 +169,14 @@ function updateTop() {
   $("rpLiveScore").textContent = tiles.score;
   $("rpLiveCorrect").textContent = tiles.correct;
   $("rpLiveWrong").textContent = tiles.wrong;
+  if (run.mode.levels) {
+    const streak = run.session.state().correct;
+    const highest = reachedLevel(streak);
+    $("rpStreakVal").textContent = String(streak);
+    $("rpStreakNext").textContent = nextLevelText(streak);
+    markLevels($("rpStreakLevels"), streak, { pop: highest > run.shownLevel ? highest : -1 });
+    run.shownLevel = highest;
+  }
 }
 
 function showNext() {
@@ -143,7 +204,10 @@ function showNext() {
 }
 
 function renderSource(question) {
-  const box = $("rpSource");
+  fillSource($("rpSource"), question);
+}
+
+function fillSource(box, question) {
   box.textContent = "";
   box.className = `rp-source rp-source-${question.source.kind}`;
   const { source } = question;
@@ -234,7 +298,8 @@ function submitAnswer() {
   $("rpCard").classList.add(result.correct ? "is-right" : "is-wrong");
   updateTop();
 
-  if (run.mode.feedback === "flash") {
+  const feedback = result.correct ? run.mode.feedback : (run.mode.wrongFeedback ?? run.mode.feedback);
+  if (feedback === "flash") {
     if (!result.correct) {
       $("rpFlashAnswer").textContent = `Rätt svar: ${correctAnswerText(question)}`;
       $("rpFlashAnswer").hidden = false;
@@ -259,12 +324,17 @@ function showFeedback(question, answer, result) {
   }
   $("rpHint").textContent = hintFor(question, result) ?? "";
   renderTranslation(question);
+  $("rpNext").textContent = run.mode.isOver(run.session.state()) ? "Se resultatet →" : "Nästa →";
   $("rpFeedback").hidden = false;
   $("rpNext").focus();
 }
 
-// Värdet i alla fem former sida vid sida.
 function renderTranslation(question) {
+  fillTranslation($("rpTranslation"), question);
+}
+
+// Värdet i alla fem former sida vid sida.
+function fillTranslation(box, question) {
   const v = question.value;
   const picture = cardPicture(v, question.source.picture ?? question.target.picture ?? null);
   const cells = [
@@ -274,7 +344,6 @@ function renderTranslation(question) {
     ["Ord", fractionWords(v.num, v.den)],
     ["Bild", renderPicture(picture, { shaded: picture.shaded }).el],
   ];
-  const box = $("rpTranslation");
   box.textContent = "";
   for (const [label, content] of cells) {
     const value = el("div", `rp-tr-value${label === "Ord" ? " is-words" : ""}`);
@@ -287,7 +356,7 @@ function renderTranslation(question) {
 }
 
 function goNext() {
-  if (!run || run.finished || !run.locked || run.mode.feedback !== "card") return;
+  if (!run || run.finished || !run.locked || $("rpFeedback").hidden) return;
   if (performance.now() - run.lockedAt < NEXT_GUARD_MS) return;
   showNext();
 }
@@ -300,8 +369,12 @@ function finishRun() {
   run.finishedAt = performance.now();
   stopTimers();
   const state = run.session.state();
-  const isNew = run.mode.trackRecord ? updateRecord(store, RECORD_KEY, state.score).isNew : false;
-  $("rpResultTitle").textContent = isTimed(run.mode) ? "Tiden är ute!" : "Bra jobbat!";
+  const sprintRun = { score: state.score, correct: state.correct, wrong: state.wrong, at: Date.now() };
+  let isNew = run.mode.trackRecord ? updateRecord(store, RECORD_KEY, sprintRun).isNew : false;
+  if (run.mode.levels) isNew = finishStreak(state);
+  $("rpResultTitle").textContent = isTimed(run.mode) ? "Tiden är ute!" : run.mode.levels && state.wrong > 0 ? "Sviten är slut!" : "Bra jobbat!";
+  $("rpResultStats").hidden = Boolean(run.mode.levels);
+  $("rpStreakResult").hidden = !run.mode.levels;
   $("rpStatScore").textContent = formatScore(state.score);
   $("rpStatCorrect").textContent = String(state.correct);
   $("rpStatWrong").textContent = String(state.wrong);
@@ -316,7 +389,28 @@ function finishRun() {
     breakdown.append(el("span", "rp-breakdown-item", `${TARGET_LABELS[t]} ${correct}/${total}`));
   }
   showScreen("rpResult");
+  if (run.mode.levels) renderStreakProgress($("rpResultProgress"), loadStreaks(store));
+  else $("rpResultProgress").hidden = true;
   $("rpAgain").focus();
+}
+
+// Sparar omgången och fyller i sviten och nivåerna. En omgång som avslutades före första svaret sparas inte, men en som
+// avslutades mitt i räknas med sviten den hade. Ger true vid nytt rekord (som sprintens: över 0 och sparat).
+function finishStreak(state) {
+  const streak = state.correct;
+  const { best } = summarizeStreaks(loadStreaks(store));
+  const saved = state.answered > 0 && saveStreak(store, { ts: Date.now(), streak });
+  const highest = reachedLevel(streak);
+  $("rpFinalStreak").textContent = String(streak);
+  const level = $("rpFinalLevel");
+  level.textContent = "";
+  level.classList.toggle("is-none", highest < 0);
+  if (highest >= 0) level.append(el("span", "rp-final-check", "✓ "), plainName(STREAK_LEVELS[highest])); // bryts vid mellanslaget, inte mitt i ordet
+  else level.textContent = "Ingen nivå än";
+  buildLevels($("rpFinalLevels"));
+  markLevels($("rpFinalLevels"), streak, { yours: true });
+  $("rpFinalHint").textContent = resultHint(streak);
+  return saved && streak > (best ?? 0);
 }
 
 // ---------- HÄNDELSER ----------
@@ -336,8 +430,7 @@ $("rpAgain").addEventListener("click", () => {
 $("rpChangeMode").addEventListener("click", () => {
   stopTimers();
   run = null;
-  renderStart();
-  showScreen("rpStart");
+  showStart();
 });
 
 // Ett nedhållet Enter (autorepeat) får aldrig klicka på en knapp eller skicka in formuläret.
@@ -359,5 +452,5 @@ document.addEventListener("keydown", (event) => {
   else submitAnswer();
 });
 
-renderStart();
-showScreen("rpStart");
+renderExample();
+showStart();

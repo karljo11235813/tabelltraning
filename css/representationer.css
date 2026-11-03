@@ -8,6 +8,23 @@ a.header-title, a.back-link { text-decoration: none; }
 /* ---------- START ---------- */
 .rp-title { font-size: clamp(1.4rem, 3vw, 1.9rem); color: var(--accent); margin: 0 0 6px; line-height: 1.2; }
 .rp-intro { color: var(--text-muted); margin: 0 0 8px; line-height: 1.45; }
+/* Exemplet: en liten fråga med svar och sedan samma tal i alla former, så att sidan går att förstå på en gång. */
+.rp-example { margin: 14px 0 6px; padding: 14px 16px 4px; border: 2px solid var(--accent-soft); border-radius: 14px; background: var(--bg); }
+.rp-example-label { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+.rp-example-task { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 22px; margin: 6px 0 14px; }
+.rp-example-question { text-align: center; }
+.rp-example .rp-source { font-size: 2.2rem; min-height: 0; margin: 0; }
+.rp-example-prompt { margin: 2px 0 0; font-weight: 700; }
+.rp-example-arrow { font-size: 1.8rem; font-weight: 800; color: var(--text-muted); }
+.rp-example-answer { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 800; font-size: 1.1rem; }
+.rp-example-answer .rp-frac { font-family: "Baloo 2", sans-serif; font-size: 1.6rem; color: var(--success); }
+.rp-example .rp-translation { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+.rp-example .rp-tr-cell { padding: 8px 4px; }
+.rp-example .rp-tr-cell .rp-svg { max-width: 72px; }
+@media (max-width: 560px) {
+  .rp-example-arrow { display: none; } /* svaret står under frågan, och en pil som pekar ut i luften förvirrar */
+  .rp-example .rp-translation { grid-template-columns: repeat(3, minmax(0, 1fr)); } /* "fjärdedelar" ryms utan att delas */
+}
 .rp-record-badge { display: block; margin-top: 6px; font-size: 0.85rem; font-weight: 800; color: var(--accent-strong); }
 
 /* ---------- FRÅGA ---------- */
@@ -50,6 +67,98 @@ a.header-title, a.back-link { text-decoration: none; }
 .rp-tile-correct .rp-tile-val { color: var(--success); }
 .rp-tile-wrong .rp-tile-val { color: var(--danger); }
 .rp-tile-lbl { margin-top: 4px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+
+/* ---------- RÄTT I RAD ---------- */
+/* Läraren ska kunna se på håll hur det går: sviten är stor, och en nådd nivå är en fylld ruta med ✓ (en ej nådd är
+   streckad), så att den syns också utan färg. Den fyllda färgen är mörkare än --success så att vit text läses (5:1). */
+:root { --rp-lit: #227a5c; --rp-lit-text: #ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --rp-lit: var(--success); --rp-lit-text: var(--surface); }
+}
+:root[data-theme="dark"] { --rp-lit: var(--success); --rp-lit-text: var(--surface); }
+
+.rp-streak {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "count levels" "next next";
+  align-items: center;
+  gap: 8px 18px;
+  margin-bottom: 16px;
+}
+.rp-streak .rp-streak-count { grid-area: count; }
+.rp-streak .rp-levels { grid-area: levels; }
+.rp-streak-next { grid-area: next; font-weight: 800; font-size: 1.15rem; color: var(--text); }
+.rp-streak-count { display: flex; align-items: baseline; justify-content: center; gap: 6px; }
+.rp-streak-val {
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(2.6rem, 8vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.rp-streak-unit { font-size: 1.15rem; font-weight: 800; color: var(--text-muted); }
+
+.rp-levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.rp-level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 5px 4px 7px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+  text-align: center;
+}
+.rp-level.is-reached { border: 2px solid var(--rp-lit); background: var(--rp-lit); color: var(--rp-lit-text); }
+.rp-level.is-yours { box-shadow: 0 0 0 4px var(--success-soft), 0 0 0 6px var(--rp-lit); }
+.rp-level.is-new { animation: rp-level-pop 0.5s ease-out; }
+.rp-level-check { min-height: 1.2rem; font-size: 1.2rem; font-weight: 800; line-height: 1; }
+.rp-level-name { font-family: "Baloo 2", sans-serif; font-size: 0.9rem; font-weight: 800; line-height: 1.1; hyphens: manual; overflow-wrap: anywhere; }
+.rp-level-req { font-size: 0.75rem; font-weight: 700; }
+.rp-level-yours {
+  margin-top: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--rp-lit-text);
+  color: var(--rp-lit);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+@keyframes rp-level-pop {
+  40% { transform: scale(1.15); }
+}
+
+/* Resultatet: sviten, nivåns namn mycket stort och nivåerna som stora rutor. */
+.rp-streak-result { margin: 0 0 20px; }
+.rp-final-level {
+  margin: 6px 0 16px;
+  text-align: center;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(2rem, 7vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.rp-final-level.is-none { font-size: clamp(1.4rem, 4vw, 1.8rem); color: var(--text-muted); }
+.rp-final-check { color: var(--rp-lit); }
+.rp-levels-big { gap: 10px; }
+.rp-levels-big .rp-level { padding: 12px 6px 14px; border-width: 3px; }
+.rp-levels-big .rp-level-check { min-height: 2rem; font-size: 2rem; }
+.rp-levels-big .rp-level-name { font-size: clamp(0.95rem, 2.6vw, 1.3rem); }
+.rp-levels-big .rp-level-req { font-size: 0.9rem; }
+.rp-final-hint { margin: 14px 0 0; font-weight: 700; }
+.rp-pp-tiles { grid-template-columns: repeat(3, 1fr); }
+
+@media (max-width: 520px) {
+  .rp-streak { grid-template-areas: "count next" "levels levels"; }
+  .rp-levels-big { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 .rp-card {
   background: var(--surface);
@@ -174,6 +283,7 @@ a.header-title, a.back-link { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .rp-shake { animation: none; }
   .rp-card { transition: none; }
+  .rp-level.is-new { animation: none; }
 }
 
 /* ---------- BILDER ---------- */
