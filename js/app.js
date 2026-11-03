@@ -1,9 +1,9 @@
-import { randInt, shuffled } from './utils.js';
+import { randInt } from './utils.js';
 import { getLang, setLang, t } from './i18n.js';
 import * as Audio from './audio.js';
 import { factKey } from './mastery.js';
 import { getAttemptsByFact, getFactStats, logAttempt, clearFactStats } from './stats-store.js';
-import { BUILD_STEPS_META, BUILD_MIX_LEN, stepFactPairs, buildStepsUpTo } from './build-data.js';
+import { BUILD_STEPS_META, BUILD_PHASES, stepFactPairs, divisionFact, phasePlan } from './build-data.js';
 import { describeScope, roundPoints, formatPoints } from './result-scope.js';
 import { LEVELS, assessLevels, levelHint, levelRequirement } from './levels.js';
 import { createStore } from './sant-falskt/storage.js';
@@ -47,6 +47,7 @@ const backFromBuildComplete = document.getElementById('backFromBuildComplete');
 const buildStepTitle = document.getElementById('buildStepTitle');
 const buildStrategyText = document.getElementById('buildStrategyText');
 const buildStrategyExample = document.getElementById('buildStrategyExample');
+const buildStrategyDivision = document.getElementById('buildStrategyDivision');
 const buildStartBtn = document.getElementById('buildStartBtn');
 const buildDoneCaption = document.getElementById('buildDoneCaption');
 const buildNextBtn = document.getElementById('buildNextBtn');
@@ -109,9 +110,9 @@ let originScreen = 'practice'; // which setup screen to return to on "again"
 
 // ---------- Bygg upp state ----------
 let buildStepIndex = 0;
-let buildPhase = 'order'; // 'order' | 'shuffle2' | 'mix'
+let buildPhase = 'order'; // one of BUILD_PHASES
 let buildPhaseLen = 0;
-let buildFactQueue = []; // draw order for the 'order' and 'shuffle2' rounds
+let buildFactQueue = []; // the round's problems as { a, b, op }, drawn in order
 let buildCompleted = new Set();
 try {
   const savedProgress = JSON.parse(localStorage.getItem('tabelltraning_build_progress') || '[]');
@@ -565,31 +566,23 @@ function buildMulProblem(a, b) {
   return { text: x + ' × ' + y + ' =', answer: a * b, factA: a, factB: b };
 }
 
+// factA is the table, as in makeProblem, so a division counts on the same fact as its multiplication.
+function buildDivProblem(a, b) {
+  const { dividend, divisor, quotient } = divisionFact(a, b);
+  return { text: dividend + ' ÷ ' + divisor + ' =', answer: quotient, factA: a, factB: b };
+}
+
+// Draws from the round's pre-built plan (phasePlan), so the rounds in order stay in order and the mix keeps its
+// new, old, new, old turns. After the last problem, the one preview slot that is never answered gets a random
+// multiplication from this step.
 function makeBuildProblem() {
-  const step = BUILD_STEPS_META[buildStepIndex];
-
-  if (buildPhase === 'order' || buildPhase === 'shuffle2') {
-    // Draw from the pre-built queue so 'order' stays in ascending order and
-    // 'shuffle2' stays a fixed shuffled-with-every-fact-twice sequence —
-    // falls back to a fresh random fact from this step only for the one
-    // unanswered preview slot after the queue empties.
-    if (buildFactQueue.length > 0) {
-      const [a, b] = buildFactQueue.shift();
-      return buildMulProblem(a, b);
-    }
-    const pairs = stepFactPairs(step, MAX_TABLE);
-    const [a, b] = pairs[randInt(0, pairs.length - 1)];
-    return buildMulProblem(a, b);
+  if (buildFactQueue.length > 0) {
+    const { a, b, op } = buildFactQueue.shift();
+    return op === 'div' ? buildDivProblem(a, b) : buildMulProblem(a, b);
   }
-
-  // mix phase: draw from everything unlocked so far, including this step
-  const { nums, includeSquares } = buildStepsUpTo(buildStepIndex);
-  if (includeSquares && Math.random() < 0.25) {
-    const n = randInt(2, 10);
-    return buildMulProblem(n, n);
-  }
-  const table = nums[randInt(0, nums.length - 1)];
-  return buildMulProblem(table, randInt(1, MAX_TABLE));
+  const pairs = stepFactPairs(BUILD_STEPS_META[buildStepIndex], MAX_TABLE);
+  const [a, b] = pairs[randInt(0, pairs.length - 1)];
+  return buildMulProblem(a, b);
 }
 
 function refillQueue() {
@@ -736,19 +729,14 @@ function endRound() {
   renderResultText();
 }
 
-// ---------- Bygg upp: order -> shuffle2 -> mix rounds per step ----------
+// ---------- Bygg upp: the rounds in BUILD_PHASES per step ----------
+const PHASE_LABELS = { order: 'phaseOrder', shuffle2: 'phaseShuffle', divOrder: 'phaseDivOrder', divShuffle: 'phaseDivShuffle', mix: 'phaseMix' };
+
 function startBuildPhase(phase) {
   mode = 'build';
   buildPhase = phase;
-  const step = BUILD_STEPS_META[buildStepIndex];
-
-  if (phase === 'order') {
-    buildFactQueue = stepFactPairs(step, MAX_TABLE);
-  } else if (phase === 'shuffle2') {
-    const pairs = stepFactPairs(step, MAX_TABLE);
-    buildFactQueue = shuffled(pairs.concat(pairs));
-  }
-  buildPhaseLen = (phase === 'order' || phase === 'shuffle2') ? buildFactQueue.length : BUILD_MIX_LEN;
+  buildFactQueue = phasePlan(phase, buildStepIndex, MAX_TABLE);
+  buildPhaseLen = buildFactQueue.length;
 
   correctCount = 0;
   wrongCount = 0;
@@ -764,7 +752,7 @@ function startBuildPhase(phase) {
 
   showScreen(testScreen);
   answerInput.value = '';
-  timerDisplay.textContent = phase === 'order' ? t().phaseOrder : phase === 'shuffle2' ? t().phaseShuffle : t().phaseMix;
+  timerDisplay.textContent = t()[PHASE_LABELS[phase]];
   timerBar.style.width = '0%';
   renderLiveLabel();
   renderCurrent();
@@ -773,12 +761,9 @@ function startBuildPhase(phase) {
 
 function completeBuildPhase() {
   running = false;
-  if (buildPhase === 'order') {
-    startBuildPhase('shuffle2');
-    return;
-  }
-  if (buildPhase === 'shuffle2') {
-    startBuildPhase('mix');
+  const next = BUILD_PHASES[BUILD_PHASES.indexOf(buildPhase) + 1];
+  if (next) {
+    startBuildPhase(next);
     return;
   }
   buildCompleted.add(buildStepIndex);
@@ -829,6 +814,11 @@ function openBuildStepIntro(index) {
   document.getElementById('buildStrategyLabel').textContent = s.strategyLabel;
   buildStrategyText.textContent = info.strategy;
   buildStrategyExample.textContent = info.example;
+  // The division rounds: one of this step's facts backwards (the 6th, or the last in a shorter step).
+  const pairs = stepFactPairs(BUILD_STEPS_META[index], MAX_TABLE);
+  const { dividend, divisor } = divisionFact(...pairs[Math.min(5, pairs.length - 1)]);
+  buildStrategyDivision.textContent = s.divisionHint
+    .replace('{div}', dividend + '\u00A0÷\u00A0' + divisor) // the formulas never break across lines.replace('{divisor}', divisor).replace('{dividend}', dividend);
   buildStartBtn.textContent = s.startStep;
   backFromBuildIntro.textContent = s.backToOverview;
   showScreen(buildStepIntroScreen);
