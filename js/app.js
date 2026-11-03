@@ -3,7 +3,7 @@ import { getLang, setLang, t } from './i18n.js';
 import * as Audio from './audio.js';
 import { factKey } from './mastery.js';
 import { getAttemptsByFact, getFactStats, logAttempt, clearFactStats } from './stats-store.js';
-import { BUILD_STEPS_META, BUILD_PHASES, stepFactPairs, divisionFact, phasePlan } from './build-data.js';
+import { BUILD_STEPS_META, BUILD_PHASES, stepFactPairs, stepTableColumns, divisionFact, phasePlan } from './build-data.js';
 import { describeScope, roundPoints, formatPoints } from './result-scope.js';
 import { LEVELS, assessLevels, levelHint, levelRequirement } from './levels.js';
 import { createStore } from './sant-falskt/storage.js';
@@ -48,6 +48,7 @@ const buildStepTitle = document.getElementById('buildStepTitle');
 const buildStrategyText = document.getElementById('buildStrategyText');
 const buildStrategyExample = document.getElementById('buildStrategyExample');
 const buildStrategyDivision = document.getElementById('buildStrategyDivision');
+const buildFactList = document.getElementById('buildFactList');
 const buildStartBtn = document.getElementById('buildStartBtn');
 const buildDoneCaption = document.getElementById('buildDoneCaption');
 const buildNextBtn = document.getElementById('buildNextBtn');
@@ -811,17 +812,28 @@ function openBuildStepIntro(index) {
   document.getElementById('buildStepOf').textContent = s.stepOf
     .replace('{i}', index + 1).replace('{n}', BUILD_STEPS_META.length);
   buildStepTitle.textContent = info.title;
+  document.getElementById('buildFactListLabel').textContent = s.factListLabel;
+  renderStepTable(index);
   document.getElementById('buildStrategyLabel').textContent = s.strategyLabel;
   buildStrategyText.textContent = info.strategy;
   buildStrategyExample.textContent = info.example;
   // The division rounds: one of this step's facts backwards (the 6th, or the last in a shorter step).
   const pairs = stepFactPairs(BUILD_STEPS_META[index], MAX_TABLE);
   const { dividend, divisor } = divisionFact(...pairs[Math.min(5, pairs.length - 1)]);
+  // Non-breaking spaces (also in the texts), so a formula never breaks across lines.
   buildStrategyDivision.textContent = s.divisionHint
-    .replace('{div}', dividend + '\u00A0÷\u00A0' + divisor) // the formulas never break across lines.replace('{divisor}', divisor).replace('{dividend}', dividend);
+    .replace('{div}', dividend + '\u00A0÷\u00A0' + divisor).replace('{divisor}', divisor).replace('{dividend}', dividend);
   buildStartBtn.textContent = s.startStep;
   backFromBuildIntro.textContent = s.backToOverview;
   showScreen(buildStepIntroScreen);
+}
+
+// The whole table the step teaches, first on its intro screen: 2 × 1 = 2 … 2 × 12 = 24, table first as in the strategies.
+function renderStepTable(index) {
+  const row = ([a, b]) => '<div class="fact-row"><span>' + a + '</span><span class="fact-op">×</span><span>' + b
+    + '</span><span class="fact-op">=</span><span class="fact-product">' + (a * b) + '</span></div>';
+  buildFactList.innerHTML = stepTableColumns(BUILD_STEPS_META[index], MAX_TABLE)
+    .map((column) => '<div class="fact-col">' + column.map(row).join('') + '</div>').join('');
 }
 
 buildStartBtn.addEventListener('click', () => startBuildPhase('order'));

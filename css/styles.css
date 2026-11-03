@@ -1077,6 +1077,31 @@
     padding: 16px 18px;
     margin: 4px 0 20px;
   }
+  /* Hela tabellen först på stegets sida: stora siffror, uppställda så att likhetstecknen står under varandra. */
+  .fact-list-label {
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 4px 0 6px;
+  }
+  .fact-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px clamp(18px, 6vw, 44px); margin: 0 0 18px; }
+  .fact-col { display: flex; flex-direction: column; }
+  .fact-row {
+    display: grid;
+    grid-template-columns: 2ch 1.5ch 2ch 1.5ch 3ch;
+    column-gap: 0.25ch;
+    font-family: "Baloo 2", sans-serif;
+    font-size: clamp(1.05rem, 4.4vw, 1.6rem); /* två kolumner ryms bredvid varandra också på en telefon */
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .fact-row span { text-align: right; }
+  .fact-row .fact-op { text-align: center; color: var(--text-muted); }
+  .fact-row .fact-product { color: var(--accent-strong); font-weight: 800; }
   .strategy-box .strategy-label {
     font-weight: 800;
     color: var(--accent);
@@ -1097,6 +1122,7 @@
     font-weight: 700;
     color: var(--accent-strong);
     font-variant-numeric: tabular-nums;
+    white-space: pre-wrap; /* "0 × 9 = 0    1 × 9 = 9": mellanrummet skiljer två exempel åt */
   }
   .strategy-box .strategy-division {
     margin-top: 12px;

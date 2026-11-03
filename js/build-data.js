@@ -99,3 +99,12 @@ export function stepFactPairs(step, maxTable) {
   }
   return pairs;
 }
+
+// The whole table on the step's intro screen, as columns of [a, b] pairs: one column per table when the step has two
+// (0:or och 1:or), otherwise the facts split in two columns with the first half on the left.
+export function stepTableColumns(step, maxTable) {
+  const pairs = stepFactPairs(step, maxTable);
+  if (step.addsTables.length > 1) return step.addsTables.map((table) => pairs.filter(([a]) => a === table));
+  const half = Math.ceil(pairs.length / 2);
+  return [pairs.slice(0, half), pairs.slice(half)];
+}
