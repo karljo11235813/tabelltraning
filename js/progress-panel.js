@@ -1,5 +1,6 @@
 // The student's progress on the 1-minute test: verdict, current level, chart,
-// small numbers and a table of every run. One self-contained block, so it can go
+// small numbers and a table of every run (with the time of day and whether it
+// was before, during or after school). One self-contained block, so it can go
 // on any screen: give renderProgress an empty element, the runs and the texts.
 // The chart is drawn at the element's real width, so its text stays readable on
 // a phone. Styles are the .pp- classes in styles.css.
@@ -12,6 +13,8 @@ const HEIGHT = 170;
 const PAD = { top: 18, right: 10, bottom: 20, left: 28 };
 const HIGHEST_LEVEL_ON_CHART = 80; // the 216 world record would flatten everything else
 const MIN_AVERAGE_RUNS = 4; // the rolling average starts at run 3, and a line needs two points
+const SCHOOL_START = 8; // school hours on a weekday: 8.00 up to 15.00
+const SCHOOL_END = 15;
 
 const px = (v) => v.toFixed(1);
 const oneDecimal = (v) => String(Math.round(v * 10) / 10).replace('.', ',');
@@ -126,21 +129,38 @@ function legendHtml(s) {
     + '</div>';
 }
 
-function tilesHtml(summary, s) {
+function tilesHtml(runs, summary, s) {
   const tile = (value, label) => '<div class="pp-tile"><b>' + value + '</b><span>' + label + '</span></div>';
+  const total = runs.reduce((sum, run) => sum + run.correct, 0); // every right answer in every test
   return '<div class="pp-tiles">'
     + tile(summary.best, s.progressBest)
     + tile(summary.worst, s.progressWorst)
     + tile(summary.count, s.progressCount)
+    + tile(total.toLocaleString(s.progressLocale), s.progressTotal)
     + tile(oneDecimal(summary.wrongAverage), fill(s.progressWrong, { n: summary.windowSize }))
     + '</div>';
 }
 
+// When a run was played, in the computer's own time: before, during or after
+// school hours on a weekday, or at the weekend, when there is no school.
+export function schoolTime(ts) {
+  const date = new Date(ts);
+  if (date.getDay() === 0 || date.getDay() === 6) return 'weekend';
+  const hour = date.getHours();
+  return hour < SCHOOL_START ? 'before' : hour < SCHOOL_END ? 'during' : 'after';
+}
+
+function timeHtml(ts, s) {
+  const clock = new Date(ts).toLocaleTimeString(s.progressLocale, { hour: '2-digit', minute: '2-digit' });
+  const when = schoolTime(ts);
+  return '<span class="pp-when"><span>' + clock + '</span><span class="pp-tag pp-tag-' + when + '">' + s.progressSchoolTime[when] + '</span></span>';
+}
+
 function tableHtml(runs, s) {
   const rows = runs.map((run, i) => '<tr><td>' + (i + 1) + '</td><td>' + new Date(run.ts).toLocaleDateString(s.progressLocale)
-    + '</td><td>' + run.correct + '</td><td>' + run.wrong + '</td></tr>').reverse().join('');
+    + '</td><td>' + timeHtml(run.ts, s) + '</td><td>' + run.correct + '</td><td>' + run.wrong + '</td></tr>').reverse().join('');
   return '<details class="pp-table"><summary>' + s.progressTable + '</summary><div class="pp-table-scroll"><table>'
-    + '<thead><tr><th>' + s.progressCount + '</th><th>' + s.progressTableDate + '</th><th>' + s.statCorrect + '</th><th>' + s.statWrong + '</th></tr></thead>'
+    + '<thead><tr><th>' + s.progressCount + '</th><th>' + s.progressTableDate + '</th><th>' + s.progressTableTime + '</th><th>' + s.statCorrect + '</th><th>' + s.statWrong + '</th></tr></thead>'
     + '<tbody>' + rows + '</tbody></table></div></details>';
 }
 
@@ -154,7 +174,7 @@ export function progressHtml(runs, s, { width = DEFAULT_WIDTH } = {}) {
     + '<p class="pp-chart-title">' + s.progressChartTitle + '</p>'
     + chartSvg(runs, summary, s, width)
     + (runs.length >= MIN_AVERAGE_RUNS ? legendHtml(s) : '')
-    + tilesHtml(summary, s)
+    + tilesHtml(runs, summary, s)
     + tableHtml(runs, s);
 }
 
