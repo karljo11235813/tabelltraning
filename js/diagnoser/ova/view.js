@@ -43,10 +43,14 @@ function button(className, text, onClick) {
   return node;
 }
 
+// Ett tangentbord på skärmen täcker halva uppgiften. Fokus öppnar det, så på en pekskärm väntar rutan på ett tryck.
+const hasTouchKeyboard = () => window.matchMedia("(pointer: coarse)").matches;
+
 // Vad en tangent träffar, i deck.js ord. Ett bokstavschip tar pilarna själv (de flyttar chipet), som en ruta. En ruta som
 // har blivit skrivskyddad (svaret visas) tar inget mer: ett klick i den lämnar fokus där, och mellanslag och pilar ska ändå gå vidare.
 function keyTarget(node, mainButton) {
   if (node.matches("input[readonly]")) return "other";
+  if (node.matches("input") && node.value === "") return "empty";
   if (node.matches("input, textarea, .dg-chip")) return "input";
   if (node === mainButton) return "main";
   return node.matches("button, a, label, select") ? "control" : "other";
@@ -98,17 +102,18 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     e.preventDefault();
     if (action === "block") e.stopPropagation();
     else if (action === "back") goBack();
+    else if (action === "skip") skip();
     else activate();
   }
 
   // Andra klicket i ett dubbelklick (detail 2 eller mer) räknas aldrig, var i vyn det än hamnar: ett dubbelklick på Öva i listan
   // ger annars ett klick på startskärmen, och ett dubbelklick på Föregående går två uppgifter tillbaka. Det andra tryckets
-  // mousedown har då redan tagit fokus från huvudknappen, så den får det tillbaka.
+  // mousedown har då redan tagit fokus, så det sätts tillbaka.
   const ignoreDoubleClick = (e) => {
     if (e.detail < 2 || e.target.closest(".dg-toolbox")) return; // i ett tankeverktyg klickar man fort, ett steg i taget
     e.preventDefault();
     e.stopPropagation();
-    if (running) mainButton.focus({ preventScroll: true });
+    if (running) focusTask();
   };
   host.addEventListener("click", ignoreDoubleClick, true);
   let running = false; // en uppgift visas: tangentlyssnaren är på
@@ -122,7 +127,11 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
   }
 
   // Chrome tar fokus från en ruta redan när trycket börjar (mousedown), före klicket: därför noteras fokus vid pointerdown.
-  const inputFocused = () => document.activeElement instanceof HTMLInputElement && stage.contains(document.activeElement);
+  // En tom ruta på en dator har fokus av sig själv, så där har eleven inte börjat skriva och ett klick på ytan visar svaret som vanligt.
+  const inputFocused = () => {
+    const box = document.activeElement;
+    return box instanceof HTMLInputElement && stage.contains(box) && (box.value !== "" || hasTouchKeyboard());
+  };
   let focusedAtPress = false;
   const onStagePress = () => {
     focusedAtPress = inputFocused();
@@ -182,14 +191,20 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
     return entries[index];
   }
 
-  // Räknaren, Föregående och huvudknappen följer visningsföljden; fokus står alltid på huvudknappen efteråt, så att
-  // mellanslag och → fortsätter genom klassen.
+  // En uppgift utan svar börjar i första rutan, så att eleven kan skriva direkt. Annars står fokus på huvudknappen, så att
+  // mellanslag och → fortsätter genom klassen: också en uppgift utan textruta, där brickor och chips annars tar tangenterna.
+  function focusTask() {
+    const box = deck.revealed || hasTouchKeyboard() ? null : entries[deck.index].view.el.querySelector("input");
+    (box ?? mainButton).focus({ preventScroll: true });
+  }
+
+  // Räknaren, Föregående och huvudknappen följer visningsföljden, och fokus flyttas efteråt.
   function refresh() {
     const count = `Uppgift ${deck.index + 1} av ${deck.total}`;
     if (counter.textContent !== count) counter.textContent = count; // samma text om igen (svaret visas) läses inte upp på nytt
     prevButton.disabled = deck.index === 0;
     mainButton.textContent = !deck.revealed ? "Visa svar" : deck.index === deck.total - 1 ? "Klar" : "Nästa uppgift";
-    mainButton.focus({ preventScroll: true });
+    focusTask();
   }
 
   function showTask() {
@@ -226,13 +241,13 @@ export async function openPractice({ host, diagnosis, partIds = null, onExit }) 
 
   function goBack() {
     if (deck.back()) showTask();
-    else mainButton.focus({ preventScroll: true });
+    else focusTask();
   }
 
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     else host.requestFullscreen().catch(() => {});
-    mainButton.focus({ preventScroll: true });
+    focusTask();
   }
 
   function syncFullscreen() {

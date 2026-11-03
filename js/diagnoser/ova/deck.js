@@ -3,14 +3,15 @@
 // PRACTICE_GUARD_MS  så snart efter en ändring är ett nytt tryck ett dubbeltryck och gör ingenting.
 // createDeck         uppgifterna i ordning; activate() visar svaret eller går till nästa, skip() går till nästa utan att visa
 //                    svaret, back() går tillbaka.
-// routeKey           vad en tangent ska göra (visa svaret, gå vidare, gå tillbaka), med hänsyn till var fokus står.
+// routeKey           vad en tangent ska göra (visa svaret, hoppa vidare, gå tillbaka), med hänsyn till var fokus står.
 // routeClick         vad ett klick på uppgiftsytan ska göra.
 // promptScale        hur stor uppgiftens text är, som andel av uppgiftsytans grundstorlek.
 //
 // Läraren visar detta på tavlan och klickar sig fram framför klassen. Ett dubbelklick eller en nedhållen tangent får
 // därför aldrig hoppa över ett svar, en elev som skriver i svarsrutan får aldrig flytta uppgiften med mellanslag eller
-// pil, och ett tryck på ytan för att stänga tangentbordet på en telefon får aldrig visa svaret. De flesta presentationsfjärrar
-// skickar PageDown och PageUp: PageDown gör som pil höger, och PageUp och pil vänster går tillbaka som Föregående.
+// pil, och ett tryck på ytan för att stänga tangentbordet på en telefon får aldrig visa svaret. Pilarna bläddrar bara: pil höger
+// gör som Nästa och pil vänster som Föregående, och ingen av dem visar svaret. De flesta presentationsfjärrar skickar PageDown och
+// PageUp, och en fjärr har inget annat sätt att visa svaret: PageDown gör som huvudknappen, och PageUp gör som pil vänster.
 
 // En halv sekund: längre än ett dubbelklick (ofta 300–400 ms) och ungefär så lång som det tar innan en nedhållen
 // tangent börjar upprepas, så att båda fångas även om `repeat` skulle saknas. Gränsen räknas från start, så att ett klick som
@@ -57,32 +58,35 @@ export function createDeck(tasks, now = () => performance.now()) {
   };
 }
 
-// Tangenterna som visar svaret eller går vidare, och de som går tillbaka.
-const ACTIVATING = [" ", "Enter", "ArrowRight", "PageDown"];
+// Tangenterna som går framåt, och de som går tillbaka.
+const FORWARD = [" ", "Enter", "ArrowRight", "PageDown"];
 const BACKING = ["PageUp", "ArrowLeft"];
 
-// target: "input" (svarsrutan), "main" (uppgiftsytan själv), "control" (en knapp eller länk) eller "other".
-// Ger "activate" (visa svaret eller gå vidare), "back" (föregående uppgift), "block" (gör ingenting och stoppa tangenten)
-// eller "native" (tangentens egen verkan).
+// target: "input" (svarsrutan med något skrivet), "empty" (en tom svarsruta), "main" (huvudknappen), "control" (en annan knapp
+// eller länk) eller "other".
+// Ger "activate" (visa svaret eller gå vidare), "skip" (nästa uppgift utan svaret), "back" (föregående uppgift), "block" (gör
+// ingenting och stoppa tangenten) eller "native" (tangentens egen verkan).
 // - Ett nedhållet Enter är inget nytt tryck: "block" var fokus än står, också i svarsrutan, där sidan annars skickar
 //   in svaret om och om igen och 500 ms-gränsen ensam skulle släppa igenom ett svar var halv sekund.
-// - Andra tangenter än de som är nämnda här, och allt annat i svarsrutan, är elevens eget: "native". Ett nedhållet
-//   mellanslag, en pil eller en bokstav där ska fortsätta skriva, och pil vänster och PageUp flyttar markören.
+// - Andra tangenter än de som är nämnda här, och allt annat i en svarsruta med något skrivet, är elevens eget: "native". Ett
+//   nedhållet mellanslag, en pil eller en bokstav där ska fortsätta skriva, och pil vänster och PageUp flyttar markören.
+// - En ny uppgift börjar med fokus i en tom ruta, och där finns ingenting för mellanslag och pilar att göra: de gör som utanför
+//   rutan, så att man kan bläddra och visa svaret utan att först lämna den. Enter är rutans eget (nästa ruta, eller visa svaret).
 // - Utanför svarsrutan blockeras också ett nedhållet mellanslag, en nedhållen pil och en nedhållen PageDown eller PageUp,
 //   så att de inte heller klickar en knapp eller hoppar flera uppgifter om och om igen.
-// - Utanför svarsrutan går pil höger och PageDown alltid vidare, och pil vänster och PageUp alltid tillbaka. Mellanslag och
-//   Enter går bara vidare utanför knappar och uppgiftsytan, där de redan har en egen verkan (knappens klick, att rulla en
-//   lång lösning): "native".
+// - Utanför en ruta med något skrivet hoppar pil höger alltid vidare, PageDown går alltid vidare, och pil vänster och PageUp går
+//   alltid tillbaka. Mellanslag och Enter går bara vidare utanför knappar, där de redan har en egen verkan (knappens klick): "native".
 export function routeKey({ key, repeat, target }) {
   if (repeat && key === "Enter") return "block";
   if (BACKING.includes(key)) {
     if (target === "input") return "native";
     return repeat ? "block" : "back";
   }
-  if (!ACTIVATING.includes(key) || target === "input") return "native";
+  if (!FORWARD.includes(key) || target === "input") return "native";
   if (repeat) return "block";
-  if (key === "ArrowRight" || key === "PageDown") return "activate";
-  return target === "other" ? "activate" : "native";
+  if (key === "ArrowRight") return "skip";
+  if (key === "PageDown" || target === "other") return "activate";
+  return key === " " && target === "empty" ? "activate" : "native";
 }
 
 // target: "control" (en knapp eller länk, som har sin egen klickhantering) eller "other".
