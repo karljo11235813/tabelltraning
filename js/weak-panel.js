@@ -7,7 +7,8 @@
 // only counts right answers. Styles are the .weak- classes in styles.css.
 
 import { fill } from './levels.js';
-import { MASTERY_MIN_ATTEMPTS, factDivisions, getRetrieval } from './mastery.js';
+import { MASTERY_MIN_ATTEMPTS, factDivisions, getRetrieval, mostCommonWrongAnswer } from './mastery.js';
+import { PRACTICE_FACTS } from './missed-practice.js';
 
 const SHOWN_WEAKEST = 8;
 const SHOWN_SLOW = 4;
@@ -49,9 +50,32 @@ function slowTileHtml(f, s) {
   return tileHtml(f, '<strong>' + speedText(f.retrieval, s) + '</strong> · ' + fill(s.weakOutOf, f.stats));
 }
 
+const factsOf = (factStats, answers) => Object.keys(factStats)
+  .map(fact => ({ fact, stats: factStats[fact], retrieval: getRetrieval(factStats[fact], answers[fact]) }));
+
+const productOf = (fact) => fact.split('x').reduce((a, b) => a * b);
+
+// Öva på dina svagaste (missed-practice.js): the top of the two lists on the page, so the
+// practice is always what the student sees. The weakest in their order, then the slowest
+// that aren't among them, up to PRACTICE_FACTS.
+export function weakPracticeFacts(factStats, answers, n = PRACTICE_FACTS) {
+  const facts = factsOf(factStats, answers);
+  const weak = weakestOf(facts).slice(0, n);
+  const slow = slowestOf(facts).filter(f => !weak.includes(f)).slice(0, n - weak.length);
+  return {
+    weak: weak.map(({ fact, stats }) => ({
+      key: fact, answer: productOf(fact), wrong: stats.wrong, attempts: stats.attempts,
+      mistake: mostCommonWrongAnswer(stats.wrongAnswerCounts || {}),
+    })),
+    slow: slow.map(({ fact, retrieval }) => ({
+      key: fact, text: fact.split('x').join(' × ') + ' =', answer: productOf(fact), ms: retrieval.typicalSeconds * 1000,
+    })),
+    keys: [...weak, ...slow].map(f => f.fact),
+  };
+}
+
 export function weakFactsHtml(factStats, answers, s) {
-  const facts = Object.keys(factStats)
-    .map(fact => ({ fact, stats: factStats[fact], retrieval: getRetrieval(factStats[fact], answers[fact]) }));
+  const facts = factsOf(factStats, answers);
   const weakest = weakestOf(facts);
   const slowest = slowestOf(facts);
   let html = '<p class="weak-caption">' + s.weakCaption + '</p>';

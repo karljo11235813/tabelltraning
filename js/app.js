@@ -5,12 +5,14 @@ import { factKey } from './mastery.js';
 import { getAttemptsByFact, getFactStats, logAttempt, clearFactStats } from './stats-store.js';
 import { BUILD_STEPS_META, BUILD_PHASES, stepFactPairs, stepTableColumns, divisionFact, phasePlan } from './build-data.js';
 import { describeScope, roundPoints, formatPoints } from './result-scope.js';
-import { LEVELS, assessLevels, levelHint, levelRequirement } from './levels.js';
+import { LEVELS, assessLevels, fill, levelHint, levelRequirement } from './levels.js';
 import { createStore } from './sant-falskt/storage.js';
 import { isProgressRun, loadRuns, saveRun } from './run-history.js';
 import { renderProgress } from './progress-panel.js';
 import { clearHeatmapSelection, renderHeatmap } from './heatmap-panel.js';
-import { weakFactsHtml } from './weak-panel.js';
+import { weakFactsHtml, weakPracticeFacts } from './weak-panel.js';
+import { pickFacts, practicePlan, createSession, summarize } from './missed-practice.js';
+import { reviewHtml, weakReviewHtml, summaryHtml, missHtml } from './missed-panel.js';
 
 const ROUND_SECONDS = 60;
 const COUNT_TARGET = 100;
@@ -61,6 +63,7 @@ const statsWeakView = document.getElementById('statsWeakView');
 const statsGridView = document.getElementById('statsGridView');
 const statsProgress = document.getElementById('statsProgress');
 const statsResetBtn = document.getElementById('statsResetBtn');
+const weakPracticeBtn = document.getElementById('weakPracticeBtn');
 
 const testModeButtons = document.querySelectorAll('#testModeChoice button');
 const testStartBtn = document.getElementById('testStartBtn');
@@ -102,6 +105,22 @@ const penaltyNote = document.getElementById('penaltyNote');
 const rankLadder = document.getElementById('rankLadder');
 const againBtn = document.getElementById('againBtn');
 const resultProgress = document.getElementById('resultProgress');
+const missedBtn = document.getElementById('missedBtn');
+
+const missedReviewScreen = document.getElementById('missedReviewScreen');
+const missedScreen = document.getElementById('missedScreen');
+const missedDoneScreen = document.getElementById('missedDoneScreen');
+const backFromMissedReview = document.getElementById('backFromMissedReview');
+const backFromMissed = document.getElementById('backFromMissed');
+const backFromMissedDone = document.getElementById('backFromMissedDone');
+const missedStartBtn = document.getElementById('missedStartBtn');
+const missedCounter = document.getElementById('missedCounter');
+const missedBox = document.getElementById('missedBox');
+const missedProblem = document.getElementById('missedProblem');
+const missedFeedback = document.getElementById('missedFeedback');
+const missedInput = document.getElementById('missedInput');
+const missedNextBtn = document.getElementById('missedNextBtn');
+const missedAgainTestBtn = document.getElementById('missedAgainTestBtn');
 const restartBtn = document.getElementById('restartBtn');
 
 let mode = 'time';
@@ -137,6 +156,13 @@ let hasResult = false;
 let lastRun = null; // what the finished round covered, frozen at endRound so later setting changes can't alter the result screen
 let timerId = null;
 let running = false;
+let runAnswers = []; // this round's answers, for Öva på det du missade: { a, b, text, given, answer, correct, ms }
+
+// ---------- Öva på det du missade state ----------
+let missedSource = 'run'; // 'run': Öva på det du missade after a Test; 'stats': Öva på dina svagaste on Statistik
+let missedPicked = null; // pickFacts or weakPracticeFacts, set when the review opens
+let missedSession = null;
+let missedShownAt = 0;
 
 function updateSoundToggleUI() {
   const on = Audio.isSoundOn();
@@ -152,7 +178,8 @@ soundToggle.addEventListener('click', () => {
 // ---------- Screen navigation ----------
 function showScreen(el) {
   [landingScreen, testSetupScreen, setupScreen, buildOverviewScreen,
-   buildStepIntroScreen, buildCompleteScreen, statsScreen, testScreen, resultScreen].forEach(s => {
+   buildStepIntroScreen, buildCompleteScreen, statsScreen, testScreen, resultScreen,
+   missedReviewScreen, missedScreen, missedDoneScreen].forEach(s => {
     s.style.display = 'none';
   });
   el.style.display = el === testScreen ? 'flex' : 'block';
@@ -368,6 +395,7 @@ function renderResultText() {
   }
 
   renderResultProgress();
+  renderMissedButton(s);
 }
 
 function applyLanguage() {
@@ -442,6 +470,7 @@ function applyLanguage() {
   if (buildStepIntroScreen.style.display !== 'none') openBuildStepIntro(buildStepIndex);
   if (buildCompleteScreen.style.display !== 'none') showBuildComplete();
   if (statsScreen.style.display !== 'none') renderStatsScreen();
+  renderMissedTexts();
 }
 
 langToggle.addEventListener('click', (e) => {
@@ -634,6 +663,7 @@ function renderCurrent() {
 function startRound() {
   correctCount = 0;
   wrongCount = 0;
+  runAnswers = [];
   queue = [];
   running = false; // answers count from the end of the countdown
   hasResult = false;
@@ -865,6 +895,8 @@ function renderStatsScreen() {
 
   renderHeatmap(statsGridView, getFactStats(), getAttemptsByFact(), s);
   statsWeakView.innerHTML = weakFactsHtml(getFactStats(), getAttemptsByFact(), s);
+  weakPracticeBtn.hidden = weakPracticeFacts(getFactStats(), getAttemptsByFact()).keys.length === 0;
+  weakPracticeBtn.textContent = s.weakPracticeBtn;
 }
 
 statsResetBtn.addEventListener('click', () => {
@@ -907,6 +939,7 @@ function submitAnswer() {
   const isCorrect = given === correct;
   const elapsedMs = performance.now() - problemShownAt;
   logAttempt(factKey(queue[0].factA, queue[0].factB), given, correct, isCorrect, elapsedMs, mode);
+  runAnswers.push({ a: queue[0].factA, b: queue[0].factB, text: queue[0].text, given: raw, answer: correct, correct: isCorrect, ms: elapsedMs });
 
   if (isCorrect) {
     correctCount++;
@@ -1006,6 +1039,171 @@ document.addEventListener('keydown', (e) => {
 againBtn.addEventListener('click', () => {
   document.body.style.backgroundColor = '';
   showScreen(originScreen === 'test' ? testSetupScreen : setupScreen);
+});
+
+// ---------- Öva på det du missade and Öva på dina svagaste (missed-practice.js, missed-panel.js) ----------
+// After a Test: the run's wrong facts and then its slowest right ones. On Statistik: the top
+// of Svagaste fakta and Långsammast. Either way untimed, until each fact's latest first try
+// is right. The two only differ in the review, the way back and the button after.
+function renderMissedButton(s) {
+  missedBtn.hidden = !describeScope(lastRun, s).isTest || pickFacts(runAnswers).keys.length === 0;
+  missedBtn.textContent = s.missedBtn;
+}
+
+function leaveMissed() {
+  missedSession = null;
+  if (missedSource === 'stats') {
+    showScreen(statsScreen);
+    renderStatsScreen(); // the practice's first tries are in the statistics now
+  } else {
+    showScreen(resultScreen);
+    renderResultText(); // also the background colour, which the practice screens leave plain
+  }
+}
+
+const backText = (s) => missedSource === 'stats' ? s.weakPracticeBack : s.missedBackToResult;
+
+function openMissedReview(source) {
+  missedSource = source;
+  missedPicked = source === 'stats' ? weakPracticeFacts(getFactStats(), getAttemptsByFact()) : pickFacts(runAnswers);
+  document.body.style.backgroundColor = '';
+  renderMissedReview(t());
+  showScreen(missedReviewScreen);
+  missedStartBtn.focus(); // so Enter starts
+}
+
+function renderMissedReview(s) {
+  const stats = missedSource === 'stats';
+  backFromMissedReview.textContent = backText(s);
+  document.getElementById('missedReviewHeading').textContent = stats ? s.weakPracticeBtn : s.missedHeading;
+  document.getElementById('missedReviewIntro').textContent = s.missedIntro;
+  document.getElementById('missedReview').innerHTML = stats ? weakReviewHtml(missedPicked, s) : reviewHtml(missedPicked, s);
+  missedStartBtn.textContent = s.missedStart;
+}
+
+function startMissedPractice() {
+  const ops = missedSource === 'stats' ? 'mix' : lastRun.operation;
+  missedSession = createSession(practicePlan(missedPicked.keys, ops), ops);
+  showScreen(missedScreen);
+  renderMissedQuestion();
+  missedInput.focus();
+}
+
+function renderMissedCounter(s) {
+  const p = missedSession.position;
+  missedCounter.innerHTML = p.extra
+    ? fill(s.missedExtra, { left: '<b>' + missedSession.left + '</b>' })
+    : s.liveQuestion + '<b>' + p.index + '</b> / ' + p.total;
+}
+
+function renderMissedQuestion() {
+  const s = t();
+  backFromMissed.textContent = backText(s);
+  missedNextBtn.textContent = s.nextBtn;
+  missedInput.setAttribute('aria-label', s.answerAria);
+  renderMissedCounter(s);
+  missedProblem.textContent = missedSession.current.text;
+  missedFeedback.hidden = true;
+  missedFeedback.innerHTML = '';
+  missedInput.value = '';
+  missedShownAt = performance.now();
+}
+
+// After a miss the right answer stays on the screen, and it has to be typed to go on.
+function showMissedFeedback(given) {
+  const s = t();
+  missedFeedback.innerHTML = missHtml([given], missedSession.current.answer, s)
+    + '<p class="mp-retype">' + s.missedRetype + '</p>';
+  missedFeedback.hidden = false;
+  missedInput.value = '';
+}
+
+function flashMissed(cls) {
+  missedBox.classList.remove('flash-correct', 'flash-wrong');
+  void missedBox.offsetWidth; // restart animation
+  missedBox.classList.add(cls);
+  setTimeout(() => missedBox.classList.remove(cls), 250);
+}
+
+function submitMissed() {
+  if (!missedSession || missedSession.done) return;
+  const raw = missedInput.value.trim();
+  if (raw === '') return;
+  const given = parseInt(raw, 10);
+  const q = missedSession.current;
+  const ms = performance.now() - missedShownAt;
+  const { correct, counted } = missedSession.submit(given, ms);
+  // Only first tries go into Statistik: typing the answer that is on the screen is copying.
+  if (counted) logAttempt(q.key, given, q.answer, correct, ms, 'missed');
+  flashMissed(correct ? 'flash-correct' : 'flash-wrong');
+  if (correct) Audio.playCorrectSfx(); else Audio.playWrongSfx();
+  if (!correct) {
+    if (counted) showMissedFeedback(raw);
+    missedInput.value = '';
+    return;
+  }
+  if (missedSession.done) showMissedDone();
+  else renderMissedQuestion();
+}
+
+function showMissedDone() {
+  renderMissedDone(t());
+  showScreen(missedDoneScreen);
+  missedAgainTestBtn.focus();
+}
+
+function renderMissedDone(s) {
+  document.getElementById('missedDoneHeading').textContent = s.missedDoneHeading;
+  document.getElementById('missedDoneCaption').textContent = s.missedDoneCaption;
+  document.getElementById('missedSummary').innerHTML =
+    summaryHtml(missedPicked, summarize(missedPicked.keys, missedSession.results), s);
+  missedAgainTestBtn.textContent = missedSource === 'stats' ? s.weakPracticeAgain : s.missedAgainTest;
+  backFromMissedDone.textContent = backText(s);
+}
+
+// A language change redraws whichever of the three screens is showing.
+function renderMissedTexts() {
+  const s = t();
+  if ([missedReviewScreen, missedScreen, missedDoneScreen].some(el => el.style.display !== 'none')) {
+    document.body.style.backgroundColor = ''; // renderResultText just coloured it for the result screen
+  }
+  if (missedReviewScreen.style.display !== 'none') renderMissedReview(s);
+  if (missedScreen.style.display !== 'none' && missedSession && !missedSession.done) {
+    backFromMissed.textContent = backText(s);
+    missedNextBtn.textContent = s.nextBtn;
+    renderMissedCounter(s);
+    const retype = missedFeedback.querySelector('.mp-retype');
+    if (retype) retype.textContent = s.missedRetype;
+  }
+  if (missedDoneScreen.style.display !== 'none') renderMissedDone(s);
+}
+
+missedBtn.addEventListener('click', () => openMissedReview('run'));
+weakPracticeBtn.addEventListener('click', () => openMissedReview('stats'));
+missedStartBtn.addEventListener('click', startMissedPractice);
+backFromMissedReview.addEventListener('click', leaveMissed);
+backFromMissed.addEventListener('click', leaveMissed);
+backFromMissedDone.addEventListener('click', leaveMissed);
+missedInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.repeat) {
+    e.preventDefault();
+    submitMissed();
+  }
+});
+missedNextBtn.addEventListener('click', () => {
+  submitMissed();
+  missedInput.focus();
+});
+// After a Test the same test again: Test is always every table with × and ÷, in the format just
+// played. On Statistik the weakest again, picked anew now that the practice has changed them.
+missedAgainTestBtn.addEventListener('click', () => {
+  if (missedSource === 'stats') {
+    openMissedReview('stats');
+    return;
+  }
+  mode = lastRun.mode;
+  syncModeUI();
+  testStartBtn.click();
 });
 
 updateStartButton();

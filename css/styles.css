@@ -477,7 +477,7 @@
     margin-bottom: 18px;
     font-variant-numeric: tabular-nums;
   }
-  #answerInput {
+  #answerInput, #missedInput {
     width: 150px;
     font-family: "Baloo 2", sans-serif;
     font-size: 2rem;
@@ -489,7 +489,7 @@
     background: var(--surface);
     color: var(--text);
   }
-  #answerInput:focus-visible {
+  #answerInput:focus-visible, #missedInput:focus-visible {
     outline: 3px solid var(--accent-strong);
     outline-offset: 2px;
   }
@@ -1183,6 +1183,100 @@
     cursor: pointer;
   }
   .again-btn:hover { background: var(--accent-strong); }
+
+  /* ---------- ÖVA PÅ DET DU MISSADE (js/missed-practice.js, js/missed-panel.js) ---------- */
+  .missed-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--surface);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: 9px;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .missed-btn:hover { background: var(--accent-soft); }
+  .missed-btn[hidden] { display: none; }
+  .missed-btn:focus-visible, .back-link:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+
+  .card h2 + .mp-intro { margin-top: 0; }
+  .mp-intro { margin: 0 0 6px; color: var(--text-muted); }
+  .mp-heading { margin: 18px 0 4px; font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+  .mp-caption { margin: 0 0 8px; font-size: 0.85rem; color: var(--text-muted); }
+  .mp-list { display: grid; gap: 8px; }
+  /* Readable from across the room: the problem, what was written and the right answer all big. */
+  .mp-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 24px;
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-left: 8px solid var(--border);
+    border-radius: 10px;
+  }
+  .mp-row.is-wrong { border-left-color: var(--danger); }
+  .mp-row.is-slow { border-left-color: var(--warning); }
+  .mp-problem {
+    flex: 1 1 auto;
+    font-family: "Baloo 2", sans-serif;
+    font-size: clamp(1.9rem, 6vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.15;
+    white-space: nowrap;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .mp-answers { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+  .mp-cell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 4.5rem;
+  }
+  .mp-cell .mp-given + .mp-given { margin-top: 2px; }
+  .mp-given, .mp-right, .mp-time {
+    font-family: "Baloo 2", sans-serif;
+    font-size: clamp(1.9rem, 6vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .mp-given { color: var(--danger); text-decoration: line-through; text-decoration-thickness: 3px; }
+  .mp-right { color: var(--success); }
+  .mp-time { color: var(--text); }
+  .mp-count { font-weight: 800; color: var(--text); white-space: nowrap; }
+  .stats-section .missed-btn { margin-top: 16px; }
+  .mp-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+
+  #missedScreen .top-row { align-items: center; }
+  #missedScreen .back-link { padding: 0; }
+  .mp-feedback { margin: -6px 0 16px; }
+  .mp-feedback .mp-answers { justify-content: center; gap: 32px; margin: 0; }
+  .mp-retype { margin: 10px 0 0; font-weight: 700; color: var(--accent); }
+
+  .mp-summary {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 6px 20px;
+    margin-top: 12px;
+  }
+  .mp-sum-head { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+  .mp-fact {
+    font-family: "Baloo 2", sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .mp-before { font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+  .mp-before.is-wrong { color: var(--danger); }
+  .mp-after { font-weight: 800; color: var(--text); }
+  .mp-done-back { display: block; margin: 14px auto 0; padding: 0; }
 
   @media (max-width: 420px) {
     .table-grid { grid-template-columns: repeat(4, 1fr); }

@@ -143,6 +143,7 @@
       <section class="stats-section">
         <h2 id="statsWeakHeading"></h2>
         <div id="statsWeakView"></div>
+        <button type="button" class="missed-btn" id="weakPracticeBtn" hidden></button>
       </section>
       <button type="button" class="stats-reset-link" id="statsResetBtn"></button>
     </div>
@@ -260,8 +261,40 @@
       <div class="rank-ladder" id="rankLadder"></div>
       <div class="penalty-note" id="penaltyNote"></div>
       <button class="again-btn" id="againBtn">Kör igen</button>
+      <button type="button" class="missed-btn" id="missedBtn" hidden></button>
       <section class="progress-panel" id="resultProgress" hidden></section>
     </div>
+  </div>
+
+  <!-- ÖVA PÅ DET DU MISSADE (after a Test) and ÖVA PÅ DINA SVAGASTE (on Statistik): what to practise,
+       the practice round and before → after (missed-practice.js) -->
+  <div id="missedReviewScreen" class="card mp-screen" style="display:none;">
+    <button type="button" class="back-link" id="backFromMissedReview"></button>
+    <h2 id="missedReviewHeading"></h2>
+    <p class="mp-intro" id="missedReviewIntro"></p>
+    <div id="missedReview"></div>
+    <button class="start-btn" id="missedStartBtn"></button>
+  </div>
+
+  <div id="missedScreen" style="display:none;">
+    <div class="top-row">
+      <button type="button" class="back-link" id="backFromMissed"></button>
+      <div class="live-score" id="missedCounter"></div>
+    </div>
+    <div class="problem-box" id="missedBox">
+      <div class="problem-text" id="missedProblem">–</div>
+      <div class="mp-feedback" id="missedFeedback" hidden></div>
+      <input type="tel" inputmode="numeric" id="missedInput" autocomplete="off">
+      <button type="button" class="next-btn" id="missedNextBtn"></button>
+    </div>
+  </div>
+
+  <div id="missedDoneScreen" class="card mp-screen" style="display:none;">
+    <h2 id="missedDoneHeading"></h2>
+    <p class="mp-intro" id="missedDoneCaption"></p>
+    <div id="missedSummary"></div>
+    <button class="start-btn" id="missedAgainTestBtn"></button>
+    <button type="button" class="back-link mp-done-back" id="backFromMissedDone"></button>
   </div>
 
 </main>
