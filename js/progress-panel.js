@@ -18,31 +18,34 @@ const SCHOOL_END = 15;
 
 const px = (v) => v.toFixed(1);
 const oneDecimal = (v) => String(Math.round(v * 10) / 10).replace('.', ',');
-const levelName = (level, s) => s.levelNames[LEVELS.indexOf(level)].replace(/­/g, '');
+const levelName = (level, s, levels) => s.levelNames[levels.indexOf(level)].replace(/­/g, '');
 
-// The top of the y-axis, which always starts at 0, and the levels to draw:
-// Godtagbart as the fixed reference, the one just passed and the next goal.
-export function chartLevels(best) {
-  const shown = LEVELS.filter(l => l.minCorrect <= HIGHEST_LEVEL_ON_CHART);
+// The top of the y-axis and the levels to draw: Godtagbart as the fixed
+// reference, the one just passed and the next goal. Without levels the top
+// only follows the best run.
+export function chartLevels(best, levels = LEVELS) {
+  const shown = levels.filter(l => l.minCorrect <= HIGHEST_LEVEL_ON_CHART);
   const next = shown.find(l => l.minCorrect > best);
   const passed = shown.filter(l => l.minCorrect <= best).pop();
-  const reference = LEVELS.find(l => l.id === 'acceptable');
-  const highest = Math.max(reference.minCorrect, next ? next.minCorrect : best);
+  const reference = levels.find(l => l.id === 'acceptable');
+  const highest = Math.max(reference ? reference.minCorrect : best, next ? next.minCorrect : best);
   return {
-    top: Math.ceil((highest + 3) / 5) * 5,
+    top: Math.max(5, Math.ceil((highest + 3) / 5) * 5),
     lines: shown.filter(l => l === reference || l === passed || l === next),
   };
 }
 
-function chartSvg(runs, summary, s, width) {
-  const { top, lines } = chartLevels(summary.best);
+// The y-axis starts at 0, or lower when a score is below 0.
+function chartSvg(runs, summary, s, { width, score, levels }) {
+  const { top, lines } = chartLevels(summary.best, levels);
+  const bottom = Math.min(0, summary.worst);
   const n = runs.length;
   const plotW = width - PAD.left - PAD.right;
   const plotH = HEIGHT - PAD.top - PAD.bottom;
   const right = width - PAD.right;
   const baseline = HEIGHT - PAD.bottom;
   const x = (i) => PAD.left + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
-  const y = (v) => PAD.top + plotH * (1 - Math.min(v, top) / top);
+  const y = (v) => PAD.top + plotH * (1 - (Math.min(v, top) - bottom) / (top - bottom));
 
   const parts = [];
   const withInterval = summary.rolling.map((r, i) => ({ ...r, i })).filter(r => r.low !== null);
@@ -57,6 +60,7 @@ function chartSvg(runs, summary, s, width) {
   const axisNumber = (value) => '<text class="pp-axis" x="' + (PAD.left - 6) + '" y="' + px(y(value) + 4) + '" text-anchor="end">' + value + '</text>';
   parts.push('<line class="pp-base" x1="' + PAD.left + '" x2="' + right + '" y1="' + baseline + '" y2="' + baseline + '"/>');
   parts.push(axisNumber(0));
+  if (bottom < 0) parts.push(axisNumber(bottom));
   lines.forEach((level) => {
     const ly = px(y(level.minCorrect));
     parts.push('<line class="pp-goal" x1="' + PAD.left + '" x2="' + right + '" y1="' + ly + '" y2="' + ly + '"/>');
@@ -68,19 +72,20 @@ function chartSvg(runs, summary, s, width) {
   parts.push(n === 1 ? axisText(0, 'middle') : axisText(0, 'start') + axisText(n - 1, 'end'));
 
   if (n > 1) {
-    parts.push('<polyline class="pp-runs" points="' + runs.map((run, i) => px(x(i)) + ',' + px(y(run.correct))).join(' ') + '"/>');
+    parts.push('<polyline class="pp-runs" points="' + runs.map((run, i) => px(x(i)) + ',' + px(y(score(run)))).join(' ') + '"/>');
   }
 
   const dotRadius = n > 100 ? 2 : n > 40 ? 3 : 4;
-  const bestIndex = runs.map(r => r.correct).lastIndexOf(summary.best);
+  const bestIndex = runs.map(score).lastIndexOf(summary.best);
   runs.forEach((run, i) => {
     const cx = px(x(i));
-    const cy = px(y(run.correct));
+    const cy = px(y(score(run)));
     const title = fill(s.progressRunTitle, {
       n: i + 1,
       date: new Date(run.ts).toLocaleDateString(s.progressLocale),
       correct: run.correct,
       wrong: run.wrong,
+      score: score(run),
     });
     parts.push('<g><title>' + title + '</title><circle class="pp-hit" cx="' + cx + '" cy="' + cy + '" r="12"/>'
       + '<circle class="pp-dot' + (i === bestIndex ? ' pp-dot-best' : '') + '" cx="' + cx + '" cy="' + cy + '" r="' + dotRadius + '"/></g>');
@@ -89,7 +94,7 @@ function chartSvg(runs, summary, s, width) {
   if (showAverage) parts.push('<polyline class="pp-line" points="' + points('mean').join(' ') + '"/>');
 
   lines.forEach((level) => {
-    parts.push('<text class="pp-goal-name" x="' + (PAD.left + 6) + '" y="' + px(y(level.minCorrect) - 4) + '">' + levelName(level, s) + '</text>');
+    parts.push('<text class="pp-goal-name" x="' + (PAD.left + 6) + '" y="' + px(y(level.minCorrect) - 4) + '">' + levelName(level, s, levels) + '</text>');
   });
   parts.push('<text class="pp-best" x="' + px(x(bestIndex)) + '" y="' + px(y(summary.best) - 8) + '" text-anchor="middle">' + summary.best + '</text>');
 
@@ -156,28 +161,33 @@ function timeHtml(ts, s) {
   return '<span class="pp-when"><span>' + clock + '</span><span class="pp-tag pp-tag-' + when + '">' + s.progressSchoolTime[when] + '</span></span>';
 }
 
-function tableHtml(runs, s) {
+// columns: [{ head, cell(run) }] after Fel, for a page that shows more per run.
+function tableHtml(runs, s, columns) {
+  const extraHeads = columns.map(c => '<th>' + c.head + '</th>').join('');
   const rows = runs.map((run, i) => '<tr><td>' + (i + 1) + '</td><td>' + new Date(run.ts).toLocaleDateString(s.progressLocale)
-    + '</td><td>' + timeHtml(run.ts, s) + '</td><td>' + run.correct + '</td><td>' + run.wrong + '</td></tr>').reverse().join('');
+    + '</td><td>' + timeHtml(run.ts, s) + '</td><td>' + run.correct + '</td><td>' + run.wrong + '</td>'
+    + columns.map(c => '<td>' + c.cell(run) + '</td>').join('') + '</tr>').reverse().join('');
   return '<details class="pp-table"><summary>' + s.progressTable + '</summary><div class="pp-table-scroll"><table>'
-    + '<thead><tr><th>' + s.progressCount + '</th><th>' + s.progressTableDate + '</th><th>' + s.progressTableTime + '</th><th>' + s.statCorrect + '</th><th>' + s.statWrong + '</th></tr></thead>'
+    + '<thead><tr><th>' + s.progressCount + '</th><th>' + s.progressTableDate + '</th><th>' + s.progressTableTime + '</th><th>' + s.statCorrect + '</th><th>' + s.statWrong + '</th>' + extraHeads + '</tr></thead>'
     + '<tbody>' + rows + '</tbody></table></div></details>';
 }
 
-export function progressHtml(runs, s, { width = DEFAULT_WIDTH } = {}) {
+// score is what the chart and the numbers count (right answers by default) and
+// levels the lines to draw; Decimaltal passes right minus wrong and no levels.
+export function progressHtml(runs, s, { width = DEFAULT_WIDTH, score = r => r.correct, levels = LEVELS, columns = [] } = {}) {
   const heading = '<h2>' + s.progressTitle + '</h2>';
   if (runs.length === 0) return heading + '<p class="pp-note">' + s.progressEmpty + '</p>';
-  const summary = summarizeRuns(runs);
+  const summary = summarizeRuns(runs, score);
   return heading
     + verdictHtml(summary, s)
     + levelHtml(summary, s)
     + '<p class="pp-chart-title">' + s.progressChartTitle + '</p>'
-    + chartSvg(runs, summary, s, width)
+    + chartSvg(runs, summary, s, { width, score, levels })
     + (runs.length >= MIN_AVERAGE_RUNS ? legendHtml(s) : '')
     + tilesHtml(runs, summary, s)
-    + tableHtml(runs, s);
+    + tableHtml(runs, s, columns);
 }
 
-export function renderProgress(el, runs, s) {
-  el.innerHTML = progressHtml(runs, s, el.clientWidth ? { width: el.clientWidth } : {});
+export function renderProgress(el, runs, s, options = {}) {
+  el.innerHTML = progressHtml(runs, s, el.clientWidth ? { ...options, width: el.clientWidth } : options);
 }

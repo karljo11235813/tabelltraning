@@ -1,0 +1,450 @@
+/* Decimaltal — sidans egna stilar, laddas efter styles.css. */
+
+:root {
+  --bg: #f3eef9;
+  --surface: #ffffff;
+  --accent: #7a4a8c;
+  --accent-strong: #5f3870;
+  --accent-soft: #ece0f5;
+  --text: #221b28;
+  --text-muted: #6f6478;
+  --success: #2f8f6f;
+  --success-soft: #e6f5ef;
+  --danger: #b23b3b;
+  --danger-soft: #fbecec;
+  --border: #d8cfe0;
+  --shadow: 0 2px 14px rgba(45, 24, 58, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1420;
+    --surface: #251c2c;
+    --accent: #c9a0dd;
+    --accent-strong: #ddbaef;
+    --accent-soft: #382a44;
+    --text: #f0e9f5;
+    --text-muted: #b7a9c2;
+    --success: #5fcfa0;
+    --success-soft: #203a30;
+    --danger: #e2837f;
+    --danger-soft: #402226;
+    --border: #453a4f;
+    --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1a1420;
+  --surface: #251c2c;
+  --accent: #c9a0dd;
+  --accent-strong: #ddbaef;
+  --accent-soft: #382a44;
+  --text: #f0e9f5;
+  --text-muted: #b7a9c2;
+  --success: #5fcfa0;
+  --success-soft: #203a30;
+  --danger: #e2837f;
+  --danger-soft: #402226;
+  --border: #453a4f;
+  --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+}
+
+* { box-sizing: border-box; }
+body {
+  font-family: "Nunito Sans", "Segoe UI", "Arial", sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+h1, h2 { font-family: "Baloo 2", "Segoe UI", sans-serif; }
+header {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.header-title {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.3px;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+.header-title:hover { opacity: 0.85; }
+main {
+  width: 100%;
+  max-width: 880px;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+.card h2 {
+  margin: 0 0 10px 0;
+  font-size: clamp(1.05rem, 2.4vw, 1.6rem);
+  font-weight: 700;
+  color: var(--accent);
+}
+a.back-link {
+  color: var(--accent);
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 0; /* styles.css gives .back-link padding below */
+}
+
+.category-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 22px;
+}
+.category-row button {
+  padding: 8px 12px;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  border-radius: 999px;
+  font-family: "Nunito Sans", sans-serif;
+  font-size: clamp(0.82rem, 1.6vw, 1.05rem);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.category-row button.active {
+  background: var(--accent);
+  color: #fff;
+}
+.category-row button:focus-visible {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+.score-line {
+  font-size: clamp(0.85rem, 1.8vw, 1.2rem);
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.score-line b { color: var(--text); }
+
+.problem-box {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 16px;
+}
+.problem-box.flash-correct { border-color: var(--success); background: var(--success-soft); }
+.problem-box.flash-wrong { border-color: var(--danger); background: var(--danger-soft); }
+
+.problem-label {
+  font-size: clamp(1.2rem, 3.4vw, 2.3rem);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.problem-text {
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.9rem, 5vw, 3.4rem);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 18px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+/* Uppgiften och varje steg i stegen under ett fel svar delas aldrig mellan rader. Är
+   de för breda för rutan (telefon) krymper fitToWidth dem i stället. Meningar får
+   radbrytas, men aldrig mitt i ett uttryck. */
+.problem-text,
+.problem-label .katex,
+.fb-step { white-space: nowrap; }
+/* Höga uttryck (\dfrac) ska ta sin fulla höjd, annars krockar de med raden ovanför
+   eller under när meningen radbryts eller stegen står under varandra. */
+.problem-label .katex,
+.feedback .katex { display: inline-block; margin: 0.12em 0; }
+#answerInput {
+  width: clamp(150px, 24vw, 260px);
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.7rem, 4.2vw, 2.8rem);
+  text-align: center;
+  padding: 10px;
+  border: 2px solid var(--accent);
+  border-radius: 9px;
+  outline: none;
+  background: var(--surface);
+  color: var(--text);
+}
+#answerInput:focus-visible {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+/* Större eller mindre? besvaras med två knappar i stället för svarsrutan. */
+.choice-answers {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.choice-answers[hidden] { display: none; }
+.choice-answers button {
+  min-width: clamp(130px, 20vw, 220px);
+  padding: clamp(12px, 1.8vw, 18px) 20px;
+  border: 3px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  border-radius: 12px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.choice-answers button:hover:not(:disabled) { background: var(--accent-soft); }
+.choice-answers button:focus-visible {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+.choice-answers button:disabled { cursor: default; }
+.choice-answers button:disabled:not(.chosen-right):not(.chosen-wrong) { opacity: 0.4; }
+.choice-answers button.chosen-right { background: var(--success); border-color: var(--success); color: var(--surface); }
+.choice-answers button.chosen-wrong { background: var(--danger); border-color: var(--danger); color: var(--surface); }
+.feedback {
+  min-height: 1.3em;
+  margin-top: 14px;
+  font-size: clamp(1.15rem, 3.2vw, 2.2rem);
+  font-weight: 700;
+}
+.feedback.correct { color: var(--success); }
+.feedback.wrong .fb-head { color: var(--danger); }
+/* Under ett fel svar: rätt svar, meningen som uträkning och en stege av enklare tal
+   med en kort förklaring mellan stegen. */
+.fb-text {
+  margin-top: 10px;
+  font-size: clamp(1rem, 2.2vw, 1.5rem);
+  font-weight: 600;
+}
+.fb-note {
+  margin-top: 10px;
+  font-size: clamp(0.9rem, 1.8vw, 1.2rem);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.fb-step {
+  font-size: clamp(1.1rem, 2.6vw, 1.8rem);
+  font-weight: 400;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  justify-content: center;
+}
+.btn-row button {
+  min-width: clamp(130px, 18vw, 200px);
+  padding: clamp(12px, 1.6vw, 16px) 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-row button:hover { background: var(--accent-strong); }
+.btn-row button:focus-visible {
+  outline: 3px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+/* Sidans bild bredvid rubriken, samma bild som på startsidans kort. */
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.page-title-img {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+.card .page-title-row > :is(h1, h2) { margin: 0; }
+
+/* ---------- Start: läge och kategorier ---------- */
+#dtStart[hidden], #dtPlay[hidden], #dtResult[hidden] { display: none; }
+.dt-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 4px 0 20px;
+}
+.dt-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font-family: "Nunito Sans", sans-serif;
+  cursor: pointer;
+}
+.dt-mode[aria-pressed="true"] { border: 3px solid var(--accent); background: var(--accent-soft); padding: 15px 17px; }
+.dt-mode:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.dt-mode-name { font-family: "Baloo 2", sans-serif; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; color: var(--accent); line-height: 1.1; }
+.dt-mode-desc { font-size: 0.92rem; color: var(--text-muted); line-height: 1.35; }
+.dt-mode-record { font-size: 0.9rem; font-weight: 800; color: var(--accent-strong); }
+.dt-mode-record:empty { display: none; }
+.dt-cats-heading {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dt-cats-note { margin: -12px 0 12px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); }
+.btn-row button:disabled { opacity: 0.45; cursor: default; }
+@media (max-width: 520px) {
+  .dt-modes { grid-template-columns: 1fr; }
+}
+
+/* ---------- Omgången ---------- */
+.dt-play-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.dt-play-top .score-line { margin: 0; font-size: clamp(1rem, 2vw, 1.3rem); }
+.dt-timer {
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.dt-timer.is-ending { color: var(--danger); }
+.dt-quit {
+  margin-left: auto;
+  background: none;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dt-quit:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+
+/* ---------- Resultatet: ska gå att läsa på håll ---------- */
+.dt-level {
+  margin: 4px 0 6px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(2.4rem, 7vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+.dt-level.is-ok { color: var(--success); }
+.dt-level.is-not { color: var(--danger); }
+.dt-score {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 26px;
+  margin: 0 0 14px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.dt-score b { color: var(--text); font-weight: 800; }
+#dtResult .levels-hint { margin: 0 0 18px; text-align: center; font-size: 1.1rem; }
+.dt-levels { margin: 0 0 22px; }
+.dt-levels .levels-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dt-levels .level-name { font-size: clamp(0.9rem, 2vw, 1.15rem); }
+.dt-levels .level-req { font-size: 0.8rem; }
+@media (max-width: 520px) {
+  .dt-levels .levels-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.dt-note { margin: 0 0 16px; text-align: center; font-weight: 700; color: var(--text-muted); }
+.dt-wrong-heading {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dt-wrong-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 8px; }
+.dt-wrong-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 2px solid var(--danger);
+  border-left-width: 8px;
+  border-radius: 10px;
+  background: var(--danger-soft);
+}
+.dt-wrong-name { font-family: "Baloo 2", sans-serif; font-size: clamp(1.15rem, 2.6vw, 1.45rem); font-weight: 800; line-height: 1.15; color: var(--text); }
+.dt-wrong-count { font-size: clamp(1rem, 2vw, 1.2rem); font-weight: 700; color: var(--text); }
+.dt-no-wrong { margin: 0; text-align: center; font-family: "Baloo 2", sans-serif; font-size: clamp(1.4rem, 3.5vw, 2rem); font-weight: 800; color: var(--success); }
+.dt-practice-missed {
+  display: block;
+  margin: 14px auto 0;
+  padding: 12px 20px;
+  border: 2px solid var(--accent);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--accent);
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+.dt-practice-missed:hover { background: var(--accent-soft); }
+.dt-practice-missed:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.dt-missed { margin-top: 18px; }
+.dt-missed summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+.dt-missed-item { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.dt-missed-label { font-size: 1.05rem; line-height: 1.4; }
+.dt-missed-tex { font-size: 1.6rem; white-space: nowrap; }
+.dt-missed-given { margin-top: 4px; font-weight: 700; color: var(--text-muted); }
+.dt-missed-given s { color: var(--danger); }
+/* Listen läses på nära håll, så stegen får vanlig textstorlek i stället för projektorns. */
+.dt-missed .feedback { min-height: 0; margin-top: 8px; font-size: 1.15rem; }
+.dt-missed .fb-text { font-size: 1rem; }
+.dt-missed .fb-note { font-size: 0.95rem; }
+.dt-missed .fb-step { font-size: 1.15rem; }
+.btn-row .dt-secondary { background: var(--surface); color: var(--accent); border: 2px solid var(--accent); }
+.btn-row .dt-secondary:hover { background: var(--accent-soft); }

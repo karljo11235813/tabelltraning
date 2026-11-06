@@ -10,8 +10,8 @@ export const LEVELS = [
   { id: 'record', minCorrect: 216, maxWrong: 0 },
 ];
 
-export function assessLevels({ correct, wrong }) {
-  const reached = LEVELS.map(l => correct >= l.minCorrect && wrong <= l.maxWrong);
+export function assessLevels({ correct, wrong }, levels = LEVELS) {
+  const reached = levels.map(l => correct >= l.minCorrect && wrong <= l.maxWrong);
   const highest = reached.lastIndexOf(true);
   return { correct, wrong, reached, highest };
 }
@@ -25,10 +25,10 @@ export function levelRequirement(level, s) {
 }
 
 // What is missing for the next level: more right answers, fewer wrong, or both.
-export function levelHint({ correct, wrong, highest }, s) {
+export function levelHint({ correct, wrong, highest }, s, levels = LEVELS) {
   const index = highest + 1;
-  if (index >= LEVELS.length) return s.levelTop;
-  const level = LEVELS[index];
+  if (index >= levels.length) return s.levelTop;
+  const level = levels[index];
   const values = { name: s.levelNames[index], n: level.minCorrect - correct, m: level.maxWrong, w: wrong };
   const needMore = correct < level.minCorrect;
   const tooManyWrong = wrong > level.maxWrong;

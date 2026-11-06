@@ -27,7 +27,8 @@ export function meanInterval(values) {
   if (values.length < MIN_INTERVAL_RUNS) return { mean: m, low: null, high: null };
   const margin = T_95[values.length - 1] * Math.sqrt(variance(values) / values.length);
   const wide = Math.max(MIN_MARGIN, margin);
-  return { mean: m, low: Math.max(0, m - wide), high: m + wide };
+  // Never below 0, or below the lowest run when a score can be negative.
+  return { mean: m, low: Math.max(Math.min(0, ...values), m - wide), high: m + wide };
 }
 
 // The latest runs against the same number of runs before them. It only leaves
@@ -44,8 +45,9 @@ export function compareRecent(values) {
   return { kind, gap, margin, size };
 }
 
-export function summarizeRuns(runs) {
-  const right = runs.map(r => r.correct);
+// score: what is counted per run, right answers unless the page says otherwise.
+export function summarizeRuns(runs, score = r => r.correct) {
+  const right = runs.map(score);
   const wrong = runs.map(r => r.wrong);
   const verdict = compareRecent(right);
   if (runs.length === 0) {
