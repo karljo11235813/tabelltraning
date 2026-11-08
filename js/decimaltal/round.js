@@ -30,9 +30,10 @@ export function createRound({ categories, rng, generate = (id, r) => categoryByI
       const given = raw.trim();
       if (finished || answered || given === '') return null;
       const { category, problem } = current;
-      const correct = problem.answerType === 'choice'
-        ? given === problem.answer
-        : checkDecimalAnswer(given, problem.answer);
+      // A choice is its button's word, a multi the picked letters in order ('ADE').
+      const correct = problem.answerType === 'decimal'
+        ? checkDecimalAnswer(given, problem.answer)
+        : given === problem.answer;
       answered = true;
       const own = counts.byCategory[category] || (counts.byCategory[category] = { correct: 0, wrong: 0 });
       if (correct) {

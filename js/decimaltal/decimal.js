@@ -50,8 +50,10 @@ export function checkDecimalAnswer(rawInput, expected) {
   if (normalized === '') return false;
   const givenNum = Number(normalized);
   if (!Number.isFinite(givenNum)) return false;
+  // Exact: 2,10 is 2,1 but 2,14 is not. The tolerance only absorbs float noise
+  // (2.1 · 10 = 21.000000000000004), not a digit more.
   const scale = Math.pow(10, expected.d);
-  return Math.round(givenNum * scale) === expected.m;
+  return Math.abs(givenNum * scale - expected.m) < 1e-6;
 }
 
 export function inline(x) { return `\\(${num(x)}\\)`; }

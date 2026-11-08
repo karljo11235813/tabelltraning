@@ -6,7 +6,7 @@
 
 import { assessLevels, fill, levelHint, levelRequirement } from '../levels.js';
 import { CATEGORIES } from './categories.js';
-import { feedbackHtml } from './feedback.js';
+import { feedbackHtml, letterList } from './feedback.js';
 import { isFullTest } from './history.js';
 import { ACCEPTABLE_ID, LEVELS } from './settings.js';
 
@@ -65,12 +65,13 @@ function wrongTilesHtml(tally, s) {
 function missedHtml(missed, s) {
   if (missed.length === 0) return '';
   const items = missed.map(({ problem, given }) => {
-    const shown = problem.answerType === 'choice' ? given.charAt(0).toUpperCase() + given.slice(1) : given;
+    const shown = problem.answerType === 'choice' ? given.charAt(0).toUpperCase() + given.slice(1)
+      : problem.answerType === 'multi' ? letterList(given) : given;
     return '<div class="dt-missed-item">'
       + (problem.label ? '<div class="dt-missed-label">' + problem.label + '</div>' : '')
       + (problem.tex ? '<div class="dt-missed-tex">\\(' + problem.tex + '\\)</div>' : '')
       + '<div class="dt-missed-given">' + s.youWrote + ': <s>' + escapeHtml(shown) + '</s></div>'
-      + '<div class="feedback wrong">' + feedbackHtml(problem) + '</div></div>';
+      + '<div class="feedback wrong">' + feedbackHtml(problem, given) + '</div></div>';
   }).join('');
   return '<details class="dt-missed"><summary>' + fill(s.showMissed, { n: missed.length }) + '</summary>' + items + '</details>';
 }

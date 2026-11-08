@@ -29,20 +29,21 @@
 
     <section id="dtStart">
       <div class="dt-modes" role="group" aria-label="Läge">
-        <button type="button" class="dt-mode" data-mode="practice" aria-pressed="true">
-          <span class="dt-mode-name">Öva</span>
-          <span class="dt-mode-desc">Ingen tid. Efter ett fel ser du steg för steg hur man tänker.</span>
-        </button>
-        <button type="button" class="dt-mode" data-mode="test" aria-pressed="false">
+        <button type="button" class="dt-mode" data-mode="test" aria-pressed="true">
           <span class="dt-mode-name" id="dtTestName">Test</span>
           <span class="dt-mode-desc">Så många rätt du hinner. Varje fel drar av en poäng.</span>
           <span class="dt-mode-record" id="dtTestCard"></span>
         </button>
+        <button type="button" class="dt-mode" data-mode="practice" aria-pressed="false">
+          <span class="dt-mode-name">Öva</span>
+          <span class="dt-mode-desc">Ingen tid. Efter ett fel ser du steg för steg hur man tänker. Du väljer själv vad du övar på.</span>
+        </button>
       </div>
 
-      <h3 class="dt-cats-heading">Kategorier</h3>
-      <div class="category-row" id="dtCategories"></div>
-      <p class="dt-cats-note" id="dtCatsNote" hidden>Nivåerna och Dina framsteg gäller bara test med alla kategorier.</p>
+      <div id="dtPractice" hidden>
+        <h3 class="dt-cats-heading">Kategorier</h3>
+        <div class="category-row" id="dtCategories"></div>
+      </div>
 
       <div class="btn-row">
         <button type="button" id="dtStartBtn">Starta</button>
@@ -66,6 +67,7 @@
           <button type="button" data-answer="större">Större</button>
           <button type="button" data-answer="mindre">Mindre</button>
         </div>
+        <div class="multi-answers" id="multiAnswers" role="group" aria-label="Svar" hidden></div>
         <div class="feedback" id="feedback"></div>
       </div>
 

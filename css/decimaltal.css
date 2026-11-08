@@ -233,6 +233,44 @@ a.back-link {
 .choice-answers button:disabled:not(.chosen-right):not(.chosen-wrong) { opacity: 0.4; }
 .choice-answers button.chosen-right { background: var(--success); border-color: var(--success); color: var(--surface); }
 .choice-answers button.chosen-wrong { background: var(--danger); border-color: var(--danger); color: var(--surface); }
+/* Samma svar?: en knapp per beräkning, som väljs och avväljs. En vald är fylld med
+   sidans färg. Efter Kontrollera i Öva får varje beräkning ✓ eller ✗ (rätt men inte
+   vald: streckad med ✓), så att färgen inte bär ensam. */
+.multi-answers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 10px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.multi-answers[hidden] { display: none; }
+.multi-answers button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 3px solid var(--accent);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: clamp(1.15rem, 2.6vw, 1.6rem);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.multi-letter { font-family: "Baloo 2", sans-serif; font-weight: 800; color: var(--accent); }
+.multi-answers button:hover:not(:disabled) { background: var(--accent-soft); }
+.multi-answers button:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+.multi-answers button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.multi-answers button[aria-pressed="true"] .multi-letter { color: var(--surface); }
+.multi-answers button:disabled { cursor: default; }
+.multi-answers button:disabled:not(.chosen-right):not(.chosen-wrong):not(.missed-right) { opacity: 0.4; }
+.multi-answers button.chosen-right { background: var(--success); border-color: var(--success); color: var(--surface); }
+.multi-answers button.chosen-wrong { background: var(--danger); border-color: var(--danger); color: var(--surface); }
+.multi-answers button:is(.chosen-right, .chosen-wrong) .multi-letter { color: var(--surface); }
+.multi-answers button.missed-right { border-style: dashed; border-color: var(--success); background: var(--success-soft); }
+.multi-answers button:is(.chosen-right, .missed-right)::after { content: "✓"; margin-left: auto; font-weight: 800; }
+.multi-answers button.chosen-wrong::after { content: "✗"; margin-left: auto; font-weight: 800; }
 .feedback {
   min-height: 1.3em;
   margin-top: 14px;
@@ -248,6 +286,8 @@ a.back-link {
   font-size: clamp(1rem, 2.2vw, 1.5rem);
   font-weight: 600;
 }
+/* Räkneordning: vad eleven gjorde, när svaret är ett känt fel. */
+.fb-mistake { font-weight: 800; }
 .fb-note {
   margin-top: 10px;
   font-size: clamp(0.9rem, 1.8vw, 1.2rem);
@@ -299,7 +339,7 @@ a.back-link {
 .card .page-title-row > :is(h1, h2) { margin: 0; }
 
 /* ---------- Start: läge och kategorier ---------- */
-#dtStart[hidden], #dtPlay[hidden], #dtResult[hidden] { display: none; }
+#dtStart[hidden], #dtPlay[hidden], #dtResult[hidden], #dtPractice[hidden] { display: none; }
 .dt-modes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -320,12 +360,16 @@ a.back-link {
   font-family: "Nunito Sans", sans-serif;
   cursor: pointer;
 }
-.dt-mode[aria-pressed="true"] { border: 3px solid var(--accent); background: var(--accent-soft); padding: 15px 17px; }
+.dt-mode:hover { border-color: var(--accent); }
 .dt-mode:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
 .dt-mode-name { font-family: "Baloo 2", sans-serif; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; color: var(--accent); line-height: 1.1; }
 .dt-mode-desc { font-size: 0.92rem; color: var(--text-muted); line-height: 1.35; }
 .dt-mode-record { font-size: 0.9rem; font-weight: 800; color: var(--accent-strong); }
 .dt-mode-record:empty { display: none; }
+/* Det valda läget är fyllt med sidans färg (Testet från början). Texten har ytans färg, så att den syns
+   i båda teman (vit på mörklila, mörk på ljuslila). */
+.dt-mode[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+.dt-mode[aria-pressed="true"] :is(.dt-mode-name, .dt-mode-desc, .dt-mode-record) { color: var(--surface); }
 .dt-cats-heading {
   margin: 0 0 8px;
   font-size: 0.8rem;
@@ -334,7 +378,6 @@ a.back-link {
   text-transform: uppercase;
   color: var(--text-muted);
 }
-.dt-cats-note { margin: -12px 0 12px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); }
 .btn-row button:disabled { opacity: 0.45; cursor: default; }
 @media (max-width: 520px) {
   .dt-modes { grid-template-columns: 1fr; }

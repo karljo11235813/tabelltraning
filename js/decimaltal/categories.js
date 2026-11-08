@@ -1,20 +1,23 @@
-// The nine question categories in the page's order. Each generator takes a random
+// The twelve question categories in the page's order. Each generator takes a random
 // function (mulberry32 in tests, Math.random on the page) and calls it in the same
 // order as the page did before the code moved here, so a seed gives one question.
 
-import { randInt, pick } from '../representationer/random.js';
+import { randInt, pick, shuffle } from '../representationer/random.js';
 import { D, dAdd, dSub, dMul, dMulPow10, inline, num, placed, trim, value } from './decimal.js';
 import { comparisonLadder, fracLine, productLadder, productProblem, quotientLadder, quotientProblem,
-  quotientSteps, sumLadder, sumOf, sumProblem, sumTex } from './ladders.js';
+  quotientSteps, shortDivisionLadder, sumLadder, sumOf, sumProblem, sumTex } from './ladders.js';
+import { genOrder } from './order.js';
 import { numberWords } from './words.js';
 
-// Each generator returns { label, tex, answerType, answer, ladder, intro }. `tex` is
+// Each generator returns { label, tex, answerType, answer, ladder, intro, mistakes }. `tex` is
 // LaTeX without delimiters; `label` and `intro` are text that may hold \( … \) math.
 // String.raw keeps the backslashes in the LaTeX. Every division is written as a
 // display fraction. `intro` (word problems) turns the sentence into a calculation
 // above the ladder.
 // answerType 'decimal' -> answer is a {m,d} object, checked via checkDecimalAnswer.
 // answerType 'choice' -> answer is the data-answer of the right choice button.
+// answerType 'multi' -> `options` is [{ id: 'A', tex }], and answer the ids of every
+// right option in order ('ADE'); the student picks all that are right.
 
 function genAddSub(rng) {
   const variant = randInt(rng, 1, 5);
@@ -119,6 +122,41 @@ function genMulDecimal(rng) {
     }
     default: { // 0,04 · 3 000
       return productProblem(D(randInt(rng, 1, 9), 2), D(randInt(rng, 2, 9) * 1000, 0));
+    }
+  }
+}
+
+// Kort division: a decimal divided by a one-digit number, always exact. The kinds on
+// the worksheet Kort division 3: no carrying (48,8 / 2), carrying with a quotient below
+// 10 (5,7 / 3), a first digit smaller than the divisor (22,4 / 7), a quotient above 10
+// (103,8 / 6), a zero in the quotient (42,8 / 4) and two decimals (17,64 / 9). The
+// numerator has as many decimals as the quotient, so never 3,0 / 2.
+function genShortDivision(rng) {
+  const kind = randInt(rng, 1, 6);
+  const everyDigitDivides = (t, n) => [...String(t.m)].every((digit) => Number(digit) % n === 0);
+  // The divisor is drawn first and kept while quotients are tried, so that 5 (where
+  // half the quotients end the numerator in 0) comes as often as the others. A kind
+  // that no quotient fits for this divisor (9 with carrying below 10) draws a new one.
+  for (;;) {
+    const n = kind === 1 ? randInt(rng, 2, 4) : randInt(rng, 2, 9);
+    for (let tries = 0; tries < 30; tries++) {
+      let q;
+      switch (kind) {
+        case 1: { // 48,8 / 2 = 24,4
+          const digit = () => randInt(rng, 1, Math.floor(9 / n));
+          q = D(rng() < 0.5 ? digit() * 10 + digit() : digit() * 100 + digit() * 10 + digit(), 1);
+          break;
+        }
+        case 2: case 3: q = D(randInt(rng, 11, 99), 1); break; // 5,7 / 3 = 1,9 and 22,4 / 7 = 3,2
+        case 4: q = D(randInt(rng, 101, 399), 1); break; // 103,8 / 6 = 17,3
+        case 5: q = D(randInt(rng, 1, 3) * 100 + randInt(rng, 1, 9), 1); break; // 42,8 / 4 = 10,7
+        default: q = D(randInt(rng, 101, 299), 2); // 17,64 / 9 = 1,96
+      }
+      const t = D(q.m * n, q.d), first = Number(String(t.m)[0]);
+      if (q.m % 10 === 0 || t.m % 10 === 0) continue;
+      if (kind === 2 && (first < n || everyDigitDivides(t, n))) continue;
+      if (kind === 3 && (first >= n || t.m < 100)) continue;
+      return { tex: String.raw`\dfrac{${num(t)}}{${n}} =`, answerType: 'decimal', answer: q, ladder: shortDivisionLadder(t, n, q) };
     }
   }
 }
@@ -232,6 +270,61 @@ function scaleFromQuotient(rng) {
       { tex: fracLine(numerator0, denom0, quot0) },
       ...quotientSteps(numerator0, denom0, quot0, scaledNumerator, scaledDenominator),
     ],
+  };
+}
+
+// ---- Samma svar? Which calculations give the same product ----
+// Vilka av följande beräkningar ger samma svar som 45 · 57? Five calculations where
+// each factor is moved at most two places, such as 0,45 · 5 700. The product stays
+// when one factor is as many times larger as the other is smaller, so a calculation
+// is right when its two moves add up to 0. One to three of the five are right.
+
+const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+const SAME_SHIFTS = [[-2, 2], [-1, 1], [1, -1], [2, -2]];
+// Moves that add up to ±1 or ±2: the product is 10 or 100 times too large or small.
+const OTHER_SHIFTS = [];
+for (let p = -2; p <= 2; p++) {
+  for (let q = -2; q <= 2; q++) {
+    if ([1, 2].includes(Math.abs(p + q))) OTHER_SHIFTS.push([p, q]);
+  }
+}
+
+function genSameProduct(rng) {
+  const twoDigits = () => {
+    let n;
+    do { n = randInt(rng, 12, 98); } while (n % 10 === 0);
+    return n;
+  };
+  const a = twoDigits();
+  let b;
+  do { b = twoDigits(); } while (b === a);
+  const base = String.raw`${a} \cdot ${b}`;
+
+  const right = randInt(rng, 1, 3);
+  const shifts = shuffle([...shuffle(SAME_SHIFTS, rng).slice(0, right), ...shuffle(OTHER_SHIFTS, rng).slice(0, 5 - right)], rng);
+  const power = (k) => num(placed(1, k));
+  // 57 moved p places, written as 57 · 100 or 57/100 so that the move shows.
+  const moved = (n, p) => p === 0 ? String(n) : p > 0 ? String.raw`${n} \cdot ${power(p)}` : String.raw`\dfrac{${n}}{${power(-p)}}`;
+
+  const options = shifts.map(([p, q], i) => ({ id: LETTERS[i], p, q, tex: String.raw`${num(placed(a, p))} \cdot ${num(placed(b, q))}` }));
+  return {
+    label: String.raw`Vilka av följande beräkningar ger samma svar som \(${base}\)? Välj alla som stämmer.`,
+    tex: '',
+    answerType: 'multi',
+    base,
+    options: options.map(({ id, tex }) => ({ id, tex })),
+    answer: options.filter(({ p, q }) => p + q === 0).map(({ id }) => id).join(''),
+    intro: 'Produkten blir densamma när den ena faktorn blir lika många gånger större som den andra blir mindre.',
+    // One line per calculation, not a chain of steps.
+    ladder: options.map(({ id, p, q, tex }) => {
+      const net = p + q;
+      const result = net === 0 ? base : net > 0 ? String.raw`${base} \cdot ${power(net)}` : String.raw`\dfrac{${base}}{${power(-net)}}`;
+      const middle = String.raw`${moved(a, p)} \cdot ${moved(b, q)}`;
+      return {
+        note: net === 0 ? `${id}: samma svar ✓` : `${id}: \\(${power(Math.abs(net))}\\) gånger ${net > 0 ? 'större' : 'mindre'} ✗`,
+        tex: middle === result ? `${tex} = ${result}` : `${tex} = ${middle} = ${result}`,
+      };
+    }),
   };
 }
 
@@ -437,11 +530,14 @@ export const CATEGORIES = [
   { id: 'powers10', name: 'Gånger/delat med 10, 100, 1000', generate: genPowers10 },
   { id: 'powers01', name: 'Gånger/delat med 0,1; 0,01; 0,001', generate: genPowers01 },
   { id: 'muldecimal', name: 'Multiplikation', generate: genMulDecimal },
+  { id: 'shortdiv', name: 'Kort division', generate: genShortDivision },
   { id: 'fraction', name: 'Bråkform', generate: genFraction },
   { id: 'comparison', name: 'Större eller mindre?', generate: genComparison },
   { id: 'scale', name: 'Skala om', generate: genScale },
+  { id: 'same', name: 'Samma svar?', generate: genSameProduct },
   { id: 'words', name: 'Summa, differens, produkt, kvot', generate: genWords },
   { id: 'abstract', name: 'Abstrakta problem', generate: genAbstract },
+  { id: 'order', name: 'Räkneordning', generate: genOrder },
 ];
 
 export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);

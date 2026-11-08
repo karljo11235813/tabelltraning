@@ -1,4 +1,4 @@
-import { D, dAdd, dSub, dMul, dMulPow10, inline, num, numFixed, trim, value } from './decimal.js';
+import { D, dAdd, dSub, dMul, dMulPow10, inline, num, numFixed, placed, trim, value } from './decimal.js';
 
 // ---- Feedback ladders ----
 // A wrong answer shows a ladder of simpler problems leading up to the problem, the
@@ -97,6 +97,29 @@ export function quotientLadder(t, n, answer) {
   const [cn] = split(n), [cq] = split(answer);
   const [t0, n0, q0] = cn === 1 ? [t, D(1, 0), t] : [D(cn * cq, 0), D(cn, 0), D(cq, 0)];
   return [{ tex: fracLine(t0, n0, q0) }, ...quotientSteps(t0, n0, q0, t, n)];
+}
+
+// Kort division, one place at a time from the left: what n goes evenly into at a place
+// is a part, and what is left over follows to the next place. The parts add up to the
+// numerator and each one divides evenly: 103,8 = 60 + 42 + 1,8, so 103,8 / 6 = 10 + 7 + 0,3.
+export function shortDivisionLadder(t, n, q) {
+  const digits = String(t.m), parts = [];
+  let left = 0;
+  [...digits].forEach((digit, i) => {
+    const place = digits.length - 1 - i - t.d, current = left * 10 + Number(digit);
+    const times = Math.floor(current / n);
+    left = current % n;
+    if (times > 0) parts.push({ part: placed(times * n, place), share: placed(times, place) });
+  });
+  const join = (show) => parts.map(show).join(' + ');
+  return [
+    {
+      note: `Dela upp ${inline(t)} från vänster i delar som \\(${n}\\) går jämnt upp i. Det som blir över följer med till nästa siffra.`,
+      tex: `${num(t)} = ${join((p) => num(p.part))}`,
+    },
+    { note: `Dela varje del med \\(${n}\\).`, tex: `${join((p) => String.raw`\dfrac{${num(p.part)}}{${n}}`)} = ${join((p) => num(p.share))}` },
+    { note: 'Lägg ihop.', tex: String.raw`\dfrac{${num(t)}}{${n}} = ${join((p) => num(p.share))} = ${num(q)}` },
+  ];
 }
 
 // Counts everything in the smallest place, 40 + 4 = 44 hundradelar, then writes the
