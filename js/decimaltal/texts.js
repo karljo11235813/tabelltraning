@@ -17,6 +17,7 @@ export const S = {
   practiceMissed: 'Öva på det du missade',
   showMissed: 'Visa dina fel ({n})',
   youWrote: 'Du skrev',
+  youSkipped: 'Du hoppade över.',
   testCard: 'Bäst {best} poäng · Senast: {level}',
   progressEmpty: 'Här ser du hur det går när du har gjort ditt första test med alla kategorier.',
   progressWait: 'Gör {n} test till så ser vi om du blir bättre.',

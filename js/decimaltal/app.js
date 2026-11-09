@@ -45,6 +45,7 @@ const choiceButtons = choiceAnswers.querySelectorAll('button');
 const multiAnswers = $('multiAnswers');
 const feedback = $('feedback');
 const actionBtn = $('actionBtn');
+const skipBtn = $('skipBtn');
 const resultBody = $('dtResultBody');
 
 let mode = 'test'; // 'practice' or 'test'
@@ -192,7 +193,8 @@ function renderQuestion() {
       `<button type="button" data-option="${o.id}" aria-pressed="false"><span class="multi-letter">${o.id}</span> \\(${o.tex}\\)</button>`).join(''));
   }
   actionBtn.textContent = mode === 'practice' ? 'Kontrollera' : 'Svara';
-  actionBtn.style.visibility = type === 'choice' ? 'hidden' : '';
+  actionBtn.hidden = type === 'choice';
+  skipBtn.hidden = false;
   if (type === 'decimal') {
     answerInput.focus();
   } else if (document.activeElement) {
@@ -237,6 +239,15 @@ multiAnswers.addEventListener('click', (e) => {
 
 actionBtn.addEventListener('click', () => submit(givenAnswer()));
 
+// Hoppa över is a wrong answer: a point off in the test, the help in Öva. The second
+// click of a double click must not skip the next question too.
+skipBtn.addEventListener('click', (e) => {
+  if (e.detail > 1 || (mode === 'practice' && awaitingNext)) return;
+  if (round.skip() === null) return;
+  if (mode === 'practice') showPracticeResult(false, null, '', true);
+  else nextTestQuestion(false);
+});
+
 answerInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.repeat) {
     e.preventDefault();
@@ -256,19 +267,19 @@ function startPractice(categories) {
   startRound(categories);
 }
 
-function showPracticeResult(isCorrect, button, given) {
+// skipped: Hoppa över, shown as a wrong answer with nothing picked.
+function showPracticeResult(isCorrect, button, given, skipped = false) {
   updateScore();
   problemBox.classList.remove('flash-correct', 'flash-wrong');
   void problemBox.offsetWidth;
-  if (button) {
-    choiceButtons.forEach((b) => { b.disabled = true; });
-    button.classList.add(isCorrect ? 'chosen-right' : 'chosen-wrong');
-  }
-  // Samma svar?: every calculation shows whether it was right, also one not picked.
   const { answerType, answer } = round.current().problem;
+  if (answerType === 'choice') choiceButtons.forEach((b) => { b.disabled = true; });
+  if (button) button.classList.add(isCorrect ? 'chosen-right' : 'chosen-wrong');
+  // Samma svar?: every calculation shows whether it was right, also one not picked.
   if (answerType === 'multi') {
     multiAnswers.querySelectorAll('button[data-option]').forEach((b) => {
-      const picked = b.getAttribute('aria-pressed') === 'true', right = answer.includes(b.dataset.option);
+      const picked = !skipped && b.getAttribute('aria-pressed') === 'true', right = answer.includes(b.dataset.option);
+      if (skipped) b.setAttribute('aria-pressed', 'false');
       b.disabled = true;
       if (picked) b.classList.add(right ? 'chosen-right' : 'chosen-wrong');
       else if (right) b.classList.add('missed-right');
@@ -280,14 +291,15 @@ function showPracticeResult(isCorrect, button, given) {
     feedback.className = 'feedback correct';
   } else {
     problemBox.classList.add('flash-wrong');
-    renderMath(feedback, feedbackHtml(round.current().problem, given));
+    renderMath(feedback, feedbackHtml(round.current().problem, given, { skipped }));
     feedback.className = 'feedback wrong';
     feedback.querySelectorAll('.fb-step').forEach(fitToWidth);
   }
   awaitingNext = true;
   actionBtn.textContent = 'Nästa';
-  actionBtn.style.visibility = '';
-  if (button) actionBtn.focus(); // so Enter goes on to the next question
+  actionBtn.hidden = false;
+  skipBtn.hidden = true;
+  if (button || skipped) actionBtn.focus(); // so Enter goes on to the next question
 }
 
 // ---- Test ----

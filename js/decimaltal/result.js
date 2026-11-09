@@ -60,18 +60,18 @@ function wrongTilesHtml(tally, s) {
     + '<button type="button" class="dt-practice-missed">' + s.practiceMissed + '</button>';
 }
 
-// Each missed question as it was shown, what the student wrote (always as text)
-// and the help that goes with the question.
+// Each missed question as it was shown, what the student wrote (always as text) or
+// that it was skipped, and the help that goes with the question.
 function missedHtml(missed, s) {
   if (missed.length === 0) return '';
-  const items = missed.map(({ problem, given }) => {
+  const items = missed.map(({ problem, given, skipped }) => {
     const shown = problem.answerType === 'choice' ? given.charAt(0).toUpperCase() + given.slice(1)
       : problem.answerType === 'multi' ? letterList(given) : given;
     return '<div class="dt-missed-item">'
       + (problem.label ? '<div class="dt-missed-label">' + problem.label + '</div>' : '')
       + (problem.tex ? '<div class="dt-missed-tex">\\(' + problem.tex + '\\)</div>' : '')
-      + '<div class="dt-missed-given">' + s.youWrote + ': <s>' + escapeHtml(shown) + '</s></div>'
-      + '<div class="feedback wrong">' + feedbackHtml(problem, given) + '</div></div>';
+      + '<div class="dt-missed-given">' + (skipped ? s.youSkipped : s.youWrote + ': <s>' + escapeHtml(shown) + '</s>') + '</div>'
+      + '<div class="feedback wrong">' + feedbackHtml(problem, given, { skipped }) + '</div></div>';
   }).join('');
   return '<details class="dt-missed"><summary>' + fill(s.showMissed, { n: missed.length }) + '</summary>' + items + '</details>';
 }

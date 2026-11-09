@@ -17,8 +17,8 @@ export function displayAnswer(current) {
 // calculation (word problems), and the ladder, each in its own block. A note between
 // two steps gets an arrow; a note before the first step introduces it. A multi
 // question's ladder is one line per calculation instead, so its notes get no arrows.
-export function feedbackHtml(problem, given = '') {
-  const parts = [`<div class="fb-head">Fel. Rätt svar är ${displayAnswer(problem)}.</div>`];
+export function feedbackHtml(problem, given = '', { skipped = false } = {}) {
+  const parts = [`<div class="fb-head">${skipped ? 'Du hoppade över.' : 'Fel.'} Rätt svar är ${displayAnswer(problem)}.</div>`];
   const mistake = given && (problem.mistakes || []).find(({ value }) => checkDecimalAnswer(given, value));
   if (mistake) parts.push(`<div class="fb-text fb-mistake">${mistake.text}</div>`);
   if (problem.intro) parts.push(`<div class="fb-text">${problem.intro}</div>`);

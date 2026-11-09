@@ -21,6 +21,20 @@ export function createRound({ categories, rng, generate = (id, r) => categoryByI
   }
   draw();
 
+  function record(correct, wrongAnswer) {
+    const { category, problem } = current;
+    answered = true;
+    const own = counts.byCategory[category] || (counts.byCategory[category] = { correct: 0, wrong: 0 });
+    if (correct) {
+      counts.correct++;
+      own.correct++;
+    } else {
+      counts.wrong++;
+      own.wrong++;
+      missed.push({ category, problem, ...wrongAnswer });
+    }
+  }
+
   return {
     current: () => current,
 
@@ -29,22 +43,21 @@ export function createRound({ categories, rng, generate = (id, r) => categoryByI
     answer(raw) {
       const given = raw.trim();
       if (finished || answered || given === '') return null;
-      const { category, problem } = current;
+      const { problem } = current;
       // A choice is its button's word, a multi the picked letters in order ('ADE').
       const correct = problem.answerType === 'decimal'
         ? checkDecimalAnswer(given, problem.answer)
         : given === problem.answer;
-      answered = true;
-      const own = counts.byCategory[category] || (counts.byCategory[category] = { correct: 0, wrong: 0 });
-      if (correct) {
-        counts.correct++;
-        own.correct++;
-      } else {
-        counts.wrong++;
-        own.wrong++;
-        missed.push({ category, problem, given });
-      }
+      record(correct, { given });
       return { correct };
+    },
+
+    // Hoppa över counts as a wrong answer, so it costs a point in the test. It
+    // only saves the time of guessing. null as for answer.
+    skip() {
+      if (finished || answered) return null;
+      record(false, { given: '', skipped: true });
+      return { correct: false, skipped: true };
     },
 
     next() {
