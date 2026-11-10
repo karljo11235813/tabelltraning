@@ -9,6 +9,7 @@ import tal2Kontroll from "./tal-2-kontroll.js";
 import talRaknesatt from "./tal-raknesatt.js";
 import andringar from "./andringar.js";
 import rataLinjen from "./rata-linjen.js";
+import funktioner from "./funktioner.js";
 // Tvillingar: liknar ett original (twinOf) på ytan men har ett annat svar.
 import tvProcent from "./tvillingar-procent.js";
 import tvTalBegrepp from "./tvillingar-tal-begrepp.js";
@@ -17,10 +18,11 @@ import tvTal2Kontroll from "./tvillingar-tal-2-kontroll.js";
 import tvTalRaknesatt from "./tvillingar-tal-raknesatt.js";
 import tvAndringar from "./tvillingar-andringar.js";
 import tvRataLinjen from "./tvillingar-rata-linjen.js";
+import tvFunktioner from "./tvillingar-funktioner.js";
 
 const SOURCES = [
-  procent, talBegrepp, tal1, tal2Kontroll, talRaknesatt, andringar, rataLinjen,
-  tvProcent, tvTalBegrepp, tvTal1, tvTal2Kontroll, tvTalRaknesatt, tvAndringar, tvRataLinjen,
+  procent, talBegrepp, tal1, tal2Kontroll, talRaknesatt, andringar, rataLinjen, funktioner,
+  tvProcent, tvTalBegrepp, tvTal1, tvTal2Kontroll, tvTalRaknesatt, tvAndringar, tvRataLinjen, tvFunktioner,
 ];
 
 export { CHAPTERS, SOURCES };
