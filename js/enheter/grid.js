@@ -4,6 +4,8 @@ import { dec, formatDecimal } from "./decimal.js";
 import { unit } from "./units.js";
 
 // Lärarens tavelbokstäver: H och D för hekto och deka. Rutor utan prefix har ingen bokstav.
+// I ett rutnät för en enhet står hela enheten i rutan (km, Hm, Dm, m, dm, cm, mm), så att milli inte
+// förväxlas med meter; bara rutnätet utan enhet (Prefixens betydelse) visar bokstäverna ensamma.
 const LETTERS = { 9: "G", 6: "M", 3: "k", 2: "H", 1: "D", [-1]: "d", [-2]: "c", [-3]: "m", [-6]: "µ" };
 const NAMES = { 9: "Giga", 6: "Mega", 3: "kilo", 2: "hekto", 1: "deka", [-1]: "deci", [-2]: "centi", [-3]: "milli", [-6]: "mikro" };
 
@@ -60,9 +62,12 @@ export function gridModel({ family, from = null, to = null, showHops = false, wi
   const fromUnit = from ? unit(from) : null;
   const toUnit = to ? unit(to) : null;
 
+  const baseLabel = BASE_LABELS[family] ?? "enhet";
+  const labelOf = (s) => (s.pos === 0 ? baseLabel : s.letter && family ? s.letter + baseLabel : s.letter);
   const squares = rows.map((s) => ({
     pos: s.pos,
     letter: s.letter,
+    label: labelOf(s),
     name: names ? s.name : null,
     isFrom: !!fromUnit && !isLiter(fromUnit) && fromUnit.pos === s.pos,
     isTo: !!toUnit && !isLiter(toUnit) && toUnit.pos === s.pos,
@@ -109,5 +114,5 @@ export function gridModel({ family, from = null, to = null, showHops = false, wi
     }
   }
 
-  return { family, cells, baseLabel: BASE_LABELS[family] ?? "enhet", squares, hops: hopList, window, literRow: liter };
+  return { family, cells, baseLabel, squares, hops: hopList, window, literRow: liter };
 }

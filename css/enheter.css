@@ -69,6 +69,8 @@ button.en-tile:focus-visible { outline: 3px solid var(--accent-strong); outline-
 /* Tätt rutnät (16 rutor på en telefon): bara bokstäverna, mindre, och "enhet" ännu mindre. */
 .en-grid.is-long .en-letter.is-word { font-size: 0.56em; letter-spacing: -0.02em; }
 .en-grid.is-long .en-name { font-size: 0.56em; }
+/* 16 smala rutor med hela enheter (GW, HW, µg): mindre, så att två grannar inte går ihop. */
+.en-grid.is-long.has-units .en-letter { font-size: 0.85em; letter-spacing: -0.03em; }
 .en-grid.is-tight .en-name { display: none; }
 .en-grid.is-tight .en-square { min-height: 2.4em; }
 .en-grid.is-tight .en-letter { font-size: 0.9em; }

@@ -77,7 +77,7 @@ function meaningQuestion(rng, prefix, all, { wide }) {
 function missingQuestion(rng) {
   const prefix = pick(rng, SMALL_PREFIXES);
   const full = gridModel({ family: null, names: true });
-  const model = { ...full, squares: full.squares.map((s) => (s.pos === prefix.pos ? { ...s, letter: null, name: null, isBlank: true } : s)) };
+  const model = { ...full, squares: full.squares.map((s) => (s.pos === prefix.pos ? { ...s, letter: null, label: null, name: null, isBlank: true } : s)) };
   const others = shuffle(SMALL_PREFIXES.filter((p) => p !== prefix), rng).slice(0, 3);
   const steps = [
     { text: "Rutnätet går från kilo till milli. Varje ruta är 10 gånger rutan till höger.", row: [grid(full)] },

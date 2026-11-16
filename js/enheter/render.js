@@ -104,6 +104,7 @@ function renderGrid(model, { useWindow = false } = {}) {
   const node = el("div", `en-grid en-cells-${cells}`);
   node.style.setProperty("--en-cols", cols);
   if (squares.length > 7) node.classList.add("is-long"); // Mikro, Mega och Giga: 16 smala rutor
+  if (model.family) node.classList.add("has-units"); // hela enheter i rutorna (km, Hm …), inte bara bokstäver
   node._model = model;
   if (useWindow) node.dataset.windowed = "true";
 
@@ -138,7 +139,7 @@ function renderGrid(model, { useWindow = false } = {}) {
   const row = el("div", "en-grid-row en-squares");
   squares.forEach((s, i) => {
     const isBase = s.pos === 0;
-    const label = isBase ? model.baseLabel : s.letter;
+    const label = s.label;
     const square = el("div", "en-square");
     square.style.gridColumn = `${squareStart(i)} / span ${2 * cells}`;
     square.style.gridRow = String(gridRow);
